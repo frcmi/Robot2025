@@ -9,6 +9,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
@@ -20,6 +21,7 @@ public final class RobotContainer {
 
   private SwerveSubsystem m_Swerve;
   private VisionSubsystem m_Vision;
+  private LEDSubsystem m_LedSubsystem = new LEDSubsystem();;
 
   private SwerveRequest.FieldCentric m_Request;
 
@@ -53,6 +55,8 @@ public final class RobotContainer {
         // stick right is +1
         // +theta is counterclockwise
         .withRotationalRate(-m_Controller.getRightX() * kMaxAngularVelocity)));
+
+    m_LedSubsystem.setDefaultCommand(m_LedSubsystem.allianceColor());
   }
 
   public Command getAutonomousCommand() {
