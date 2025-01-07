@@ -4,6 +4,8 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -76,7 +78,7 @@ public final class SwerveSubsystem extends SwerveDrivetrain implements Subsystem
     }
 
     public SwerveSubsystem(SwerveDrivetrainConstants constants, SwerveModuleConstants... modules) {
-        super(constants, modules);
+        super(TalonFX::new, TalonFX::new, CANcoder::new, constants, modules);
         if (Robot.isSimulation()) {
             startSimThread();
         }
@@ -84,7 +86,7 @@ public final class SwerveSubsystem extends SwerveDrivetrain implements Subsystem
 
     public SwerveSubsystem(SwerveDrivetrainConstants constants, double odometryFrequency,
             SwerveModuleConstants... modules) {
-        super(constants, odometryFrequency, modules);
+        super(TalonFX::new, TalonFX::new, CANcoder::new, constants, odometryFrequency, modules);
         if (Robot.isSimulation()) {
             startSimThread();
         }
