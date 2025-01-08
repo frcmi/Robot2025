@@ -37,10 +37,10 @@ public class PivotSubsystem extends SubsystemBase {
             pivotMotor.setControl(motorPositionControl.withPosition(angle));
         });
     }
-    public Command goToIntake() {
-        setAngle(null).schedule(); //idk how to use the angle class mb king
+    public Command goToIntakePosition() {
+        return setAngle(Angle.ofBaseUnits(2, Units.Degrees)); //TODO: find what angles these are
     }
-    public Command goToIntake() {
-        setAngle(null).schedule(); //idk how to use the angle class mb king
+    public Command goToOutakePosition() {
+        return setAngle(Angle.ofBaseUnits(2, Units.Degrees)); //TODO: find what angles these are
     }
 }
