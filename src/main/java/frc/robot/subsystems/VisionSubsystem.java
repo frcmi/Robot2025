@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 
 import frc.robot.Robot;
 import frc.robot.vision.Camera;
-// import frc.robot.vision.PhotonlibCamera;
+import frc.robot.vision.PhotonlibCamera;
 import frc.robot.vision.Camera.Result;
 import frc.robot.vision.Camera.Simulator;
 import frc.robot.vision.Camera.Specification;
@@ -60,7 +60,7 @@ public final class VisionSubsystem implements Subsystem {
     private static Camera createCamera(CameraDescription desc, AprilTagFieldLayout layout) {
         switch (desc.type) {
             case PHOTONVISION:
-                return null; //new PhotonlibCamera(desc.name, desc.offset, layout);
+                return new PhotonlibCamera(desc.name, desc.offset, layout);
             default:
                 return null;
         }
