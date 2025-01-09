@@ -1,69 +1,66 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import java.util.function.BooleanSupplier;
-
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.ultralogger.UltraBooleanLog;
+import frc.lib.ultralogger.UltraDoubleLog;
+import frc.lib.ultralogger.UltraTempLog;
+import frc.robot.Constants.ClawConstants;
 
 public class ClawSubsystem extends SubsystemBase {
+  private final TalonFX topMotor = new TalonFX(ClawConstants.topMotorId);
+  private final TalonFX bottomMotor = new TalonFX(ClawConstants.bottomMotorId);
+  private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw/Beambreak");
+  private final UltraTempLog topMotorSpeedPublisher = new UltraTempLog("Claw/Top motor speed", topMotor.getVelocity()::getValueAsDouble);
+  private final UltraTempLog bottomMotorSpeedPublisher = new UltraTempLog("Claw/Bottom motor speed", bottomMotor.getVelocity()::getValueAsDouble);
+  private final UltraTempLog topMotorTempPublisher = new UltraTempLog("Claw/Top motor temperature", topMotor.getDeviceTemp()::getValueAsDouble);
+  private final UltraTempLog bottomMotorTempPublisher = new UltraTempLog("Claw/Bottom motor temperature", bottomMotor.getDeviceTemp()::getValueAsDouble);
 
-    // get ID later
-    private final TalonFX intake1 = new TalonFX(0);
-    private final TalonFX intake2 = new TalonFX(1);
-    private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw Beambreak");
+  public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
-    private final Boolean Beambreak;
-    private final LEDSubsystem ledSubsystem;
+  public ClawSubsystem() {
+    topMotor.setNeutralMode(NeutralModeValue.Brake);
+    bottomMotor.setNeutralMode(NeutralModeValue.Brake);
 
-  public ClawSubsystem(Boolean Beambreak, LEDSubsystem ledSubsystem) {
-    this.Beambreak = Beambreak;
-    this.ledSubsystem = ledSubsystem;
-    intake1.setNeutralMode(NeutralModeValue.Brake);
-    intake2.setNeutralMode(NeutralModeValue.Brake);
+    // TODO: Change oppose master direction based on final claw design
+    bottomMotor.setControl(new Follower(topMotor.getDeviceID(), true));
 
     setDefaultCommand(stop());
   }
 
   public Command stop() {
     return run(() -> {
-        intake1.set(0.0);
-        intake2.set(0.0);
+        topMotor.set(0.0);
     });
   }
 
   public Command runMotor(double speed){
     return run(() -> {
-        intake1.set(speed);
-        intake2.set(speed);
+        topMotor.set(speed);
     });
   }
 
   public Command intake(){
-    return runMotor(1).until(() -> !Beambreak).andThen(stop());
+    return runMotor(1).until(beambreak::get).andThen(stop());
 
   }
 
   public Command shoot() {
-    return runMotor(-1).until(() -> Beambreak).andThen(stop());
+    return runMotor(-1).until(() -> !beambreak.get()).andThen(stop());
   }
-
-  
-
-
-
-
 
   @Override
   public void periodic() {
-    beambreakPublisher.update(Beambreak);
-  }
+    beambreakPublisher.update(beambreak.get());
 
-  @Override
-  public void simulationPeriodic() {
-
+    topMotorSpeedPublisher.update();
+    bottomMotorSpeedPublisher.update();
+    topMotorTempPublisher.update();
+    bottomMotorTempPublisher.update();
   }
 }

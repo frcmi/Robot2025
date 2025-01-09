@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import java.beans.Encoder;
-import java.util.concurrent.Flow.Publisher;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;

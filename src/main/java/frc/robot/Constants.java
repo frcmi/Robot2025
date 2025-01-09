@@ -16,4 +16,10 @@ public final class Constants {
         // How often to re-check if the FMS is connected (and disable network logging if so)
         public static final double fmsCheckDelay = Units.secondsToMilliseconds(1);
     }
+
+    public static class ClawConstants {
+        public static final int beambreakChannel = 0;
+        public static final int topMotorId = 0;
+        public static final int bottomMotorId = 0;
+    }
 }

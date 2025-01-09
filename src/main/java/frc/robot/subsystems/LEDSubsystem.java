@@ -26,8 +26,8 @@ public class LEDSubsystem extends SubsystemBase {
         led.start();
     }
 
-    public Command blank() {
-        return applyPattern(LEDPattern.solid(Color.kBlack));
+    public Command solidColor(Color color) {
+        return applyPattern(LEDPattern.solid(color));
     }
 
     public Command fauxRSL() {
@@ -70,7 +70,7 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     public Command applyPattern(LEDPattern pattern) {
-        return this.runOnce(() -> {
+        return this.run(() -> {
             pattern.applyTo(ledBuffer);
             led.setData(ledBuffer);
         }).ignoringDisable(true);
