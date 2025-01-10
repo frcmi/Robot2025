@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.PivotSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
@@ -26,6 +27,7 @@ public final class RobotContainer {
   private VisionSubsystem m_Vision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClawSubsystem m_ClawSubsystem = new ClawSubsystem();
+  private PivotSubsystem m_PivotSubsystem = new PivotSubsystem();
 
   private SwerveRequest.FieldCentric m_Request;
 
@@ -67,6 +69,10 @@ public final class RobotContainer {
     m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intake());
     m_Controller.rightTrigger().whileTrue(m_ClawSubsystem.shoot());
 
+    m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition());
+    m_Controller.b().onTrue(m_PivotSubsystem.goToOnCoralPosition());
+    m_Controller.x().onTrue(m_PivotSubsystem.goToReefPosition());
+    m_Controller.y().onTrue(m_PivotSubsystem.goToBargePosition());
   }
 
   public Command getAutonomousCommand() {
