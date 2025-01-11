@@ -27,7 +27,7 @@ public final class Constants {
 
     public static class PivotConstants {
         public static final int motorID = 0;
-
+        // TODO figure out real values
         public static final Angle floorAngle = Degrees.of(0);
         public static final Angle onCoralAngle = Degrees.of(0);
         public static final Angle reefAngle = Degrees.of(0);
@@ -41,6 +41,24 @@ public final class Constants {
         public static final double kD = 0.0;
 
         public static final double kS = 0.0;
+        public static final double kV = 0.0;
+        public static final double kA = 0.0;
+        public static final double kG = 0.0;
+    }
+
+    public static class ElevatorConstants {
+        public static final double floorHeight = 0;
+        public static final double onCoralHeight = 0;
+        public static final double reefOneHeight = 0;
+        public static final double reefTwoHeight = 0;
+        public static final double bargeHeight = 0;
+        // TODO figure out real conversion and heights
+        public static final double inchesPerRotation = 20;
+
+        public static final double kP = 1.0;
+        public static final double kI = 0.0;
+        public static final double kD = 0.0;
+        public static final double kS = 0.0;    
         public static final double kV = 0.0;
         public static final double kA = 0.0;
         public static final double kG = 0.0;
