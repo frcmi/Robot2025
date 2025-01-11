@@ -21,13 +21,13 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final TalonFX extendingMotor = new TalonFX(0);
 
     private final Slot0Configs configs = new Slot0Configs()
-    .withKP(1.0)
-    .withKI(0.0)
-    .withKD(0.0)
-    .withKS(0.0)
-    .withKV(0.0)
-    .withKA(0.0)
-    .withKG(0.0);
+    .withKP(ElevatorConstants.kP)
+    .withKI(ElevatorConstants.kI)
+    .withKD(ElevatorConstants.kD)
+    .withKS(ElevatorConstants.kS)
+    .withKV(ElevatorConstants.kV)
+    .withKA(ElevatorConstants.kA)
+    .withKG(ElevatorConstants.kG);
     // will track the position of the elevator
     private final Encoder encoder;
     
@@ -75,6 +75,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public Command goToBargeHeightCommand() {
         return (extendArm(ElevatorConstants.bargeHeight/ElevatorConstants.inchesPerRotation));
     }
+    
     // the speed of the motor will depend on how it is set up and how much power is needed
     // public Command lowerArm(double speed){
     //     return run(() -> {

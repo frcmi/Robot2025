@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.ClawSubsystem;
+import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
@@ -28,6 +29,8 @@ public final class RobotContainer {
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClawSubsystem m_ClawSubsystem = new ClawSubsystem();
   private PivotSubsystem m_PivotSubsystem = new PivotSubsystem();
+  // TODO fill in parameters with the real values when possible
+  private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem(null, null, null);
 
   private SwerveRequest.FieldCentric m_Request;
 
@@ -69,10 +72,12 @@ public final class RobotContainer {
     m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intake());
     m_Controller.rightTrigger().whileTrue(m_ClawSubsystem.shoot());
 
-    m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition());
-    m_Controller.b().onTrue(m_PivotSubsystem.goToOnCoralPosition());
-    m_Controller.x().onTrue(m_PivotSubsystem.goToReefPosition());
-    m_Controller.y().onTrue(m_PivotSubsystem.goToBargePosition());
+    m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition().andThen(m_ElevatorSubsystem.goToFloorHeightCommand()));
+    m_Controller.b().onTrue(m_PivotSubsystem.goToOnCoralPosition().andThen(m_ElevatorSubsystem.goOnCoralHeightCommand()));
+    // there are two heights with the coral, don't be comfused by any of it
+    m_Controller.x().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefOneHeightCommand()));
+    m_Controller.y().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefTwoHeightCommand()));
+    m_Controller.rightBumper().onTrue(m_PivotSubsystem.goToBargePosition().andThen(m_ElevatorSubsystem.goToBargeHeightCommand()));
   }
 
   public Command getAutonomousCommand() {
