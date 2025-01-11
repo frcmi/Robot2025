@@ -33,7 +33,7 @@ public final class Constants {
         public static final Angle reefAngle = Degrees.of(0);
         public static final Angle bargeAngle = Degrees.of(0);
 
-        public static final Angle maxAngle = Degrees.of(10);
+        public static final Angle maxAngle = Degrees.of(5);
         public static final Angle minAngle = Degrees.of(0);
 
         public static final double kP = 1.0;
