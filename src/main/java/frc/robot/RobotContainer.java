@@ -71,13 +71,13 @@ public final class RobotContainer {
     // TODO: add elevator and pivot setpoints to intake/shoot
     m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intake());
     m_Controller.rightTrigger().whileTrue(m_ClawSubsystem.shoot());
-
+    // when stowing the arm, use the command that goes to the floor position
     m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition().andThen(m_ElevatorSubsystem.goToFloorHeightCommand()));
     m_Controller.b().onTrue(m_PivotSubsystem.goToOnCoralPosition().andThen(m_ElevatorSubsystem.goOnCoralHeightCommand()));
     // there are two heights with the coral, don't be comfused by any of it
     m_Controller.x().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefOneHeightCommand()));
     m_Controller.y().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefTwoHeightCommand()));
-    m_Controller.rightBumper().onTrue(m_PivotSubsystem.goToBargePosition().andThen(m_ElevatorSubsystem.goToBargeHeightCommand()));
+    m_Controller.povUp().onTrue(m_PivotSubsystem.goToBargePosition().andThen(m_ElevatorSubsystem.goToBargeHeightCommand()));
   }
 
   public Command getAutonomousCommand() {
