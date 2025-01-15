@@ -37,7 +37,8 @@ import static edu.wpi.first.units.Units.*;
 
 public class ElevatorSubsystem extends SubsystemBase {
     // this is the motor that will extend the elevator
-    private final TalonFX extendingMotor = new TalonFX(0);
+    private final TalonFX extendingMotor = new TalonFX(20);
+    TalonFXSimState simState = extendingMotor.getSimState();
 
     private final DCMotorSim simMotor = new DCMotorSim(LinearSystemId.createDCMotorSystem(DCMotor.getFalcon500Foc(1), ElevatorConstants.elevatorInertia, ElevatorConstants.gearRatio), DCMotor.getFalcon500Foc(0));
 
@@ -68,6 +69,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         extendingMotor.setNeutralMode(NeutralModeValue.Brake);
         extendingMotor.getConfigurator().apply(configs);
         extendingMotor.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
+        SmartDashboard.putData("Windmill", windmill);
         // extendingMotor.setControl(new DutyCycleOut(0.5));
 
     }
@@ -77,7 +79,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     public Command extendArm(double rotations){
         return runOnce(() -> {
             extendingMotor.setControl(elevatorPositionControl.withPosition(rotations));
-            
         });
     }
 
@@ -112,19 +113,17 @@ public class ElevatorSubsystem extends SubsystemBase {
         if (RobotBase.isReal()) {
             elevator.setLength(getElevatorHeight().in(Meters));
         }
-        if (limitSwitch.get()) {
-            extendingMotor.setPosition(0);
-        }
-        SmartDashboard.putData("Windmill", windmill);
+        // TODO: brandon says he'll fix this
+        // if (limitSwitch.get()) {
+        //     extendingMotor.setPosition(0);
+        // }
     }
 
     @Override
     public void simulationPeriodic() {
-        extendingMotor.setControl(new DutyCycleOut(0.5));
-        
-
-        TalonFXSimState simState = extendingMotor.getSimState();
         simState.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+        SmartDashboard.putNumber("Voltage!", simState.getMotorVoltage());
         simMotor.setInputVoltage(simState.getMotorVoltage());
         simMotor.update(0.020);
         simState.setRawRotorPosition(ElevatorConstants.gearRatio * simMotor.getAngularPositionRotations());

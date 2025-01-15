@@ -24,7 +24,7 @@ public class PivotSubsystem extends SubsystemBase {
     .withKS(PivotConstants.kS)
     .withKV(PivotConstants.kV)
     .withKA(PivotConstants.kA)
-    .withKG(PivotConstants.kG); //Gravity keeps us on the ground...
+    .withKG(PivotConstants.kG); // Gravity keeps us on the ground...
 
     public PivotSubsystem() {
         setDefaultCommand(null);

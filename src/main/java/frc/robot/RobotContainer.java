@@ -85,9 +85,9 @@ public final class RobotContainer {
   }
 
   private void configureSimBindings() {
-    m_Controller.button(0).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand());
-    m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToReefOneHeightCommand());
-    m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand());
+    m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand());
+    m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToReefOneHeightCommand());
+    m_Controller.button(3).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand());
   }
 
   public Command getAutonomousCommand() {
