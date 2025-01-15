@@ -36,6 +36,7 @@ import frc.robot.Constants.ElevatorConstants;
 import static edu.wpi.first.units.Units.*;
 
 public class ElevatorSubsystem extends SubsystemBase {
+    private double setHeight = ElevatorConstants.minElevatorHeight;
     // this is the motor that will extend the elevator
     private final TalonFX extendingMotor = new TalonFX(20);
     TalonFXSimState simState = extendingMotor.getSimState();
@@ -49,14 +50,15 @@ public class ElevatorSubsystem extends SubsystemBase {
         .withKS(ElevatorConstants.kS)
         .withKV(ElevatorConstants.kV)
         .withKA(ElevatorConstants.kA)
-        .withKG(ElevatorConstants.kG);
+        .withKG(ElevatorConstants.kG)
+        .withGravityType(GravityTypeValue.Elevator_Static);
     // will track the position of the elevator
     private final DutyCycleEncoder encoder = new DutyCycleEncoder(ElevatorConstants.absoluteEncoderChannel);
     
     // will figure out dimensions later
     private final Mechanism2d windmill = new Mechanism2d(0.508, 2.4384);
 
-    private final MechanismRoot2d root = windmill.getRoot("elevator", 0.737/2, 0.737);
+    private final MechanismRoot2d root = windmill.getRoot("elevator", 0.508/2, 0);
     public final MechanismLigament2d elevator = root.append(new MechanismLigament2d("elevator", 2, 90, 10, new Color8Bit(255, 0, 0)));
     
     // limit switch for when the elevator is not extended
@@ -79,6 +81,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public Command extendArm(double rotations){
         return runOnce(() -> {
             extendingMotor.setControl(elevatorPositionControl.withPosition(rotations));
+            setHeight = rotations * ElevatorConstants.inchesPerRotation;
         });
     }
 
@@ -105,7 +108,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     /** Height is relative to bottom of motor
      */
     public Distance getElevatorHeight() {
-        return Meters.of(extendingMotor.getPosition().getValueAsDouble() * ElevatorConstants.metersPerRotation);
+        return Meters.of(extendingMotor.getPosition().getValueAsDouble() * ElevatorConstants.rotationsPerMeter);
     }
 
     @Override
@@ -123,25 +126,13 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void simulationPeriodic() {
         simState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
-        SmartDashboard.putNumber("Voltage!", simState.getMotorVoltage());
+        SmartDashboard.putNumber("Set Height", setHeight);
         simMotor.setInputVoltage(simState.getMotorVoltage());
         simMotor.update(0.020);
+        simMotor.setAngularVelocity(simMotor.getAngularVelocityRadPerSec() - ElevatorConstants.gravity);
         simState.setRawRotorPosition(ElevatorConstants.gearRatio * simMotor.getAngularPositionRotations());
         simState.setRotorVelocity(ElevatorConstants.gearRatio * Units.radiansToRotations(simMotor.getAngularVelocityRadPerSec()));
 
-        elevator.setLength(ElevatorConstants.gearRatio * simMotor.getAngularPositionRotations() * ElevatorConstants.metersPerRotation);
+        elevator.setLength(ElevatorConstants.gearRatio * simMotor.getAngularPositionRotations() * ElevatorConstants.rotationsPerMeter + ElevatorConstants.minElevatorHeight);
     }
-
-    
-    
-    // the speed of the motor will depend on how it is set up and how much power is needed
-    // public Command lowerArm(double speed){
-    //     return run(() -> {
-    //      if(limitSwitch.get()){
-    //         extendingMotor.set(0.0);
-    //      } else{
-    //         extendingMotor.set(-speed);
-    //      }  
-    //     });
-    // }
 }

@@ -53,23 +53,25 @@ public final class Constants {
         public static final Angle absoluteEncoderOffset = Degrees.of(0);
 
         public static final double floorHeight = 0;
-        public static final double onCoralHeight = 1;
-        public static final double reefOneHeight = 2;
-        public static final double reefTwoHeight = 3;
-        public static final double bargeHeight = 0;
-        // TODO figure out real conversion and heights
+        public static final double onCoralHeight = 0.3;
+        public static final double reefOneHeight = 0.8;
+        public static final double reefTwoHeight = 1.0;
+        public static final double bargeHeight = 2;
+        // TODO: figure out real conversion and heights
         public static final double inchesPerRotation = 20;
 
-        public static final double kP = 1.0;
+        public static final double kP = 0.0;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
         public static final double kS = 0.0;    
         public static final double kV = 0.0;
         public static final double kA = 0.0;
-        public static final double kG = 0.0;
+        public static final double kG = 1.0;
 
-        public static final double metersPerRotation = 2;
+        public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
         public static final double gearRatio = 8.0/1.0;
         public static final double elevatorInertia = 0.001; // In Kg Meters^2 
+        public static final double minElevatorHeight = 0.2; // FOR SIM!!!
+        public static final double gravity = 2;
     }
 }
