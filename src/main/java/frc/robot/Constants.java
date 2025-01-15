@@ -20,7 +20,7 @@ public final class Constants {
     }
 
     public static class ClawConstants {
-        public static final int beambreakChannel = 0;
+        public static final int beambreakChannel = 2;
         public static final int topMotorId = 0;
         public static final int bottomMotorId = 0;
     }
@@ -47,10 +47,15 @@ public final class Constants {
     }
 
     public static class ElevatorConstants {
+        public static final int absoluteEncoderChannel = 0;
+        public static final int limitSwitchChannel = 1;
+
+        public static final Angle absoluteEncoderOffset = Degrees.of(0);
+
         public static final double floorHeight = 0;
-        public static final double onCoralHeight = 0;
-        public static final double reefOneHeight = 0;
-        public static final double reefTwoHeight = 0;
+        public static final double onCoralHeight = 1;
+        public static final double reefOneHeight = 2;
+        public static final double reefTwoHeight = 3;
         public static final double bargeHeight = 0;
         // TODO figure out real conversion and heights
         public static final double inchesPerRotation = 20;
@@ -62,5 +67,9 @@ public final class Constants {
         public static final double kV = 0.0;
         public static final double kA = 0.0;
         public static final double kG = 0.0;
+
+        public static final double metersPerRotation = 2;
+        public static final double gearRatio = 8.0/1.0;
+        public static final double elevatorInertia = 0.001; // In Kg Meters^2 
     }
 }

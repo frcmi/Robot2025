@@ -14,7 +14,15 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
-      "/SmartDashboard/Alerts": "Alerts"
+      "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/Windmill": "Mechanism2d"
+    },
+    "windows": {
+      "/SmartDashboard/Windmill": {
+        "window": {
+          "visible": true
+        }
+      }
     }
   },
   "NetworkTables": {
