@@ -15,6 +15,8 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalSource;
 import edu.wpi.first.wpilibj.DutyCycle;
@@ -40,6 +42,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     // this is the motor that will extend the elevator
     private final TalonFX extendingMotor = new TalonFX(20);
     TalonFXSimState simState = extendingMotor.getSimState();
+    Alert noelevAlert = new Alert("Elevator motor not detected!", AlertType.kError);
 
     private final DCMotorSim simMotor = new DCMotorSim(LinearSystemId.createDCMotorSystem(DCMotor.getFalcon500Foc(1), ElevatorConstants.elevatorInertia, ElevatorConstants.gearRatio), DCMotor.getFalcon500Foc(0));
 
@@ -116,6 +119,8 @@ public class ElevatorSubsystem extends SubsystemBase {
         if (RobotBase.isReal()) {
             elevator.setLength(getElevatorHeight().in(Meters));
         }
+        
+        noelevAlert.set(!extendingMotor.isAlive());
         // TODO: brandon says he'll fix this
         // if (limitSwitch.get()) {
         //     extendingMotor.setPosition(0);

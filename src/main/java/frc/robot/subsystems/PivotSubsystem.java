@@ -16,6 +16,7 @@ import static edu.wpi.first.units.Units.*;
 public class PivotSubsystem extends SubsystemBase {
     Alert limitPassedAlert = new Alert("Pivot motor limit has been exceeded! FIX IT!", AlertType.kError);
     TalonFX pivotMotor = new TalonFX(PivotConstants.motorID);
+    Alert nopivotAlert = new Alert("Pivot motor not detected!", AlertType.kError);
     PositionTorqueCurrentFOC motorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0)).withSlot(0);
     Slot0Configs slot0Configs = new Slot0Configs() //TODO: pls tune
     .withKP(PivotConstants.kP)
@@ -56,5 +57,6 @@ public class PivotSubsystem extends SubsystemBase {
             pivotMotor.setNeutralMode(NeutralModeValue.Brake);
             limitPassedAlert.set(true);
         }
+        nopivotAlert.set(!pivotMotor.isAlive());
     }
 }
