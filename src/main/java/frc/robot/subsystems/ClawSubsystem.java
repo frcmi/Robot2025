@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -19,6 +21,8 @@ public class ClawSubsystem extends SubsystemBase {
   private final UltraTempLog bottomMotorSpeedPublisher = new UltraTempLog("Claw/Bottom motor speed", bottomMotor.getVelocity()::getValueAsDouble);
   private final UltraTempLog topMotorTempPublisher = new UltraTempLog("Claw/Top motor temperature", topMotor.getDeviceTemp()::getValueAsDouble);
   private final UltraTempLog bottomMotorTempPublisher = new UltraTempLog("Claw/Bottom motor temperature", bottomMotor.getDeviceTemp()::getValueAsDouble);
+  Alert notopAlert = new Alert("Top motor not detected!", AlertType.kError);
+  Alert nobottomAlert = new Alert("Bottom motor not detected!", AlertType.kError);
 
   public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
@@ -26,6 +30,7 @@ public class ClawSubsystem extends SubsystemBase {
     topMotor.setNeutralMode(NeutralModeValue.Brake);
     bottomMotor.setNeutralMode(NeutralModeValue.Brake);
 
+    
     // TODO: Change oppose master direction based on final claw design
     bottomMotor.setControl(new Follower(topMotor.getDeviceID(), true));
 
@@ -45,6 +50,8 @@ public class ClawSubsystem extends SubsystemBase {
   }
 
   public Command intake(){
+
+    
     return runMotor(1).until(beambreak::get).andThen(stop());
 
   }
@@ -55,8 +62,9 @@ public class ClawSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    nobottomAlert.set(!bottomMotor.isAlive());
+    notopAlert.set(!topMotor.isAlive());
     beambreakPublisher.update(beambreak.get());
-
     topMotorSpeedPublisher.update();
     bottomMotorSpeedPublisher.update();
     topMotorTempPublisher.update();
