@@ -10,17 +10,17 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.ultralogger.UltraBooleanLog;
-import frc.lib.ultralogger.UltraTempLog;
+import frc.lib.ultralogger.UltraSupplierLog;
 import frc.robot.Constants.ClawConstants;
 
 public class ClawSubsystem extends SubsystemBase {
   private final TalonFX topMotor = new TalonFX(ClawConstants.topMotorId);
   private final TalonFX bottomMotor = new TalonFX(ClawConstants.bottomMotorId);
   private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw/Beambreak");
-  private final UltraTempLog topMotorSpeedPublisher = new UltraTempLog("Claw/Top motor speed", topMotor.getVelocity()::getValueAsDouble);
-  private final UltraTempLog bottomMotorSpeedPublisher = new UltraTempLog("Claw/Bottom motor speed", bottomMotor.getVelocity()::getValueAsDouble);
-  private final UltraTempLog topMotorTempPublisher = new UltraTempLog("Claw/Top motor temperature", topMotor.getDeviceTemp()::getValueAsDouble);
-  private final UltraTempLog bottomMotorTempPublisher = new UltraTempLog("Claw/Bottom motor temperature", bottomMotor.getDeviceTemp()::getValueAsDouble);
+  private final UltraSupplierLog topMotorSpeedPublisher = new UltraSupplierLog("Claw/Top motor speed", topMotor.getVelocity()::getValueAsDouble);
+  private final UltraSupplierLog bottomMotorSpeedPublisher = new UltraSupplierLog("Claw/Bottom motor speed", bottomMotor.getVelocity()::getValueAsDouble);
+  private final UltraSupplierLog topMotorTempPublisher = new UltraSupplierLog("Claw/Top motor temperature", topMotor.getDeviceTemp()::getValueAsDouble);
+  private final UltraSupplierLog bottomMotorTempPublisher = new UltraSupplierLog("Claw/Bottom motor temperature", bottomMotor.getDeviceTemp()::getValueAsDouble);
   Alert notopAlert = new Alert("Top motor not detected!", AlertType.kError);
   Alert nobottomAlert = new Alert("Bottom motor not detected!", AlertType.kError);
 

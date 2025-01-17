@@ -89,7 +89,7 @@ public final class RobotContainer {
     m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand().andThen(m_PivotSubsystem.goToOnCoralPosition()));
     m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToReefOneHeightCommand().andThen(m_PivotSubsystem.goToReefPosition()));
     m_Controller.button(3).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand().andThen(m_PivotSubsystem.goToReefPosition()));
-    
+    m_Controller.button(4).onTrue(m_ElevatorSubsystem.goToBargeHeightCommand().andThen(m_PivotSubsystem.goToBargePosition()));
   }
 
   public Command getAutonomousCommand() {
