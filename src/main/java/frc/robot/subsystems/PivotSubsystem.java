@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.Constants.PivotConstants;
+import frc.robot.Robot;
+
 import static edu.wpi.first.units.Units.*;
 
 public class PivotSubsystem extends SubsystemBase {
@@ -28,13 +30,13 @@ public class PivotSubsystem extends SubsystemBase {
     Alert nopivotAlert = new Alert("Pivot motor not detected!", AlertType.kError);
     PositionTorqueCurrentFOC motorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0)).withSlot(0);
     Slot0Configs slot0Configs = new Slot0Configs() //TODO: pls tune
-    .withKP(PivotConstants.kP)
-    .withKI(PivotConstants.kI)
-    .withKD(PivotConstants.kD)
-    .withKS(PivotConstants.kS)
-    .withKV(PivotConstants.kV)
-    .withKA(PivotConstants.kA)
-    .withKG(PivotConstants.kG); // Gravity keeps us on the ground...
+        .withKP(PivotConstants.kP)
+        .withKI(PivotConstants.kI)
+        .withKD(PivotConstants.kD)
+        .withKS(PivotConstants.kS)
+        .withKV(PivotConstants.kV)
+        .withKA(PivotConstants.kA)
+        .withKG(PivotConstants.kG); // Gravity keeps us on the ground...
     MechanismLigament2d pivotLigament2d;
     TalonFXSimState talonFXSim = pivotMotor.getSimState();
     private static final double kGearRatio = 10.0;
@@ -46,12 +48,9 @@ public class PivotSubsystem extends SubsystemBase {
     );
 
     public PivotSubsystem(MechanismLigament2d elevatorLigament) {
-        setDefaultCommand(null);
         pivotMotor.getConfigurator().apply(slot0Configs);
         pivotLigament2d = elevatorLigament.append(new MechanismLigament2d("wrist", 0.5, 90, 6, new Color8Bit(Color.kPurple)));
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);
-
-
     }
     public Command setAngle(Angle angle) {
         return runOnce(() -> {
@@ -79,8 +78,11 @@ public class PivotSubsystem extends SubsystemBase {
            limitPassedAlert.set(true);
         }
         nopivotAlert.set(!pivotMotor.isAlive());
-        pivotLigament2d.setAngle(pivotMotor.getPosition().getValue().in(Degrees));
-        
+        if (Robot.isReal()) {
+            pivotLigament2d.setAngle(pivotMotor.getPosition().getValue().in(Degrees));
+        } else if (Robot.isSimulation()) {
+            pivotLigament2d.setAngle(pivotMotor.getPosition().getValue().minus(Degrees.of(90)).in(Degrees));
+        }
     }
     @Override
     public void simulationPeriodic() {
