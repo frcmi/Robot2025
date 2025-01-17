@@ -118,19 +118,12 @@ public final class SwerveSubsystem extends SwerveDrivetrain implements Subsystem
     private double m_LastSimUpdate;
     private Notifier m_SimThread;
 
-    // TODO: delete this when we get odometry
-    public Command simDrive(DoubleSupplier x, DoubleSupplier y, DoubleSupplier rot) {
-        return run(() -> {
-            position = position.plus(new Transform2d(x.getAsDouble() * 0.05, y.getAsDouble() * -0.05, new Rotation2d(rot.getAsDouble() * 0.02)));
-            System.out.println(rot.getAsDouble());
-        });
-    }
 
     StructPublisher<Pose2d> robotPose = NetworkTableInstance.getDefault().getStructTopic("Robot Pose", Pose2d.struct).publish();
     Pose2d position = new Pose2d();
 
     @Override
     public void periodic() {
-        robotPose.set(position);
+        robotPose.set(this.getState().Pose);
     }
 }
