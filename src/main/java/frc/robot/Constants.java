@@ -26,12 +26,12 @@ public final class Constants {
     }
 
     public static class PivotConstants {
-        public static final int motorID = 0;
+        public static final int motorID = 40;
         // TODO figure out real values
-        public static final Angle floorAngle = Degrees.of(0);
-        public static final Angle onCoralAngle = Degrees.of(0);
-        public static final Angle reefAngle = Degrees.of(0);
-        public static final Angle bargeAngle = Degrees.of(0);
+        public static final Angle floorAngle = Degrees.of(10);
+        public static final Angle onCoralAngle = Degrees.of(40);
+        public static final Angle reefAngle = Degrees.of(90);
+        public static final Angle bargeAngle = Degrees.of(190);
 
         public static final Angle maxAngle = Degrees.of(5);
         public static final Angle minAngle = Degrees.of(0);
