@@ -29,9 +29,10 @@ public final class RobotContainer {
   private VisionSubsystem m_Vision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClawSubsystem m_ClawSubsystem = new ClawSubsystem();
-  private PivotSubsystem m_PivotSubsystem = new PivotSubsystem();
   // TODO fill in parameters with the real values when possible
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem();
+  private PivotSubsystem m_PivotSubsystem = new PivotSubsystem(m_ElevatorSubsystem.elevator);
+
 
   private SwerveRequest.FieldCentric m_Request;
 
@@ -85,9 +86,10 @@ public final class RobotContainer {
   }
 
   private void configureSimBindings() {
-    m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand());
-    m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToReefOneHeightCommand());
-    m_Controller.button(3).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand());
+    m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand().andThen(m_PivotSubsystem.goToOnCoralPosition()));
+    m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToReefOneHeightCommand().andThen(m_PivotSubsystem.goToReefPosition()));
+    m_Controller.button(3).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand().andThen(m_PivotSubsystem.goToReefPosition()));
+    
   }
 
   public Command getAutonomousCommand() {

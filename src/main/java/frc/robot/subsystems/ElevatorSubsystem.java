@@ -57,7 +57,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final DutyCycleEncoder encoder = new DutyCycleEncoder(ElevatorConstants.absoluteEncoderChannel);
     
     // will figure out dimensions later
-    private final Mechanism2d windmill = new Mechanism2d(0.508, 2.4384);
+    private final Mechanism2d windmill = new Mechanism2d(3, 2.4384);
 
     private final MechanismRoot2d root = windmill.getRoot("elevator", 0.737/2, 0.737);
     public final MechanismLigament2d elevator = root.append(new MechanismLigament2d("elevator", 2, 90, 10, new Color8Bit(255, 0, 0)));
