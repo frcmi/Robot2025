@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.security.AlgorithmParameterGenerator;
+
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
@@ -18,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.ClawSubsystem;
@@ -35,7 +38,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
+import frc.lib.ultralogger.UltraBooleanLog;
+import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -64,6 +68,9 @@ public final class RobotContainer {
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem();
   private PivotSubsystem m_PivotSubsystem = new PivotSubsystem(m_ElevatorSubsystem.elevator);
 
+  private int algaeLevel = 0;
+  private UltraDoubleLog levelLog = new UltraDoubleLog("Algae Level");
+
   private final SendableChooser<Command> autoChooser;
 
   public RobotContainer() {
@@ -78,6 +85,22 @@ public final class RobotContainer {
 
   private void initSubsystems() {
     m_Vision = VisionSubsystem.configure(drivetrain);
+  }
+
+  private void changeLevel(boolean moveUp) {
+    if(moveUp)
+      algaeLevel++;
+    else
+      algaeLevel--;
+    
+    if(algaeLevel > 4)
+      algaeLevel = 4;
+    if(algaeLevel < 0)
+      algaeLevel = 0;
+
+    levelLog.update((double)algaeLevel);
+    ParallelCommandGroup parallelLevelCommands = new ParallelCommandGroup(m_PivotSubsystem.goToAngle(algaeLevel), m_ElevatorSubsystem.goToHeight(algaeLevel));
+    parallelLevelCommands.schedule();
   }
 
   private void configureSwerveBindings() {
@@ -120,22 +143,30 @@ public final class RobotContainer {
     // TODO: add elevator and pivot setpoints to intake/shoot
     m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intake());
     m_Controller.rightTrigger().whileTrue(m_ClawSubsystem.shoot());
+
+    m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
+    m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
+
     // when stowing the arm, use the command that goes to the floor position
-    m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition().andThen(m_ElevatorSubsystem.goToFloorHeightCommand()));
-    m_Controller.b().onTrue(m_PivotSubsystem.goToOnCoralPosition().andThen(m_ElevatorSubsystem.goToOnCoralHeightCommand()));
+    // m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition().andThen(m_ElevatorSubsystem.goToFloorHeightCommand()));
+    // m_Controller.b().onTrue(m_PivotSubsystem.goToOnCoralPosition().andThen(m_ElevatorSubsystem.goToOnCoralHeightCommand()));
     // there are two heights with the coral, don't be comfused by any of it
-    m_Controller.x().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefOneHeightCommand()));
-    m_Controller.y().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefTwoHeightCommand()));
-    m_Controller.povUp().onTrue(m_PivotSubsystem.goToBargePosition().andThen(m_ElevatorSubsystem.goToBargeHeightCommand()));
+    // m_Controller.x().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefOneHeightCommand()));
+    // m_Controller.y().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefTwoHeightCommand()));
+    // m_Controller.povUp().onTrue(m_PivotSubsystem.goToBargePosition().andThen(m_ElevatorSubsystem.goToBargeHeightCommand()));
   }
 
   private void configureSimBindings() {
     configureSwerveBindings();
     drivetrain.resetPose(new Pose2d(3, 3, new Rotation2d()));
-    m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToFloorHeightCommand().andThen(m_PivotSubsystem.goToFloorPosition()));
-    m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand().andThen(m_PivotSubsystem.goToOnCoralPosition()));
-    m_Controller.button(3).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand().andThen(m_PivotSubsystem.goToReefPosition()));
-    m_Controller.button(4).onTrue(m_ElevatorSubsystem.goToBargeHeightCommand().andThen(m_PivotSubsystem.goToBargePosition()));
+
+    m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
+    m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
+
+    // m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToFloorHeightCommand().andThen(m_PivotSubsystem.goToFloorPosition()));
+    // m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand().andThen(m_PivotSubsystem.goToOnCoralPosition()));
+    // m_Controller.button(3).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand().andThen(m_PivotSubsystem.goToReefPosition()));
+    // m_Controller.button(4).onTrue(m_ElevatorSubsystem.goToBargeHeightCommand().andThen(m_PivotSubsystem.goToBargePosition()));
   }
 
   public Command getAutonomousCommand() {

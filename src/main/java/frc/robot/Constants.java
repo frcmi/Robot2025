@@ -27,11 +27,12 @@ public final class Constants {
 
     public static class PivotConstants {
         public static final int motorID = 40;
-        // TODO figure out real values
+        // TODO: figure out real values
         // The "zero" angle is forward, larger values will rotate upwards
         public static final Angle floorAngle = Degrees.of(0);
         public static final Angle onCoralAngle = Degrees.of(20);
-        public static final Angle reefAngle = Degrees.of(45);
+        public static final Angle reefOneAngle = Degrees.of(45);
+        public static final Angle reefTwoAngle = Degrees.of(45);
         public static final Angle bargeAngle = Degrees.of(90);
 
         public static final Angle maxAngle = Degrees.of(5);
@@ -58,8 +59,6 @@ public final class Constants {
         public static final double reefOneHeight = 0.8;
         public static final double reefTwoHeight = 1.0;
         public static final double bargeHeight = 1.6;
-        // TODO: figure out real conversion and heights
-        public static final double inchesPerRotation = 20;
 
         public static final double kP = 1000;
         public static final double kI = 0.0;
@@ -69,6 +68,7 @@ public final class Constants {
         public static final double kA = 0.0;
         public static final double kG = 0.0;
 
+        // TODO: get conversion value(if this isn't it)
         public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
         public static final double gearRatio = 8.0/1.0;
         public static final double elevatorInertia = 0.001; // In Kg Meters^2 

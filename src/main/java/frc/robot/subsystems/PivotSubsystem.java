@@ -57,16 +57,35 @@ public class PivotSubsystem extends SubsystemBase {
             pivotMotor.setControl(motorPositionControl.withPosition(angle));
         });
     }
-    public Command goToFloorPosition() {
+    public Command goToAngle(int level) {
+        switch(level) {
+            case 0:
+                return goToFloorAngle();
+            case 1:
+                return goToOnCoralAngle();
+            case 2:
+                return goToReefOneAngle();
+            case 3:
+                return goToReefTwoAngle();
+            case 4:
+                return goToBargeAngle();
+            default:
+                return goToFloorAngle();
+        }
+    }
+    private Command goToFloorAngle() {
         return setAngle(PivotConstants.floorAngle);
     }
-    public Command goToOnCoralPosition() {
+    private Command goToOnCoralAngle() {
         return setAngle(PivotConstants.onCoralAngle);
     }
-    public Command goToReefPosition() {
-        return setAngle(PivotConstants.reefAngle);
+    private Command goToReefOneAngle() {
+        return setAngle(PivotConstants.reefOneAngle);
     }
-    public Command goToBargePosition() {
+    private Command goToReefTwoAngle() {
+        return setAngle(PivotConstants.reefTwoAngle);
+    }
+    private Command goToBargeAngle() {
         return setAngle(PivotConstants.bargeAngle);
     }
 

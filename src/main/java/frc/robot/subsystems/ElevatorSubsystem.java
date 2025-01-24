@@ -95,23 +95,40 @@ public class ElevatorSubsystem extends SubsystemBase {
         });
     }
 
-    public Command goToFloorHeightCommand() {
+    public Command goToHeight(int level) {
+        switch(level) {
+            case 0:
+                return goToFloorHeightCommand();
+            case 1:
+                return goToOnCoralHeightCommand();
+            case 2:
+                return goToReefOneHeightCommand();
+            case 3:
+                return goToReefTwoHeightCommand();
+            case 4:
+                return goToBargeHeightCommand();
+            default:
+                return goToFloorHeightCommand();
+        }
+    }
+
+    private Command goToFloorHeightCommand() {
         return (extendArm(ElevatorConstants.floorHeight * ElevatorConstants.rotationsPerMeter));
     }
 
-    public Command goToOnCoralHeightCommand() {
+    private Command goToOnCoralHeightCommand() {
         return (extendArm(ElevatorConstants.onCoralHeight * ElevatorConstants.rotationsPerMeter));
     }
 
-    public Command goToReefOneHeightCommand() {
+    private Command goToReefOneHeightCommand() {
         return (extendArm(ElevatorConstants.reefOneHeight * ElevatorConstants.rotationsPerMeter));
     }
 
-    public Command goToReefTwoHeightCommand() {
+    private Command goToReefTwoHeightCommand() {
         return (extendArm(ElevatorConstants.reefTwoHeight * ElevatorConstants.rotationsPerMeter));
     }
 
-    public Command goToBargeHeightCommand() {
+    private Command goToBargeHeightCommand() {
         return (extendArm(ElevatorConstants.bargeHeight * ElevatorConstants.rotationsPerMeter));
     }
 
