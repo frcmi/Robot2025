@@ -37,13 +37,13 @@ public final class VisionSubsystem implements Subsystem {
         Simulator sim;
     }
 
-    private SwerveSubsystem m_Swerve;
+    private CommandSwerveDrivetrain m_Swerve;
     private CameraData[] m_Cameras;
 
     private HashSet<Integer> m_ViableResults;
     private int m_Frame;
 
-    public static VisionSubsystem configure(SwerveSubsystem swerve) {
+    public static VisionSubsystem configure(CommandSwerveDrivetrain swerve) {
         var cameras = new CameraDescription[] { /* cameras */ };
 
         AprilTagFieldLayout layout;
@@ -66,7 +66,7 @@ public final class VisionSubsystem implements Subsystem {
         }
     }
 
-    public VisionSubsystem(SwerveSubsystem swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
+    public VisionSubsystem(CommandSwerveDrivetrain swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
         m_Swerve = swerve;
         m_ViableResults = new HashSet<>();
         m_Frame = 0;
