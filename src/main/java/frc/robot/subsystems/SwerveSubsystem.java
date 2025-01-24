@@ -7,6 +7,7 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.swerve.SimSwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -22,8 +23,11 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -59,8 +63,8 @@ public final class SwerveSubsystem extends SwerveDrivetrain implements Subsystem
                 .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
                 .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
                 .withSpeedAt12Volts(4.73)
-                .withSteerInertia(1.0e-5)
-                .withDriveInertia(0.001)
+                .withSteerInertia(0.02)
+                .withDriveInertia(0.05)
                 .withSteerFrictionVoltage(0.25)
                 .withDriveFrictionVoltage(0.25)
                 .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
@@ -70,8 +74,8 @@ public final class SwerveSubsystem extends SwerveDrivetrain implements Subsystem
                 .withPigeon2Id(0)
                 .withCANBusName("");
 
-        double moduleX = Units.inchesToMeters(11.375);
-        double moduleY = Units.inchesToMeters(11.44);
+        double moduleX = Units.inchesToMeters(29);
+        double moduleY = Units.inchesToMeters(29);
 
         var moduleConfigs = new SwerveModuleConstants[] {
                 // front left
@@ -157,11 +161,17 @@ public final class SwerveSubsystem extends SwerveDrivetrain implements Subsystem
     private Notifier m_SimThread;
 
 
-    StructPublisher<Pose2d> robotPose = NetworkTableInstance.getDefault().getStructTopic("Robot Pose", Pose2d.struct).publish();
-    Pose2d position = new Pose2d();
+    StructPublisher<Pose2d> robotPosePublisher = 
+        NetworkTableInstance.getDefault().getStructTopic("Swerve/Robot Pose", Pose2d.struct).publish();
+    StructArrayPublisher<SwerveModuleState> currentModuleStatesPublisher = 
+        NetworkTableInstance.getDefault().getStructArrayTopic("Swerve/Swerve Module States", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> setModuleStatesPublisher = 
+        NetworkTableInstance.getDefault().getStructArrayTopic("Swerve/Swerve Module Set States", SwerveModuleState.struct).publish();
 
     @Override
     public void periodic() {
-        robotPose.set(this.getState().Pose);
+        robotPosePublisher.set(this.getState().Pose);
+        currentModuleStatesPublisher.set(getState().ModuleStates);
+        setModuleStatesPublisher.set(getState().ModuleTargets);
     }
 }

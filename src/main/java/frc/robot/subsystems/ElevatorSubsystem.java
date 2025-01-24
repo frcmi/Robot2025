@@ -145,9 +145,5 @@ public class ElevatorSubsystem extends SubsystemBase {
         simState.setRawRotorPosition((elevatorSim.getPositionMeters() - ElevatorConstants.minElevatorHeight) * ElevatorConstants.rotationsPerMeter);
         simState.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond() * ElevatorConstants.rotationsPerMeter);
         elevator.setLength(elevatorSim.getPositionMeters());
-
-        SmartDashboard.putNumber("Rotor Position", (elevatorSim.getPositionMeters() - ElevatorConstants.minElevatorHeight) * ElevatorConstants.rotationsPerMeter);
-        SmartDashboard.putNumber("Rotor Set Position", elevatorPositionControl.Position);
-        SmartDashboard.putNumber("Volts", simState.getMotorVoltage());
     }
 }

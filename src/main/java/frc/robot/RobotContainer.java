@@ -8,11 +8,15 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.ClawSubsystem;
@@ -32,17 +36,16 @@ public final class RobotContainer {
   private VisionSubsystem m_Vision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClawSubsystem m_ClawSubsystem = new ClawSubsystem();
-  // TODO fill in parameters with the real values when possible
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem();
   private PivotSubsystem m_PivotSubsystem = new PivotSubsystem(m_ElevatorSubsystem.elevator);
 
-  private final SendableChooser<Command> autChooser;
+  private final SendableChooser<Command> autoChooser;
   private SwerveRequest.FieldCentric m_Request;
 
   public RobotContainer() {
     initSubsystems();
-    autChooser = AutoBuilder.buildAutoChooser();
-    SmartDashboard.putData("Auto Chooser", autChooser);
+    autoChooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Chooser", autoChooser);
     if (RobotBase.isReal())
       configureBindings();
     else if (RobotBase.isSimulation())
@@ -58,7 +61,7 @@ public final class RobotContainer {
     m_Request = new SwerveRequest.FieldCentric()
         .withDeadband(kMaxVelocity * 0.1)
         .withRotationalDeadband(kMaxVelocity * 0.1)
-        .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        .withDriveRequestType(DriveRequestType.Velocity);
 
     m_Swerve.setDefaultCommand(m_Swerve.applyRequest(() -> m_Request
         // stick up is -1
@@ -67,7 +70,7 @@ public final class RobotContainer {
 
         // stick right is +1
         // y axis is to the left
-        .withVelocityY(-m_Controller.getLeftY() * kMaxVelocity)
+        .withVelocityY(-m_Controller.getLeftX() * kMaxVelocity)
 
         // stick right is +1
         // +theta is counterclockwise
@@ -95,6 +98,7 @@ public final class RobotContainer {
 
   private void configureSimBindings() {
     configureSwerveBindings();
+    m_Swerve.resetPose(new Pose2d(3, 3, new Rotation2d()));
     m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToFloorHeightCommand().andThen(m_PivotSubsystem.goToFloorPosition()));
     m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand().andThen(m_PivotSubsystem.goToOnCoralPosition()));
     m_Controller.button(3).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand().andThen(m_PivotSubsystem.goToReefPosition()));
@@ -102,6 +106,6 @@ public final class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return autChooser.getSelected();
+    return autoChooser.getSelected();
   }
 }
