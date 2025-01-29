@@ -1,5 +1,8 @@
 package frc.robot.vision;
 
+import static edu.wpi.first.units.Units.Meters;
+
+import java.util.List;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
@@ -10,6 +13,7 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -46,8 +50,6 @@ public final class PhotonlibCamera implements Camera {
         
     }
 
-    private Optional<Double> m_LastTimestamp;
-
     private String m_Name;
     private Transform3d m_Offset;
 
@@ -55,8 +57,6 @@ public final class PhotonlibCamera implements Camera {
     private PhotonPoseEstimator m_Estimator;
 
     public PhotonlibCamera(String name, Transform3d offset, AprilTagFieldLayout layout) {
-        m_LastTimestamp = Optional.empty();
-
         m_Name = name;
         m_Offset = offset;
 
@@ -80,40 +80,18 @@ public final class PhotonlibCamera implements Camera {
     }
 
     private void update(Result result, PhotonPipelineResult cameraResult) {
-        Optional<EstimatedRobotPose> estimatedPose = isResultValid(cameraResult) ? m_Estimator.update(cameraResult)
-                : Optional.empty();
-        if (!estimatedPose.isPresent()) {
+        if (!isResultValid(cameraResult)) {
             return;
         }
 
-        var pose = estimatedPose.get();
-        if (m_LastTimestamp.isPresent() && pose.timestampSeconds - m_LastTimestamp.get() > Double.MIN_VALUE) {
-            return;
-        }
-
-        var targets = cameraResult.getTargets();
-        var firstTarget = targets.get(0);
+        PhotonTrackedTarget target = cameraResult.getBestTarget();
 
         result.isNew = true;
-        result.targetID = firstTarget.getFiducialId();
-        result.pose = pose.estimatedPose.toPose2d();
-        result.timestamp = pose.timestampSeconds;
+        result.targetID = target.getFiducialId();
 
-        result.minDistance = Double.MAX_VALUE;
-        result.maxDistance = Double.MIN_VALUE;
-        result.maxAmbiguity = Double.MIN_VALUE;
-
-        for (var target : targets) {
-            var transform = target.getBestCameraToTarget();
-            double distance = transform.getTranslation().getNorm();
-            double ambiguity = target.getPoseAmbiguity();
-
-            result.minDistance = Math.min(result.minDistance, distance);
-            result.maxDistance = Math.max(result.maxDistance, distance);
-            result.maxAmbiguity = Math.max(result.maxAmbiguity, ambiguity);
-        }
-
-        m_LastTimestamp = Optional.of(pose.timestampSeconds);
+        var transform = target.getBestCameraToTarget();
+        result.cameraToTargetDistance = Meters.of(transform.getTranslation().getNorm());
+        result.cameraToTargetRotation = transform.getRotation();
     }
 
     @Override

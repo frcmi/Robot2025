@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
+
 import java.io.IOException;
 import java.util.HashSet;
 
@@ -17,9 +20,6 @@ import frc.robot.vision.Camera.Simulator;
 import frc.robot.vision.Camera.Specification;
 
 public final class VisionSubsystem implements Subsystem {
-    public static final double kMaxAmbiguity = 0.7;
-    public static final double kMaxDistance = Units.feetToMeters(10);
-
     public static enum CameraType {
         PHOTONVISION
     }
@@ -38,9 +38,8 @@ public final class VisionSubsystem implements Subsystem {
     }
 
     private CommandSwerveDrivetrain m_Swerve;
-    private CameraData[] m_Cameras;
+    private CameraData m_Camera;
 
-    private HashSet<Integer> m_ViableResults;
     private int m_Frame;
 
     public static VisionSubsystem configure(CommandSwerveDrivetrain swerve) {
@@ -68,10 +67,9 @@ public final class VisionSubsystem implements Subsystem {
 
     public VisionSubsystem(CommandSwerveDrivetrain swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
         m_Swerve = swerve;
-        m_ViableResults = new HashSet<>();
         m_Frame = 0;
 
-        m_Cameras = new CameraData[cameras.length];
+        m_Camera = new CameraData();
         for (int i = 0; i < cameras.length; i++) {
             var desc = cameras[i];
             var data = new CameraData();
@@ -90,32 +88,31 @@ public final class VisionSubsystem implements Subsystem {
             return false;
         }
 
-        if (result.maxDistance > kMaxDistance) {
-            return false;
-        }
-
-        if (result.maxAmbiguity > kMaxAmbiguity) {
-            return false;
-        }
-
         return true;
     }
 
-    public Result getResult(int camera) {
-        return m_Cameras[camera].result;
+    public Result getResult() {
+        return m_Camera.result;
     }
 
     @Override
     public void periodic() {
-        m_ViableResults.clear();
+        var result = m_Camera.result;
+        m_Camera.camera.update(result);
 
-        for (int i = 0; i < m_Cameras.length; i++) {
-            var result = m_Cameras[i].result;
-            m_Cameras[i].camera.update(result);
+        if (isResultViable(result)) {
+            Transform3d cameraOffset = m_Camera.camera.getOffset();
+            double pitchToTarget = 
+                cameraOffset.getRotation().getMeasureY()
+                .plus(result.cameraToTargetRotation.getMeasureY()).in(Radians);
 
-            if (isResultViable(result)) {
-                m_ViableResults.add(i);
-            }
+            double planarDistance = result.cameraToTargetDistance.in(Meters) * Math.cos(pitchToTarget);
+
+            double yawToTarget =
+                cameraOffset.getRotation().getMeasureZ()
+                .plus(result.cameraToTargetRotation.getMeasureZ()).in(Radians);
+
+                        
         }
     }
 
@@ -123,9 +120,7 @@ public final class VisionSubsystem implements Subsystem {
     public void simulationPeriodic() {
         var pose = m_Swerve.getState().Pose;
 
-        for (var camera : m_Cameras) {
-            camera.sim.update(pose, m_Frame);
-        }
+        m_Camera.sim.update(pose, m_Frame);
 
         m_Frame++;
     }
