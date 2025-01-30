@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.security.AlgorithmParameterGenerator;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
@@ -37,6 +38,7 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraDoubleLog;
@@ -58,6 +60,7 @@ public final class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController m_Controller = new CommandXboxController(0);
+    private final CommandXboxController m_TuningController = new CommandXboxController(4);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -77,6 +80,8 @@ public final class RobotContainer {
     initSubsystems();
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
+    // SignalLogger.setPath("/ctre-logs/");
+    SignalLogger.start();
     if (RobotBase.isReal())
       configureBindings();
     else if (RobotBase.isSimulation())
@@ -135,6 +140,7 @@ public final class RobotContainer {
 
   private void configureBindings() {
     configureSwerveBindings();
+    configureTuningBindings();
     m_LedSubsystem.setDefaultCommand(m_LedSubsystem.fauxRSL());
     
     // TODO: correct color
@@ -167,6 +173,13 @@ public final class RobotContainer {
     // m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand().andThen(m_PivotSubsystem.goToOnCoralPosition()));
     // m_Controller.button(3).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand().andThen(m_PivotSubsystem.goToReefPosition()));
     // m_Controller.button(4).onTrue(m_ElevatorSubsystem.goToBargeHeightCommand().andThen(m_PivotSubsystem.goToBargePosition()));
+  }
+
+  private void configureTuningBindings() {
+    m_TuningController.a().whileTrue(m_ElevatorSubsystem.sysIdQuazistatic(SysIdRoutine.Direction.kForward));
+    m_TuningController.x().whileTrue(m_ElevatorSubsystem.sysIdQuazistatic(SysIdRoutine.Direction.kReverse));
+    m_TuningController.b().whileTrue(m_ElevatorSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_TuningController.y().whileTrue(m_ElevatorSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
   }
 
   public Command getAutonomousCommand() {
