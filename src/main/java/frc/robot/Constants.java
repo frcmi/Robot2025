@@ -91,7 +91,7 @@ public final class Constants {
             .withKG(0.0);
 
         public static final Slot1Configs alphaBotConfigs = new Slot1Configs()
-            .withKP(0.5)
+            .withKP(0.2)
             .withKI(0.0)
             .withKD(0.0)
             .withKS(0.12631)

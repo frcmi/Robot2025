@@ -46,6 +46,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.Constants.ElevatorConstants;
@@ -175,8 +176,17 @@ public class ElevatorSubsystem extends SubsystemBase {
         return Meters.of(elevatorMotorLeft.getPosition().getValueAsDouble() * ElevatorConstants.rotationsPerMeter);
     }
 
+    UltraDoubleLog setPose = new UltraDoubleLog("Elevator/Set Rotations");
+    UltraDoubleLog currentPose = new UltraDoubleLog("Elevator/Current Rotations");
+    StatusSignal<Double> setPoseSignal = elevatorMotorLeft.getClosedLoopReference();
+    StatusSignal<Angle> currentPoseSignal = elevatorMotorLeft.getPosition();
+
+
     @Override
     public void periodic() {
+        BaseStatusSignal.refreshAll(setPoseSignal, currentPoseSignal);
+        setPose.update(setPoseSignal.getValue());
+        currentPose.update(currentPoseSignal.getValueAsDouble());
         if (RobotBase.isReal()) {
             elevator.setLength(getElevatorHeight().in(Meters));
         }
