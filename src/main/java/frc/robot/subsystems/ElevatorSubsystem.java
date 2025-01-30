@@ -46,6 +46,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.Constants.ElevatorConstants;
 
@@ -70,15 +71,6 @@ public class ElevatorSubsystem extends SubsystemBase {
         new Mechanism(this::driveWithVoltage, null, this)
     );
 
-    private final Slot0Configs configs = new Slot0Configs()
-        .withKP(ElevatorConstants.kP)
-        .withKI(ElevatorConstants.kI)
-        .withKD(ElevatorConstants.kD)
-        .withKS(ElevatorConstants.kS)
-        .withKV(ElevatorConstants.kV)
-        .withKA(ElevatorConstants.kA)
-        .withKG(ElevatorConstants.kG)
-        .withGravityType(GravityTypeValue.Elevator_Static);
     // will track the position of the elevator
     private final DutyCycleEncoder encoder = new DutyCycleEncoder(ElevatorConstants.absoluteEncoderChannel);
     
@@ -99,18 +91,23 @@ public class ElevatorSubsystem extends SubsystemBase {
         true, 
         0.1);
 
-    private final PositionTorqueCurrentFOC elevatorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0)).withSlot(0);
+    private final PositionTorqueCurrentFOC elevatorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0)).withSlot(Constants.botType.slotId);
     private final VoltageOut elevatorVoltageControl = new VoltageOut(0).withEnableFOC(true);
 
     // there will be at least one limit switch and an encoder to track the position of the elevator
     public ElevatorSubsystem() {
         elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
         elevatorMotorRight.setNeutralMode(NeutralModeValue.Brake);
-        elevatorMotorLeft.getConfigurator().apply(configs);
-        elevatorMotorRight.getConfigurator().apply(configs);
+
+        elevatorMotorLeft.getConfigurator().apply(ElevatorConstants.realBotConfigs);
+        elevatorMotorLeft.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
+        elevatorMotorRight.getConfigurator().apply(ElevatorConstants.realBotConfigs);
+        elevatorMotorRight.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
+
         elevatorMotorLeft.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
         elevatorMotorRight.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
         elevatorMotorRight.setControl(new Follower(9, true));
+
         simState.Orientation = ChassisReference.CounterClockwise_Positive;
         SmartDashboard.putData("Windmill", windmill);
     }

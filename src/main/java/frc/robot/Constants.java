@@ -4,7 +4,25 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+
 public final class Constants {
+    public enum BotType {
+        MAIN_BOT(0),
+        ALPHA_BOT(1),
+        SIM_BOT(2);
+
+        public final int slotId;
+
+        private BotType(int slotId) {
+            this.slotId = slotId;
+        }
+    }
+    // TODO: mac address switching <3 brandon
+    public static final BotType botType = BotType.ALPHA_BOT;
+
     public static class TelemetryConstants {
         // DON'T ENABLE UNLESS ABSOLUTELY NEEDED
         // this will fully disable logging even when FMS is connected.
@@ -49,6 +67,7 @@ public final class Constants {
     }
 
     public static class ElevatorConstants {
+
         public static final int absoluteEncoderChannel = 0;
         public static final int limitSwitchChannel = 1;
 
@@ -60,13 +79,26 @@ public final class Constants {
         public static final double reefTwoHeight = 1.0;
         public static final double bargeHeight = 1.6;
 
-        public static final double kP = 1000;
-        public static final double kI = 0.0;
-        public static final double kD = 0.0;
-        public static final double kS = 0.0;    
-        public static final double kV = 0.0;
-        public static final double kA = 0.0;
-        public static final double kG = 0.0;
+        public static final int slotId = 1;
+
+        public static final Slot0Configs realBotConfigs = new Slot0Configs()
+            .withKP(0.0)
+            .withKI(0.0)
+            .withKD(0.0)
+            .withKS(0.0)
+            .withKV(0.0)
+            .withKA(0.0)
+            .withKG(0.0);
+
+        public static final Slot1Configs alphaBotConfigs = new Slot1Configs()
+            .withKP(0.5)
+            .withKI(0.0)
+            .withKD(0.0)
+            .withKS(0.12631)
+            .withKV(0.11256)
+            .withKA(0.0015562)
+            .withKG(0.16915)
+            .withGravityType(GravityTypeValue.Elevator_Static);
 
         // TODO: get conversion value(if this isn't it)
         public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
