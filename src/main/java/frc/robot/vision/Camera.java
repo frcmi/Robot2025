@@ -1,5 +1,7 @@
 package frc.robot.vision;
 
+import com.ctre.phoenix6.Timestamp;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -18,6 +20,8 @@ public interface Camera {
         public Distance cameraToTargetDistance;
         public Rotation3d cameraToTargetRotation;
         public int targetID;
+        
+        public Timestamp timestamp;
         
         public boolean isNew;
     }

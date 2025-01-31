@@ -15,6 +15,9 @@ import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import com.ctre.phoenix6.Timestamp;
+import com.ctre.phoenix6.Timestamp.TimestampSource;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -92,6 +95,7 @@ public final class PhotonlibCamera implements Camera {
         var transform = target.getBestCameraToTarget();
         result.cameraToTargetDistance = Meters.of(transform.getTranslation().getNorm());
         result.cameraToTargetRotation = transform.getRotation();
+        result.timestamp = cameraResult.getTimestampSeconds();
     }
 
     @Override

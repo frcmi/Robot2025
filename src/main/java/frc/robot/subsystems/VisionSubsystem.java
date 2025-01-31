@@ -2,13 +2,19 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Rotations;
 
 import java.io.IOException;
 import java.util.HashSet;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 
@@ -20,6 +26,8 @@ import frc.robot.vision.Camera.Simulator;
 import frc.robot.vision.Camera.Specification;
 
 public final class VisionSubsystem implements Subsystem {
+    AprilTagFieldLayout fieldLayout;
+
     public static enum CameraType {
         PHOTONVISION
     }
@@ -68,6 +76,7 @@ public final class VisionSubsystem implements Subsystem {
     public VisionSubsystem(CommandSwerveDrivetrain swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
         m_Swerve = swerve;
         m_Frame = 0;
+        fieldLayout = layout;
 
         m_Camera = new CameraData();
         for (int i = 0; i < cameras.length; i++) {
@@ -104,15 +113,46 @@ public final class VisionSubsystem implements Subsystem {
             Transform3d cameraOffset = m_Camera.camera.getOffset();
             double pitchToTarget = 
                 cameraOffset.getRotation().getMeasureY()
-                .plus(result.cameraToTargetRotation.getMeasureY()).in(Radians);
+                .plus(
+                    result.cameraToTargetRotation.getMeasureY()).in(Radians);
 
-            double planarDistance = result.cameraToTargetDistance.in(Meters) * Math.cos(pitchToTarget);
+            double planarDistanceToTarget = result.cameraToTargetDistance.in(Meters) * Math.cos(pitchToTarget);
 
-            double yawToTarget =
-                cameraOffset.getRotation().getMeasureZ()
-                .plus(result.cameraToTargetRotation.getMeasureZ()).in(Radians);
+            Rotation3d botRotation = 
+                new Rotation3d(
+                    Rotations.of(0), 
+                    Rotations.of(0), 
+                    m_Swerve.getState().Pose.getRotation().getMeasure()
+                );
 
-                        
+            Rotation3d botToTargetRotation =
+                botRotation
+                .rotateBy(cameraOffset.getRotation())
+                .rotateBy(result.cameraToTargetRotation);
+
+            Translation3d botToTagTranslation =
+                new Translation3d(
+                    planarDistanceToTarget, new Rotation3d()
+                ).rotateBy(
+                    botToTargetRotation.times(-1)
+                );
+
+            Translation3d botTranslation = 
+                fieldLayout.getTagPose(result.targetID).get().getTranslation()
+                .plus(botToTagTranslation);
+
+            m_Swerve.addVisionMeasurement(
+                new Pose2d(
+                    botTranslation.getMeasureX(), 
+                    botTranslation.getMeasureY(), 
+                    new Rotation2d(
+                        botToTargetRotation.getMeasureZ()
+                    )
+                ), 
+                result.timestamp
+            );
+            
+            result.isNew = false;
         }
     }
 
