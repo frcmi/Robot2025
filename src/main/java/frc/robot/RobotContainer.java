@@ -54,10 +54,14 @@ public final class RobotContainer {
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+    private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final Telemetry logger = new Telemetry();
 
     private final CommandXboxController m_Controller = new CommandXboxController(0);
     private final CommandXboxController m_TuningController = new CommandXboxController(4);
@@ -79,6 +83,7 @@ public final class RobotContainer {
   public RobotContainer() {
     initSubsystems();
     autoChooser = AutoBuilder.buildAutoChooser();
+    initManualAutos();
     SmartDashboard.putData("Auto Chooser", autoChooser);
     // SignalLogger.setPath("/ctre-logs/");
     SignalLogger.start();
@@ -86,6 +91,11 @@ public final class RobotContainer {
       configureBindings();
     else if (RobotBase.isSimulation())
       configureSimBindings();
+    m_ElevatorSubsystem.setDefaultCommand(m_ElevatorSubsystem.runSpeed(m_Controller::getLeftY));
+  }
+  
+  private void initManualAutos() {
+    autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityX(-1)).withTimeout(2));
   }
 
   private void initSubsystems() {

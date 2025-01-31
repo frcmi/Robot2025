@@ -30,7 +30,7 @@ public final class Constants {
         // If true, data won't be sent over network even when not connected to FMS
         public static final boolean disableNetworkLogging = false;
         // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
-        public static final boolean disableDatalog = true;
+        public static final boolean disableDatalog = false;
         // Prefix in NetworkTables, must end with a '/'
         public static final String tabPrefix = "UltraLog/";
         // How often to re-check if the FMS is connected (and disable network logging if so)
@@ -101,6 +101,9 @@ public final class Constants {
             .withGravityType(GravityTypeValue.Elevator_Static);
 
         // TODO: get conversion value(if this isn't it)
+        // TODO: figure out real conversion and heights
+        public static final double inchesPerRotation = 20;
+
         public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
         public static final double gearRatio = 8.0/1.0;
         public static final double elevatorInertia = 0.001; // In Kg Meters^2 

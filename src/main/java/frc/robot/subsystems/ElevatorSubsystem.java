@@ -53,6 +53,8 @@ import frc.robot.Constants.ElevatorConstants;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.DoubleSupplier;
+
 public class ElevatorSubsystem extends SubsystemBase {
     private double setHeight = ElevatorConstants.minElevatorHeight;
     // Left is main, right is follower
@@ -176,11 +178,16 @@ public class ElevatorSubsystem extends SubsystemBase {
         return Meters.of(elevatorMotorLeft.getPosition().getValueAsDouble() * ElevatorConstants.rotationsPerMeter);
     }
 
+
     UltraDoubleLog setPose = new UltraDoubleLog("Elevator/Set Rotations");
     UltraDoubleLog currentPose = new UltraDoubleLog("Elevator/Current Rotations");
     StatusSignal<Double> setPoseSignal = elevatorMotorLeft.getClosedLoopReference();
     StatusSignal<Angle> currentPoseSignal = elevatorMotorLeft.getPosition();
 
+
+    public Command runSpeed(DoubleSupplier speed) {
+        return run(() -> elevatorMotorLeft.set(speed.getAsDouble() * 0.1));
+    }
 
     @Override
     public void periodic() {
@@ -198,8 +205,6 @@ public class ElevatorSubsystem extends SubsystemBase {
         //     extendingMotor.setPosition(0);
         // }
     }
-
-    private double rotorPosition = 0;
 
     @Override
     public void simulationPeriodic() {
