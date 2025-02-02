@@ -135,15 +135,8 @@ public final class RobotContainer {
     //     point.withModuleDirection(new Rotation2d(-m_Controller.getLeftY(), -m_Controller.getLeftX()))
     // ));
 
-    // Run SysId routines when holding back/start and X/Y.
-    // Note that each routine should be run exactly once in a single log.
-    // m_Controller.back().and(m_Controller.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-    // m_Controller.back().and(m_Controller.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-    // m_Controller.start().and(m_Controller.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-    // m_Controller.start().and(m_Controller.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-
     // // reset the field-centric heading on left bumper press
-    // m_Controller.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+    m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
@@ -186,13 +179,23 @@ public final class RobotContainer {
   }
 
   private void configureTuningBindings() {
-    m_TuningController.a().whileTrue(m_ElevatorSubsystem.sysIdQuazistatic(SysIdRoutine.Direction.kForward));
-    m_TuningController.x().whileTrue(m_ElevatorSubsystem.sysIdQuazistatic(SysIdRoutine.Direction.kReverse));
-    m_TuningController.b().whileTrue(m_ElevatorSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_TuningController.y().whileTrue(m_ElevatorSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_TuningController.a().whileTrue(m_ElevatorSubsystem.sysIdQuazistatic(SysIdRoutine.Direction.kForward));
+    // m_TuningController.x().whileTrue(m_ElevatorSubsystem.sysIdQuazistatic(SysIdRoutine.Direction.kReverse));
+    // m_TuningController.b().whileTrue(m_ElevatorSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_TuningController.y().whileTrue(m_ElevatorSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+  
+    //  Run SysId routines when holding back/start and X/Y.
+    // Note that each routine should be run exactly once in a single log.
+    m_TuningController.back().and(m_TuningController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+    m_TuningController.back().and(m_TuningController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+    m_TuningController.start().and(m_TuningController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+    m_TuningController.start().and(m_TuningController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
   }
 
   public Command getAutonomousCommand() {
-    return autoChooser.getSelected();
+    return Commands.runOnce(() -> {
+      drivetrain.orchestra.play();
+    });
+    // return autoChooser.getSelected();
   }
 }

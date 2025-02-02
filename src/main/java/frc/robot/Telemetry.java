@@ -4,15 +4,10 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 
 import frc.lib.ultralogger.*;
 
@@ -27,6 +22,10 @@ public class Telemetry {
     private final UltraDoubleLog driveTimestamp = new UltraDoubleLog(swervePrefix + "Timestamp");
     private final UltraDoubleLog driveOdometryFrequency = new UltraDoubleLog(swervePrefix + "OdometryFrequency");
 
+
+    private final UltraStructArrayLog<SwerveModuleState> azimuthNormalizedStates = new UltraStructArrayLog<>(swervePrefix + "AzimuthNormalizedStates", SwerveModuleState.struct);
+    private final UltraStructArrayLog<SwerveModuleState> azimuthNormalizedTargets = new UltraStructArrayLog<>(swervePrefix + "AzimuthNormalizedTargets", SwerveModuleState.struct);
+    
     /**
      * Construct a telemetry object, with the specified max speed of the robot
      * 
@@ -43,8 +42,25 @@ public class Telemetry {
         driveSpeeds.update(state.Speeds);
         driveModuleStates.update(state.ModuleStates);
         driveModuleTargets.update(state.ModuleTargets);
+        azimuthNormalizedStates.update(normalizeAngles(state.ModuleStates));
+        azimuthNormalizedTargets.update(normalizeAngles(state.ModuleTargets));
         driveModulePositions.update(state.ModulePositions);
         driveTimestamp.update(state.Timestamp);
         driveOdometryFrequency.update(1.0 / state.OdometryPeriod);
+    }
+
+    public SwerveModuleState[] normalizeAngles(SwerveModuleState[] states) {
+        SwerveModuleState[] newStates = states.clone();
+        for (int i = 0; i < newStates.length; i++) {
+            SwerveModuleState state = newStates[i];
+            double angle = state.angle.getDegrees();
+            if (state.speedMetersPerSecond < 0) {
+                angle += 180;
+                newStates[i].speedMetersPerSecond *= -1;
+            }
+            newStates[i].angle = Rotation2d.fromDegrees((angle % 360 + 360) % 180);
+        }
+
+        return newStates;
     }
 }
