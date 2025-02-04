@@ -15,12 +15,14 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.BotType;
+import frc.robot.Constants.LedConstants;
 
 public class LEDSubsystem extends SubsystemBase {
-    private final AddressableLED led = new AddressableLED(1);
-    private final AddressableLEDBuffer ledBuffer = new AddressableLEDBuffer(10);
+    private final AddressableLED led = new AddressableLED(LedConstants.ledId);
+    private final AddressableLEDBuffer ledBuffer = new AddressableLEDBuffer(LedConstants.ledLength);
 
-    public LEDSubsystem() {
+    public LEDSubsystem(BotType bot) {
         led.setLength(ledBuffer.getLength());
         led.setData(ledBuffer);
         led.start();

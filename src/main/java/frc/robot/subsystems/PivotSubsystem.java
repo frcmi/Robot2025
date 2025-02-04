@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.robot.Constants.BotType;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Robot;
 
@@ -28,7 +29,7 @@ public class PivotSubsystem extends SubsystemBase {
     Alert limitPassedAlert = new Alert("Pivot motor limit has been exceeded! FIX IT!", AlertType.kError);
     TalonFX pivotMotor = new TalonFX(PivotConstants.motorID);
     Alert nopivotAlert = new Alert("Pivot motor not detected!", AlertType.kError);
-    PositionTorqueCurrentFOC motorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0)).withSlot(0);
+    PositionTorqueCurrentFOC motorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0));
     Slot0Configs slot0Configs = new Slot0Configs() //TODO: pls tune
         .withKP(PivotConstants.kP)
         .withKI(PivotConstants.kI)
@@ -47,7 +48,9 @@ public class PivotSubsystem extends SubsystemBase {
       DCMotor.getKrakenX60Foc(1)
     );
 
-    public PivotSubsystem(MechanismLigament2d elevatorLigament) {
+    public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
+        motorPositionControl.withSlot(bot.slotId);
+        
         pivotMotor.getConfigurator().apply(slot0Configs);
         pivotLigament2d = elevatorLigament.append(new MechanismLigament2d("wrist", 0.5, 90, 6, new Color8Bit(Color.kPurple)));
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);

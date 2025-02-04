@@ -20,8 +20,13 @@ public final class Constants {
             this.slotId = slotId;
         }
     }
-    // TODO: mac address switching <3 brandon
     public static final BotType botType = BotType.ALPHA_BOT;
+
+    public static class RobotDetectionConstants {
+        // Mac addresses of rios, google it or ask brandon
+        public static final String mainBotMacAddress = "";
+        public static final String alphaBotMacAddress = "";
+    }
 
     public static class TelemetryConstants {
         // DON'T ENABLE UNLESS ABSOLUTELY NEEDED
