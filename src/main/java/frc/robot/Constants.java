@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Angle;
 import static edu.wpi.first.units.Units.*;
 
@@ -78,11 +79,16 @@ public final class Constants {
 
         public static final Angle absoluteEncoderOffset = Degrees.of(0);
 
-        public static final double floorHeight = 0;
+        public static final double rotationsBeforeZero = 1.5;
+        // this is a place holder until we can figure out what the real number of rotation is
+        public static final double rotationsBeforeMaxHeight = 0.0;
+        public static final double floorHeight = rotationsBeforeZero - 0.5;
         public static final double onCoralHeight = 0.3;
         public static final double reefOneHeight = 0.8;
         public static final double reefTwoHeight = 1.0;
         public static final double bargeHeight = 1.6;
+        public static final double slowVoltageDown = -0.32;
+        public static final double slowVoltageUp = 0.32;
 
         public static final int slotId = 1;
 

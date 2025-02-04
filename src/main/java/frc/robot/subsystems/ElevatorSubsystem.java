@@ -160,6 +160,41 @@ public class ElevatorSubsystem extends SubsystemBase {
         return Meters.of(elevatorMotorLeft.getPosition().getValueAsDouble() * ElevatorConstants.rotationsPerMeter);
     }
 
+    public boolean isCurrentSpiked(){
+        return elevatorMotorLeft.getStatorCurrent().getValueAsDouble() > 1.0;
+    }
+
+    public boolean isRotationsAlmostAtZero(){
+        return elevatorMotorLeft.getPosition().getValueAsDouble() <= ElevatorConstants.rotationsBeforeZero;
+    }
+
+    public Command driveWithSlowVoltageDown(){
+        return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageDown)));
+    }
+
+    public Command stop(){
+        return run(() -> elevatorMotorLeft.setControl(new VoltageOut(0).withLimitReverseMotion(true)));
+    }
+
+    public Command zeroElevatorDown(){
+        return goToFloorHeightCommand().until(() -> isRotationsAlmostAtZero()).andThen(driveWithSlowVoltageDown())
+        .until(() -> isCurrentSpiked()).andThen(stop());
+    }
+
+    public boolean isRotationsAlmostAtMax(){
+        return elevatorMotorLeft.getPosition().getValueAsDouble() >= ElevatorConstants.rotationsBeforeMaxHeight;
+    }
+
+    public Command driveWithSlowVoltageUp(){
+        return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageUp)));
+    }
+
+    // this command will definently be changed due to how the elevator needs to be slowed down
+    public Command zeroElevatorUp(){
+        return goToBargeHeightCommand().until(() -> isRotationsAlmostAtMax()).andThen(driveWithSlowVoltageUp())
+        .until(() -> isCurrentSpiked()).andThen(stop());
+    }
+
     UltraDoubleLog setPose = new UltraDoubleLog("Elevator/Set Rotations");
     UltraDoubleLog currentPose = new UltraDoubleLog("Elevator/Current Rotations");
     StatusSignal<Double> setPoseSignal = elevatorMotorLeft.getClosedLoopReference();
