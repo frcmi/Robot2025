@@ -75,6 +75,9 @@ public final class Constants {
     }
 
     public static class ElevatorConstants {
+        public static final int magneticLimitSwitchID = 19;
+
+        public static final double elevatorMidpoint = 25d; // does not need to be precise
 
         public static final int absoluteEncoderChannel = 0;
         public static final int limitSwitchChannel = 1;

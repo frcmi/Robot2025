@@ -16,6 +16,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -76,6 +77,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private final PositionTorqueCurrentFOC elevatorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0));
     private final VoltageOut elevatorVoltageControl = new VoltageOut(0).withEnableFOC(true);
+
+    private final DigitalInput magneticLimitSwitch = new DigitalInput(ElevatorConstants.magneticLimitSwitchID);
 
     // there will be at least one limit switch and an encoder to track the position of the elevator
     public ElevatorSubsystem(BotType bot) {
@@ -160,39 +163,39 @@ public class ElevatorSubsystem extends SubsystemBase {
         return Meters.of(elevatorMotorLeft.getPosition().getValueAsDouble() * ElevatorConstants.rotationsPerMeter);
     }
 
-    public boolean isCurrentSpiked(){
+    public boolean isCurrentSpiked() {
         return elevatorMotorLeft.getStatorCurrent().getValueAsDouble() > 1.0;
     }
 
-    public boolean isRotationsAlmostAtZero(){
+    public boolean isRotationsAlmostAtZero() {
         return elevatorMotorLeft.getPosition().getValueAsDouble() <= ElevatorConstants.rotationsBeforeZero;
     }
 
-    public Command driveWithSlowVoltageDown(){
+    public Command driveWithSlowVoltageDown() {
         return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageDown)));
     }
 
-    public Command stop(){
+    public Command stop() {
         return run(() -> elevatorMotorLeft.setControl(new VoltageOut(0).withLimitReverseMotion(true)));
     }
 
-    public Command zeroElevatorDown(){
+    public Command zeroElevatorDown() {
         return goToFloorHeightCommand().until(() -> isRotationsAlmostAtZero()).andThen(driveWithSlowVoltageDown())
-        .until(() -> isCurrentSpiked()).andThen(stop());
+        .until(() -> { return isCurrentSpiked() || magneticLimitSwitch.get(); }).andThen(stop());
     }
 
-    public boolean isRotationsAlmostAtMax(){
+    public boolean isRotationsAlmostAtMax() {
         return elevatorMotorLeft.getPosition().getValueAsDouble() >= ElevatorConstants.rotationsBeforeMaxHeight;
     }
 
-    public Command driveWithSlowVoltageUp(){
+    public Command driveWithSlowVoltageUp() {
         return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageUp)));
     }
 
     // this command will definently be changed due to how the elevator needs to be slowed down
-    public Command zeroElevatorUp(){
+    public Command zeroElevatorUp() {
         return goToBargeHeightCommand().until(() -> isRotationsAlmostAtMax()).andThen(driveWithSlowVoltageUp())
-        .until(() -> isCurrentSpiked()).andThen(stop());
+        .until(() -> { return isCurrentSpiked() || magneticLimitSwitch.get(); }).andThen(stop());
     }
 
     UltraDoubleLog setPose = new UltraDoubleLog("Elevator/Set Rotations");
@@ -212,10 +215,10 @@ public class ElevatorSubsystem extends SubsystemBase {
         
         noelevAlert.set(!elevatorMotorLeft.isAlive());
         
-        // TODO: brandon says he'll fix this
-        // if (limitSwitch.get()) {
-        //     extendingMotor.setPosition(0);
-        // }
+        if (magneticLimitSwitch.get()) {
+            driveWithVoltage(Volts.of(0));
+            System.out.println("Elevator went past limit switch");
+        }
     }
 
     @Override
