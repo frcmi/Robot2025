@@ -1,7 +1,5 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Angle;
 import static edu.wpi.first.units.Units.*;
 
@@ -21,12 +19,11 @@ public final class Constants {
             this.slotId = slotId;
         }
     }
-    public static final BotType botType = BotType.ALPHA_BOT;
 
     public static class RobotDetectionConstants {
         // Mac addresses of rios, google it or ask brandon
         public static final String mainBotMacAddress = "";
-        public static final String alphaBotMacAddress = "";
+        public static final String alphaBotMacAddress = "im typing this out because the 2 mac addresses cant be the same, if they are the switch case throws and error, just make sure you change this once you get the mac address from the bots (its ok to delete this). This messages only purpose in life is to ensure its sibling-address can remain in its pure empty form. Just think about that for a second. This address has become this disgusting mess of word soup just to maintain the purity of the above address. Its making the ultimate sacrifice- becoming a horrific mess in the name of the main bot. What makes the main bot have priotity over the alpha bot? Sure its used more, but why does that make it more important? What about being used in a competition causes it to have more privellage than the alpha bot? ok yep? ok thank you.";
     }
 
     public static class TelemetryConstants {
@@ -47,6 +44,11 @@ public final class Constants {
         public static final int beambreakChannel = 2;
         public static final int topMotorId = 0;
         public static final int bottomMotorId = 0;
+    }
+
+    public static class LEDConstants {
+        public static final int ledID = 0;
+        public static final int ledLength = 10;
     }
 
     public static class PivotConstants {

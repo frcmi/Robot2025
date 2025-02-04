@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Robot;
@@ -50,7 +49,7 @@ public class PivotSubsystem extends SubsystemBase {
 
     public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
         motorPositionControl.withSlot(bot.slotId);
-        
+
         pivotMotor.getConfigurator().apply(slot0Configs);
         pivotLigament2d = elevatorLigament.append(new MechanismLigament2d("wrist", 0.5, 90, 6, new Color8Bit(Color.kPurple)));
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);

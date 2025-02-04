@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import java.security.AlgorithmParameterGenerator;
-
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -14,7 +12,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -30,18 +27,10 @@ import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest;
-
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraDoubleLog;
+import frc.robot.Constants.BotType;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -64,12 +53,14 @@ public final class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+    public final BotType botType = RobotDiscoverer.getRobot();
+
 //   private SwerveSubsystem m_Swerve;
   private VisionSubsystem m_Vision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
-  private ClawSubsystem m_ClawSubsystem = new ClawSubsystem();
-  private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem();
-  private PivotSubsystem m_PivotSubsystem = new PivotSubsystem(m_ElevatorSubsystem.elevator);
+  private ClawSubsystem m_ClawSubsystem = new ClawSubsystem(botType);
+  private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem(botType);
+  private PivotSubsystem m_PivotSubsystem = new PivotSubsystem(botType, m_ElevatorSubsystem.elevator);
 
   private int algaeLevel = 0;
   private UltraDoubleLog levelLog = new UltraDoubleLog("Algae Level");
