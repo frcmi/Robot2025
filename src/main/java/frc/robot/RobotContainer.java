@@ -28,7 +28,6 @@ import frc.robot.subsystems.PivotSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
 import frc.robot.generated.TunerConstants;
@@ -66,11 +65,14 @@ public final class RobotContainer {
   private UltraDoubleLog levelLog = new UltraDoubleLog("Algae Level");
 
   private final SendableChooser<Command> autoChooser;
+  private final SysIdChooser sysIdChooser = new SysIdChooser(drivetrain, m_ElevatorSubsystem, m_PivotSubsystem);
 
   public RobotContainer() {
     initSubsystems();
     autoChooser = AutoBuilder.buildAutoChooser();
+
     SmartDashboard.putData("Auto Chooser", autoChooser);
+    
     // SignalLogger.setPath("/ctre-logs/");
     SignalLogger.start();
     if (RobotBase.isReal())
@@ -167,10 +169,10 @@ public final class RobotContainer {
   }
 
   private void configureTuningBindings() {
-    m_TuningController.a().whileTrue(m_ElevatorSubsystem.sysIdQuazistatic(SysIdRoutine.Direction.kForward));
-    m_TuningController.x().whileTrue(m_ElevatorSubsystem.sysIdQuazistatic(SysIdRoutine.Direction.kReverse));
-    m_TuningController.b().whileTrue(m_ElevatorSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_TuningController.y().whileTrue(m_ElevatorSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_TuningController.a().whileTrue(sysIdChooser.sysIdDynamicForward());
+    m_TuningController.x().whileTrue(sysIdChooser.sysIdDynamicReverse());
+    m_TuningController.b().whileTrue(sysIdChooser.sysIdQuasistaticForward());
+    m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
   }
 
   public Command getAutonomousCommand() {

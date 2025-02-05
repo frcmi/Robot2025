@@ -45,7 +45,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final TalonFXSimState simState = elevatorMotorLeft.getSimState();
     Alert noelevAlert = new Alert("Elevator motor not detected!", AlertType.kError);
 
-    SysIdRoutine sysIdRoutine = new SysIdRoutine(
+    public final SysIdRoutine elevatorSysIdRoutine = new SysIdRoutine(
         new SysIdRoutine.Config(
             Volts.of(1).per(Seconds),
             Volts.of(3),
@@ -150,11 +150,11 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public Command sysIdQuazistatic(SysIdRoutine.Direction dir) {
-        return sysIdRoutine.quasistatic(dir);
+        return elevatorSysIdRoutine.quasistatic(dir);
     }
 
     public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return sysIdRoutine.dynamic(dir);
+        return elevatorSysIdRoutine.dynamic(dir);
     }
 
     /** Height is relative to bottom of motor
