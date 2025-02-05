@@ -91,19 +91,19 @@ public class PivotSubsystem extends SubsystemBase {
                 return goToFloorAngle();
         }
     }
-    private Command goToFloorAngle() {
+    public Command goToFloorAngle() {
         return setAngle(PivotConstants.floorAngle);
     }
-    private Command goToOnCoralAngle() {
+    public Command goToOnCoralAngle() {
         return setAngle(PivotConstants.onCoralAngle);
     }
-    private Command goToReefOneAngle() {
+    public Command goToReefOneAngle() {
         return setAngle(PivotConstants.reefOneAngle);
     }
-    private Command goToReefTwoAngle() {
+    public Command goToReefTwoAngle() {
         return setAngle(PivotConstants.reefTwoAngle);
     }
-    private Command goToBargeAngle() {
+    public Command goToBargeAngle() {
         return setAngle(PivotConstants.bargeAngle);
     }
 

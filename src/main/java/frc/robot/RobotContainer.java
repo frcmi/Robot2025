@@ -13,6 +13,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -21,6 +22,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.ClawSubsystem;
@@ -51,12 +53,12 @@ public final class RobotContainer {
 
     private final CommandXboxController m_Controller = new CommandXboxController(0);
     private final CommandXboxController m_TuningController = new CommandXboxController(4);
+    private final CommandJoystick m_OperatorController = new CommandJoystick(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     public final BotType botType = RobotDiscoverer.getRobot();
 
-//   private SwerveSubsystem m_Swerve;
   private VisionSubsystem m_Vision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClawSubsystem m_ClawSubsystem = new ClawSubsystem(botType);
@@ -159,11 +161,12 @@ public final class RobotContainer {
     new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
 
     // TODO: add elevator and pivot setpoints to intake/shoot
-    m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intake());
-    m_Controller.rightTrigger().whileTrue(m_ClawSubsystem.shoot());
 
     m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
     m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
+
+    // TODO: add elevator and pivot setpoints to intake/shoot
+
 
     // when stowing the arm, use the command that goes to the floor position
     // m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition().andThen(m_ElevatorSubsystem.goToFloorHeightCommand()));
@@ -187,11 +190,26 @@ public final class RobotContainer {
     // m_Controller.button(4).onTrue(m_ElevatorSubsystem.goToBargeHeightCommand().andThen(m_PivotSubsystem.goToBargePosition()));
   }
 
+  private void configureOperatorBindings() {
+    m_OperatorController.button(1).whileTrue(m_ClawSubsystem.intake());
+    m_OperatorController.button(2).whileTrue(m_ClawSubsystem.shoot());
+    m_OperatorController.button(3).whileTrue(m_ElevatorSubsystem.goToReefOneHeightCommand());
+    m_OperatorController.button(3).whileTrue(m_PivotSubsystem.goToReefOneAngle());
+    m_OperatorController.button(4).whileTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand());
+    m_OperatorController.button(4).whileTrue(m_PivotSubsystem.goToReefTwoAngle());
+    m_OperatorController.button(5).whileTrue(m_ElevatorSubsystem.goToBargeHeightCommand());
+    m_OperatorController.button(5).onTrue(m_PivotSubsystem.goToBargeAngle());
+    m_OperatorController.button(6).whileTrue(m_ElevatorSubsystem.goToFloorHeightCommand());
+    m_OperatorController.button(6).whileTrue(m_PivotSubsystem.goToFloorAngle());
+    m_OperatorController.button(7).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand());
+    m_OperatorController.button(7).onTrue(m_PivotSubsystem.goToOnCoralAngle());
+  }
+
   private void configureTuningBindings() {
-    m_Controller.a().whileTrue(sysIdChooser.sysIdDynamicForward());
-    m_Controller.x().whileTrue(sysIdChooser.sysIdDynamicReverse());
-    m_Controller.b().whileTrue(sysIdChooser.sysIdQuasistaticForward());
-    m_Controller.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
+    m_TuningController.a().whileTrue(sysIdChooser.sysIdDynamicForward());
+    m_TuningController.x().whileTrue(sysIdChooser.sysIdDynamicReverse());
+    m_TuningController.b().whileTrue(sysIdChooser.sysIdQuasistaticForward());
+    m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
   }
 
   public Command getAutonomousCommand() {
