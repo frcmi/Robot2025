@@ -43,7 +43,7 @@ public final class PhotonlibCamera implements Camera {
         public void reset(Pose2d pose) {
             s_System.resetRobotPose(pose);
         }
-        
+
     }
 
     private Optional<Double> m_LastTimestamp;
@@ -71,7 +71,7 @@ public final class PhotonlibCamera implements Camera {
 
         for (var target : result.getTargets()) {
             int id = target.getFiducialId();
-            if (id < 1 || id > 8) {
+            if (id < 1 || id > 16) {
                 return false;
             }
         }
@@ -91,11 +91,7 @@ public final class PhotonlibCamera implements Camera {
             return;
         }
 
-        var targets = cameraResult.getTargets();
-        var firstTarget = targets.get(0);
-
         result.isNew = true;
-        result.targetID = firstTarget.getFiducialId();
         result.pose = pose.estimatedPose.toPose2d();
         result.timestamp = pose.timestampSeconds;
 
@@ -103,7 +99,11 @@ public final class PhotonlibCamera implements Camera {
         result.maxDistance = Double.MIN_VALUE;
         result.maxAmbiguity = Double.MIN_VALUE;
 
-        for (var target : targets) {
+        var targets = cameraResult.getTargets();
+        result.tags = new Tag[targets.size()];
+
+        for (int i = 0; i < targets.size(); i++) {
+            var target = targets.get(i);
             var transform = target.getBestCameraToTarget();
             double distance = transform.getTranslation().getNorm();
             double ambiguity = target.getPoseAmbiguity();
@@ -111,6 +111,11 @@ public final class PhotonlibCamera implements Camera {
             result.minDistance = Math.min(result.minDistance, distance);
             result.maxDistance = Math.max(result.maxDistance, distance);
             result.maxAmbiguity = Math.max(result.maxAmbiguity, ambiguity);
+
+            var tag = new Tag();
+            tag.ID = target.getFiducialId();
+            tag.cameraDistance = distance;
+            result.tags[i] = tag;
         }
 
         m_LastTimestamp = Optional.of(pose.timestampSeconds);
@@ -149,9 +154,8 @@ public final class PhotonlibCamera implements Camera {
         properties.setAvgLatencyMs(specification.meanLatency);
         properties.setLatencyStdDevMs(specification.stdDevLatency);
         properties.setCalibError(specification.meanError, specification.stdDevError);
-        
+
         var sim = new PhotonCameraSim(m_Camera, properties);
         return new PhotonlibSimulator(sim, m_Offset);
     }
-
 }
