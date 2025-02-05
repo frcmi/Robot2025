@@ -21,7 +21,7 @@ public class RobotDiscoverer {
                     for (int i = 0; i < macAddress.length; i++) {
                         addressStr = addressStr.concat(
                             String.format("%02X", macAddress[i])
-                            .concat((i < macAddress.length-1) ? "." : ""));
+                            .concat((i < macAddress.length-1) ? ":" : ""));
                     }
                     switch (addressStr) {
                         case RobotDetectionConstants.mainBotMacAddress:

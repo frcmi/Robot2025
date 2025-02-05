@@ -22,8 +22,8 @@ public final class Constants {
 
     public static class RobotDetectionConstants {
         // Mac addresses of rios, google it or ask brandon
-        public static final String mainBotMacAddress = "";
-        public static final String alphaBotMacAddress = "im typing this out because the 2 mac addresses cant be the same, if they are the switch case throws and error, just make sure you change this once you get the mac address from the bots (its ok to delete this). This messages only purpose in life is to ensure its sibling-address can remain in its pure empty form. Just think about that for a second. This address has become this disgusting mess of word soup just to maintain the purity of the above address. Its making the ultimate sacrifice- becoming a horrific mess in the name of the main bot. What makes the main bot have priotity over the alpha bot? Sure its used more, but why does that make it more important? What about being used in a competition causes it to have more privellage than the alpha bot? ok yep? ok thank you.";
+        public static final String mainBotMacAddress = "00:80:2F:40:6D:81";
+        public static final String alphaBotMacAddress = "";
     }
 
     public static class TelemetryConstants {
