@@ -1,15 +1,24 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.CommandSupplier;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
 
 public class SysIdChooser {
     private final SendableChooser<SysIdRoutine> sysIdChooser = new SendableChooser<>();
+    
+    private CommandSupplier dynamicForward = new CommandSupplier();
+    private CommandSupplier dynamicReverse = new CommandSupplier();
+    private CommandSupplier quasistaticForward = new CommandSupplier();
+    private CommandSupplier quasistaticReverse = new CommandSupplier();
 
     public SysIdChooser(CommandSwerveDrivetrain commandSwerveDrivetrain, 
                         ElevatorSubsystem elevatorSubsystem,
@@ -20,19 +29,28 @@ public class SysIdChooser {
         sysIdChooser.addOption("Elevator", elevatorSubsystem.elevatorSysIdRoutine);
         sysIdChooser.addOption("Pivot", pivotSubsystem.pivotSysIdRoutine);
 
+        sysIdChooser.onChange(this::updateCommands);
+
         SmartDashboard.putData("SysID Routine", sysIdChooser);
     }
 
-    public Command sysIdDynamicForward() {
-        return sysIdChooser.getSelected().dynamic(SysIdRoutine.Direction.kForward);
+    public void updateCommands(SysIdRoutine routine) {
+        dynamicForward.setCommand(sysIdChooser.getSelected().dynamic(SysIdRoutine.Direction.kForward));
+        dynamicReverse.setCommand(sysIdChooser.getSelected().dynamic(SysIdRoutine.Direction.kReverse));
+        quasistaticForward.setCommand(sysIdChooser.getSelected().quasistatic(SysIdRoutine.Direction.kForward));
+        quasistaticReverse.setCommand(sysIdChooser.getSelected().quasistatic(SysIdRoutine.Direction.kReverse));
+    } 
+
+    public CommandSupplier sysIdDynamicForward() {
+        return dynamicForward;
     }
-    public Command sysIdDynamicReverse() {
-        return sysIdChooser.getSelected().dynamic(SysIdRoutine.Direction.kReverse);
+    public CommandSupplier sysIdDynamicReverse() {
+        return dynamicReverse;
     }
-    public Command sysIdQuasistaticForward() {
-        return sysIdChooser.getSelected().quasistatic(SysIdRoutine.Direction.kForward);
+    public CommandSupplier sysIdQuasistaticForward() {
+        return quasistaticForward;
     }
-    public Command sysIdQuasistaticReverse() {
-        return sysIdChooser.getSelected().quasistatic(SysIdRoutine.Direction.kReverse);
+    public CommandSupplier sysIdQuasistaticReverse() {
+        return quasistaticReverse;
     }
 }

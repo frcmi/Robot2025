@@ -12,6 +12,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -67,8 +69,25 @@ public final class RobotContainer {
   private final SendableChooser<Command> autoChooser;
   private final SysIdChooser sysIdChooser = new SysIdChooser(drivetrain, m_ElevatorSubsystem, m_PivotSubsystem);
 
+  Alert onMainAlert = new Alert("Main Bot", AlertType.kInfo);
+  Alert onAlphaAlert = new Alert("Alpha Bot", AlertType.kInfo);
+  Alert onSimAlert = new Alert("Sim Bot", AlertType.kInfo);
+
   public RobotContainer() {
     initSubsystems();
+
+    switch (botType) {
+      case MAIN_BOT:
+        onMainAlert.set(true);
+        break;
+      case ALPHA_BOT:
+        onAlphaAlert.set(true);
+        break;
+      case SIM_BOT:
+        onSimAlert.set(true);
+        break;
+    }
+
     autoChooser = AutoBuilder.buildAutoChooser();
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -169,10 +188,10 @@ public final class RobotContainer {
   }
 
   private void configureTuningBindings() {
-    m_TuningController.a().whileTrue(sysIdChooser.sysIdDynamicForward());
-    m_TuningController.x().whileTrue(sysIdChooser.sysIdDynamicReverse());
-    m_TuningController.b().whileTrue(sysIdChooser.sysIdQuasistaticForward());
-    m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
+    m_Controller.a().whileTrue(sysIdChooser.sysIdDynamicForward());
+    m_Controller.x().whileTrue(sysIdChooser.sysIdDynamicReverse());
+    m_Controller.b().whileTrue(sysIdChooser.sysIdQuasistaticForward());
+    m_Controller.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
   }
 
   public Command getAutonomousCommand() {

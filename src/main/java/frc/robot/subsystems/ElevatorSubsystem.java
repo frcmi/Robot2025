@@ -217,7 +217,6 @@ public class ElevatorSubsystem extends SubsystemBase {
         
         if (magneticLimitSwitch.get()) {
             driveWithVoltage(Volts.of(0));
-            System.out.println("Elevator went past limit switch");
         }
     }
 
