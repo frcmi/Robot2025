@@ -46,6 +46,10 @@ public final class Constants {
         public static final int bottomMotorId = 0;
     }
 
+    public static class ClimberCostansts {
+        public static final int climberMotorID = 52;
+    }
+
     public static class LEDConstants {
         public static final int ledID = 0;
         public static final int ledLength = 10;

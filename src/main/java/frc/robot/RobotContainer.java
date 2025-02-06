@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.ClawSubsystem;
+import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
@@ -61,6 +62,7 @@ public final class RobotContainer {
 
   private VisionSubsystem m_Vision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
+  private ClimberSubsystem m_ClimberSubsystem = new ClimberSubsystem();
   private ClawSubsystem m_ClawSubsystem = new ClawSubsystem(botType);
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem(botType);
   private PivotSubsystem m_PivotSubsystem = new PivotSubsystem(botType, m_ElevatorSubsystem.elevator);
@@ -161,6 +163,10 @@ public final class RobotContainer {
     new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
 
     // TODO: add elevator and pivot setpoints to intake/shoot
+    m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intake());
+    m_Controller.rightTrigger().whileTrue(m_ClawSubsystem.shoot());
+    m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
+    m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
 
     m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
     m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
