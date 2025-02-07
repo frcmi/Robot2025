@@ -77,6 +77,8 @@ public final class RobotContainer {
   Alert onAlphaAlert = new Alert("Alpha Bot", AlertType.kInfo);
   Alert onSimAlert = new Alert("Sim Bot", AlertType.kInfo);
 
+  RadioLogger radioLogger = new RadioLogger();
+
   public RobotContainer() {
     initSubsystems();
 

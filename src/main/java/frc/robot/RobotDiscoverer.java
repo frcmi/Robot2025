@@ -17,6 +17,11 @@ public class RobotDiscoverer {
                 NetworkInterface netInterface = netInterfaces.nextElement();
                 if (netInterface != null) {
                     byte[] macAddress = netInterface.getHardwareAddress();
+                    
+                    if (macAddress == null) {
+                        continue;
+                    }
+
                     String addressStr = "";
                     for (int i = 0; i < macAddress.length; i++) {
                         addressStr = addressStr.concat(

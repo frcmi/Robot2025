@@ -20,8 +20,6 @@ public class ClimberSubsystem extends SubsystemBase {
   private final UltraSupplierLog climberMotorTempPublisher = new UltraSupplierLog("Climber motor temperature", climberMotor.getDeviceTemp()::getValueAsDouble);
   Alert noclimberAlert = new Alert("Climber motor not detected!", AlertType.kError);
 
-  public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
-
   public ClimberSubsystem() {
     climberMotor.setNeutralMode(NeutralModeValue.Brake);
 
