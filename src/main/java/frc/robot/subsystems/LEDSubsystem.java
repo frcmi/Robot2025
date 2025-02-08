@@ -15,10 +15,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.LEDConstants;
 
 public class LEDSubsystem extends SubsystemBase {
-    private final AddressableLED led = new AddressableLED(1);
-    private final AddressableLEDBuffer ledBuffer = new AddressableLEDBuffer(10);
+    private final AddressableLED led = new AddressableLED(LEDConstants.ledID);
+    private final AddressableLEDBuffer ledBuffer = new AddressableLEDBuffer(LEDConstants.ledLength);
 
     public LEDSubsystem() {
         led.setLength(ledBuffer.getLength());

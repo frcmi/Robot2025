@@ -1,7 +1,9 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
@@ -9,6 +11,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
@@ -18,7 +21,9 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.robot.Constants.BotType;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Robot;
 
@@ -28,7 +33,8 @@ public class PivotSubsystem extends SubsystemBase {
     Alert limitPassedAlert = new Alert("Pivot motor limit has been exceeded! FIX IT!", AlertType.kError);
     TalonFX pivotMotor = new TalonFX(PivotConstants.motorID);
     Alert nopivotAlert = new Alert("Pivot motor not detected!", AlertType.kError);
-    PositionTorqueCurrentFOC motorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0)).withSlot(0);
+    private final PositionTorqueCurrentFOC motorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0));
+    private final VoltageOut motorVoltageControl = new VoltageOut(Volts.of(0)).withEnableFOC(true);
     Slot0Configs slot0Configs = new Slot0Configs() //TODO: pls tune
         .withKP(PivotConstants.kP)
         .withKI(PivotConstants.kI)
@@ -47,7 +53,19 @@ public class PivotSubsystem extends SubsystemBase {
       DCMotor.getKrakenX60Foc(1)
     );
 
-    public PivotSubsystem(MechanismLigament2d elevatorLigament) {
+    public final SysIdRoutine pivotSysIdRoutine = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            Volts.of(1).per(Seconds),
+            Volts.of(3),
+            Seconds.of(10),
+            (state) -> SignalLogger.writeString("state", state.toString())
+        ), 
+        new Mechanism(this::driveWithVoltage, null, this)
+    );
+
+    public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
+        motorPositionControl.withSlot(bot.slotId);
+
         pivotMotor.getConfigurator().apply(slot0Configs);
         pivotLigament2d = elevatorLigament.append(new MechanismLigament2d("wrist", 0.5, 90, 6, new Color8Bit(Color.kPurple)));
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);
@@ -73,20 +91,24 @@ public class PivotSubsystem extends SubsystemBase {
                 return goToFloorAngle();
         }
     }
-    private Command goToFloorAngle() {
+    public Command goToFloorAngle() {
         return setAngle(PivotConstants.floorAngle);
     }
-    private Command goToOnCoralAngle() {
+    public Command goToOnCoralAngle() {
         return setAngle(PivotConstants.onCoralAngle);
     }
-    private Command goToReefOneAngle() {
+    public Command goToReefOneAngle() {
         return setAngle(PivotConstants.reefOneAngle);
     }
-    private Command goToReefTwoAngle() {
+    public Command goToReefTwoAngle() {
         return setAngle(PivotConstants.reefTwoAngle);
     }
-    private Command goToBargeAngle() {
+    public Command goToBargeAngle() {
         return setAngle(PivotConstants.bargeAngle);
+    }
+
+    private void driveWithVoltage(Voltage volts) {
+        pivotMotor.setControl(motorVoltageControl.withOutput(volts));
     }
 
     @Override

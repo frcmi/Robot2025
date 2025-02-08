@@ -3,52 +3,36 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.Slot2Configs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
-import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DigitalSource;
-import edu.wpi.first.wpilibj.DutyCycle;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.lib.ultralogger.UltraDoubleLog;
-import frc.robot.Constants;
-import frc.robot.RobotContainer;
+import frc.robot.Constants.BotType;
 import frc.robot.Constants.ElevatorConstants;
 
 import static edu.wpi.first.units.Units.*;
@@ -56,7 +40,6 @@ import static edu.wpi.first.units.Units.*;
 import java.util.function.DoubleSupplier;
 
 public class ElevatorSubsystem extends SubsystemBase {
-    private double setHeight = ElevatorConstants.minElevatorHeight;
     // Left is main, right is follower
     private final TalonFX elevatorMotorLeft = new TalonFX(9);
     private final TalonFX elevatorMotorRight = new TalonFX(10);
@@ -64,7 +47,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final TalonFXSimState simState = elevatorMotorLeft.getSimState();
     Alert noelevAlert = new Alert("Elevator motor not detected!", AlertType.kError);
 
-    SysIdRoutine sysIdRoutine = new SysIdRoutine(
+    public final SysIdRoutine elevatorSysIdRoutine = new SysIdRoutine(
         new SysIdRoutine.Config(
             Volts.of(1).per(Seconds),
             Volts.of(3),
@@ -94,11 +77,15 @@ public class ElevatorSubsystem extends SubsystemBase {
         true, 
         0.1);
 
-    private final PositionTorqueCurrentFOC elevatorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0)).withSlot(Constants.botType.slotId);
+    private final PositionTorqueCurrentFOC elevatorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0));
     private final VoltageOut elevatorVoltageControl = new VoltageOut(0).withEnableFOC(true);
 
+    private final DigitalInput magneticLimitSwitch = new DigitalInput(ElevatorConstants.magneticLimitSwitchID);
+
     // there will be at least one limit switch and an encoder to track the position of the elevator
-    public ElevatorSubsystem() {
+    public ElevatorSubsystem(BotType bot) {
+        elevatorPositionControl.withSlot(bot.slotId);
+
         elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
         elevatorMotorRight.setNeutralMode(NeutralModeValue.Brake);
 
@@ -144,32 +131,32 @@ public class ElevatorSubsystem extends SubsystemBase {
         }
     }
 
-    private Command goToFloorHeightCommand() {
+    public Command goToFloorHeightCommand() {
         return (extendArm(ElevatorConstants.floorHeight * ElevatorConstants.rotationsPerMeter));
     }
 
-    private Command goToOnCoralHeightCommand() {
+    public Command goToOnCoralHeightCommand() {
         return (extendArm(ElevatorConstants.onCoralHeight * ElevatorConstants.rotationsPerMeter));
     }
 
-    private Command goToReefOneHeightCommand() {
+    public Command goToReefOneHeightCommand() {
         return (extendArm(ElevatorConstants.reefOneHeight * ElevatorConstants.rotationsPerMeter));
     }
 
-    private Command goToReefTwoHeightCommand() {
+    public Command goToReefTwoHeightCommand() {
         return (extendArm(ElevatorConstants.reefTwoHeight * ElevatorConstants.rotationsPerMeter));
     }
 
-    private Command goToBargeHeightCommand() {
+    public Command goToBargeHeightCommand() {
         return (extendArm(ElevatorConstants.bargeHeight * ElevatorConstants.rotationsPerMeter));
     }
 
     public Command sysIdQuazistatic(SysIdRoutine.Direction dir) {
-        return sysIdRoutine.quasistatic(dir);
+        return elevatorSysIdRoutine.quasistatic(dir);
     }
 
     public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return sysIdRoutine.dynamic(dir);
+        return elevatorSysIdRoutine.dynamic(dir);
     }
 
     /** Height is relative to bottom of motor
@@ -178,6 +165,41 @@ public class ElevatorSubsystem extends SubsystemBase {
         return Meters.of(elevatorMotorLeft.getPosition().getValueAsDouble() * ElevatorConstants.rotationsPerMeter);
     }
 
+
+    public boolean isCurrentSpiked() {
+        return elevatorMotorLeft.getStatorCurrent().getValueAsDouble() > 1.0;
+    }
+
+    public boolean isRotationsAlmostAtZero() {
+        return elevatorMotorLeft.getPosition().getValueAsDouble() <= ElevatorConstants.rotationsBeforeZero;
+    }
+
+    public Command driveWithSlowVoltageDown() {
+        return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageDown)));
+    }
+
+    public Command stop() {
+        return run(() -> elevatorMotorLeft.setControl(new VoltageOut(0).withLimitReverseMotion(true)));
+    }
+
+    public Command zeroElevatorDown() {
+        return goToFloorHeightCommand().until(() -> isRotationsAlmostAtZero()).andThen(driveWithSlowVoltageDown())
+        .until(() -> { return isCurrentSpiked() || magneticLimitSwitch.get(); }).andThen(stop());
+    }
+
+    public boolean isRotationsAlmostAtMax() {
+        return elevatorMotorLeft.getPosition().getValueAsDouble() >= ElevatorConstants.rotationsBeforeMaxHeight;
+    }
+
+    public Command driveWithSlowVoltageUp() {
+        return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageUp)));
+    }
+
+    // this command will definently be changed due to how the elevator needs to be slowed down
+    public Command zeroElevatorUp() {
+        return goToBargeHeightCommand().until(() -> isRotationsAlmostAtMax()).andThen(driveWithSlowVoltageUp())
+        .until(() -> { return isCurrentSpiked() || magneticLimitSwitch.get(); }).andThen(stop());
+    }
 
     UltraDoubleLog setPose = new UltraDoubleLog("Elevator/Set Rotations");
     UltraDoubleLog currentPose = new UltraDoubleLog("Elevator/Current Rotations");
@@ -200,10 +222,9 @@ public class ElevatorSubsystem extends SubsystemBase {
         
         noelevAlert.set(!elevatorMotorLeft.isAlive());
         
-        // TODO: brandon says he'll fix this
-        // if (limitSwitch.get()) {
-        //     extendingMotor.setPosition(0);
-        // }
+        if (magneticLimitSwitch.get()) {
+            driveWithVoltage(Volts.of(0));
+        }
     }
 
     @Override

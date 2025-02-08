@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 
 import frc.robot.Robot;
 import frc.robot.vision.Camera;
+import frc.robot.vision.LimelightCamera;
 import frc.robot.vision.PhotonlibCamera;
 import frc.robot.vision.Camera.Result;
 import frc.robot.vision.Camera.Simulator;
@@ -21,7 +22,8 @@ public final class VisionSubsystem implements Subsystem {
     public static final double kMaxDistance = Units.feetToMeters(10);
 
     public static enum CameraType {
-        PHOTONVISION
+        PHOTONVISION,
+        LIMELIGHT
     }
 
     public static class CameraDescription {
@@ -61,6 +63,8 @@ public final class VisionSubsystem implements Subsystem {
         switch (desc.type) {
             case PHOTONVISION:
                 return new PhotonlibCamera(desc.name, desc.offset, layout);
+            case LIMELIGHT:
+                return new LimelightCamera(desc.name, desc.offset);
             default:
                 return null;
         }
@@ -78,8 +82,9 @@ public final class VisionSubsystem implements Subsystem {
 
             data.camera = createCamera(desc, layout);
             data.result = new Result();
+            data.sim = null;
 
-            if (Robot.isSimulation()) {
+            if (Robot.isSimulation() && desc.spec != null) {
                 data.sim = data.camera.createSimulator(desc.spec);
             }
         }
@@ -124,6 +129,10 @@ public final class VisionSubsystem implements Subsystem {
         var pose = m_Swerve.getState().Pose;
 
         for (var camera : m_Cameras) {
+            if (camera.sim == null) {
+                continue;
+            }
+
             camera.sim.update(pose, m_Frame);
         }
 

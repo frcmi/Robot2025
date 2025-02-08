@@ -1,6 +1,5 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import static edu.wpi.first.units.Units.*;
 
@@ -20,8 +19,12 @@ public final class Constants {
             this.slotId = slotId;
         }
     }
-    // TODO: mac address switching <3 brandon
-    public static final BotType botType = BotType.ALPHA_BOT;
+
+    public static class RobotDetectionConstants {
+        // Mac addresses of rios, google it or ask brandon
+        public static final String mainBotMacAddress = "00:80:2F:40:6D:81";
+        public static final String alphaBotMacAddress = "";
+    }
 
     public static class TelemetryConstants {
         // DON'T ENABLE UNLESS ABSOLUTELY NEEDED
@@ -41,6 +44,15 @@ public final class Constants {
         public static final int beambreakChannel = 2;
         public static final int topMotorId = 0;
         public static final int bottomMotorId = 0;
+    }
+
+    public static class ClimberCostansts {
+        public static final int climberMotorID = 52;
+    }
+
+    public static class LEDConstants {
+        public static final int ledID = 0;
+        public static final int ledLength = 10;
     }
 
     public static class PivotConstants {
@@ -67,17 +79,25 @@ public final class Constants {
     }
 
     public static class ElevatorConstants {
+        public static final int magneticLimitSwitchID = 19;
+
+        public static final double elevatorMidpoint = 25d; // does not need to be precise
 
         public static final int absoluteEncoderChannel = 0;
         public static final int limitSwitchChannel = 1;
 
         public static final Angle absoluteEncoderOffset = Degrees.of(0);
 
-        public static final double floorHeight = 0;
+        public static final double rotationsBeforeZero = 1.5;
+        // this is a place holder until we can figure out what the real number of rotation is
+        public static final double rotationsBeforeMaxHeight = 0.0;
+        public static final double floorHeight = rotationsBeforeZero - 0.5;
         public static final double onCoralHeight = 0.3;
         public static final double reefOneHeight = 0.8;
         public static final double reefTwoHeight = 1.0;
         public static final double bargeHeight = 1.6;
+        public static final double slowVoltageDown = -0.32;
+        public static final double slowVoltageUp = 0.32;
 
         public static final int slotId = 1;
 

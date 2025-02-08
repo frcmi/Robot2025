@@ -10,11 +10,15 @@ public interface Camera {
         public void reset(Pose2d pose);
     }
 
+    public static class Tag {
+        public int ID;
+        public double cameraDistance;
+    }
+
     public static class Result {
         public Pose2d pose;
-        public Transform3d cameraToTarget;
-        public int targetID;
         public double maxAmbiguity, maxDistance, minDistance;
+        public Tag[] tags;
         
         public boolean isNew;
         public double timestamp;
