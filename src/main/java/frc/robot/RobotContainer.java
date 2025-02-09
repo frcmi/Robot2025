@@ -1,3 +1,4 @@
+
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
@@ -35,6 +36,7 @@ import frc.robot.subsystems.VisionSubsystem;
 import edu.wpi.first.units.Units;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -165,8 +167,8 @@ public final class RobotContainer {
     new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
 
     // TODO: add elevator and pivot setpoints to intake/shoot
-    m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intake());
-    m_Controller.rightTrigger().whileTrue(m_ClawSubsystem.shoot());
+    m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intakeWithBeambreak());
+    m_Controller.rightTrigger().whileTrue(m_ClawSubsystem.shootWithBeambreak());
     m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
     m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
 
@@ -199,8 +201,8 @@ public final class RobotContainer {
   }
 
   private void configureOperatorBindings() {
-    m_OperatorController.button(1).whileTrue(m_ClawSubsystem.intake());
-    m_OperatorController.button(2).whileTrue(m_ClawSubsystem.shoot());
+    m_OperatorController.button(1).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
+    m_OperatorController.button(2).whileTrue(m_ClawSubsystem.shootWithBeambreak());
     m_OperatorController.button(3).whileTrue(m_ElevatorSubsystem.goToReefOneHeightCommand());
     m_OperatorController.button(3).whileTrue(m_PivotSubsystem.goToReefOneAngle());
     m_OperatorController.button(4).whileTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand());

@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 
 public final class Constants {
@@ -41,13 +42,15 @@ public final class Constants {
     }
 
     public static class ClawConstants {
-        public static final int beambreakChannel = 2;
-        public static final int topMotorId = 0;
-        public static final int bottomMotorId = 0;
+        public static final int beambreakChannel = 1;
+        public static final int motorControllerID = 23;
+        public static final double intakeSpeed = -0.5;
+        public static final double shootSpeed = 0.5;
+        public static final double stopSpeed = 0.0;
     }
 
     public static class ClimberCostansts {
-        public static final int climberMotorID = 52;
+        public static final int climberMotorID = 0;
     }
 
     public static class LEDConstants {

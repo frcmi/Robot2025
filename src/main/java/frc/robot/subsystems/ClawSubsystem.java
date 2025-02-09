@@ -6,8 +6,12 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraSupplierLog;
@@ -15,61 +19,61 @@ import frc.robot.Constants.BotType;
 import frc.robot.Constants.ClawConstants;
 
 public class ClawSubsystem extends SubsystemBase {
-  private final TalonFX topMotor = new TalonFX(ClawConstants.topMotorId);
-  private final TalonFX bottomMotor = new TalonFX(ClawConstants.bottomMotorId);
-
+  private final TalonFXS intakeMotor = new TalonFXS(ClawConstants.motorControllerID);
   private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw/Beambreak");
-  private final UltraSupplierLog topMotorSpeedPublisher = new UltraSupplierLog("Claw/Top motor speed", topMotor.getVelocity()::getValueAsDouble);
-  private final UltraSupplierLog bottomMotorSpeedPublisher = new UltraSupplierLog("Claw/Bottom motor speed", bottomMotor.getVelocity()::getValueAsDouble);
-  private final UltraSupplierLog topMotorTempPublisher = new UltraSupplierLog("Claw/Top motor temperature", topMotor.getDeviceTemp()::getValueAsDouble);
-  private final UltraSupplierLog bottomMotorTempPublisher = new UltraSupplierLog("Claw/Bottom motor temperature", bottomMotor.getDeviceTemp()::getValueAsDouble);
-  
+  private final UltraSupplierLog topMotorSpeedPublisher = new UltraSupplierLog("Claw/Intake motor speed", intakeMotor.getVelocity()::getValueAsDouble);
+  private final UltraSupplierLog topMotorTempPublisher = new UltraSupplierLog("Claw/Intake motor temperature", intakeMotor.getExternalMotorTemp()::getValueAsDouble);
   Alert notopAlert = new Alert("Top motor not detected!", AlertType.kError);
   Alert nobottomAlert = new Alert("Bottom motor not detected!", AlertType.kError);
 
   public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
   public ClawSubsystem(BotType bot) {
-    topMotor.setNeutralMode(NeutralModeValue.Brake);
-    bottomMotor.setNeutralMode(NeutralModeValue.Brake);
-    
-    // TODO: Change oppose master direction based on final claw design
-    bottomMotor.setControl(new Follower(topMotor.getDeviceID(), true));
+    TalonFXSConfiguration configure = new TalonFXSConfiguration();
+    configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
+    intakeMotor.getConfigurator().apply(configure);
 
-    setDefaultCommand(stop());
+    // setDefaultCommand(stop());
   }
 
+  public boolean isCurrentSpiked() {
+    return intakeMotor.getStatorCurrent().getValueAsDouble() > 1.0;
+}
+
   public Command stop() {
+    
     return run(() -> {
-        topMotor.set(0.0);
+        intakeMotor.set(ClawConstants.stopSpeed);
     });
   }
 
   public Command runMotor(double speed){
     return run(() -> {
-        topMotor.set(speed);
+        intakeMotor.set(speed);
     });
   }
 
-  public Command intake(){
+  public Command intakeWithBeambreak(){
+    return runMotor(ClawConstants.intakeSpeed).until(() -> !beambreak.get()).andThen(stop());
+  }
+  
+  public Command intake() {
+    return runMotor(ClawConstants.intakeSpeed);
+  }
 
-    
-    return runMotor(1).until(beambreak::get).andThen(stop());
-
+  public Command shootWithBeambreak() {
+    return runMotor(ClawConstants.shootSpeed).until(beambreak::get).andThen(stop());
   }
 
   public Command shoot() {
-    return runMotor(-1).until(() -> !beambreak.get()).andThen(stop());
+    return runMotor(ClawConstants.shootSpeed);
   }
 
   @Override
   public void periodic() {
-    nobottomAlert.set(!bottomMotor.isAlive());
-    notopAlert.set(!topMotor.isAlive());
+    notopAlert.set(!intakeMotor.isAlive());
     beambreakPublisher.update(beambreak.get());
     topMotorSpeedPublisher.update();
-    bottomMotorSpeedPublisher.update();
     topMotorTempPublisher.update();
-    bottomMotorTempPublisher.update();
   }
 }
