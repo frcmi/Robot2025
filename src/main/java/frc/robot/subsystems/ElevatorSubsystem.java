@@ -56,7 +56,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     );
 
     // will track the position of the elevator
-    private final DutyCycleEncoder encoder = new DutyCycleEncoder(ElevatorConstants.absoluteEncoderChannel);
+    // private final DutyCycleEncoder encoder = new DutyCycleEncoder(ElevatorConstants.absoluteEncoderChannel);
     
     // will figure out dimensions later
     private final Mechanism2d windmill = new Mechanism2d(1.5, 2.4384);
@@ -92,8 +92,8 @@ public class ElevatorSubsystem extends SubsystemBase {
         elevatorMotorRight.getConfigurator().apply(ElevatorConstants.realBotConfigs);
         elevatorMotorRight.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
 
-        elevatorMotorLeft.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
-        elevatorMotorRight.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
+        // elevatorMotorLeft.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
+        // elevatorMotorRight.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
         elevatorMotorRight.setControl(new Follower(9, true));
 
         simState.Orientation = ChassisReference.CounterClockwise_Positive;
@@ -103,9 +103,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     // I would assume that there is only going to be one motor to extend the elevator but we will see
     public Command extendArm(double rotations){
-        return runOnce(() -> {
-            elevatorMotorLeft.setControl(elevatorPositionControl.withPosition(rotations));
-        });
+        return run(() -> {});
+        // return runOnce(() -> {
+        //     elevatorMotorLeft.setControl(elevatorPositionControl.withPosition(rotations));
+        // });
     }
 
     public void driveWithVoltage(Voltage volts) {

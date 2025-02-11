@@ -5,6 +5,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Rotations;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -26,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
@@ -67,7 +70,7 @@ public final class RobotContainer {
   private ClimberSubsystem m_ClimberSubsystem = new ClimberSubsystem();
   private ClawSubsystem m_ClawSubsystem = new ClawSubsystem(botType);
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem(botType);
-  private PivotSubsystem m_PivotSubsystem = new PivotSubsystem(botType, m_ElevatorSubsystem.elevator);
+  public PivotSubsystem m_PivotSubsystem = new PivotSubsystem(botType, m_ElevatorSubsystem.elevator);
 
   private int algaeLevel = 0;
   private UltraDoubleLog levelLog = new UltraDoubleLog("Algae Level");
@@ -175,6 +178,10 @@ public final class RobotContainer {
     m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
     m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
 
+    m_Controller.povLeft().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0)));
+    m_Controller.povRight().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.3)));
+
+
     // TODO: add elevator and pivot setpoints to intake/shoot
 
 
@@ -216,10 +223,10 @@ public final class RobotContainer {
   }
 
   private void configureTuningBindings() {
-    m_TuningController.a().whileTrue(sysIdChooser.sysIdDynamicForward());
-    m_TuningController.x().whileTrue(sysIdChooser.sysIdDynamicReverse());
-    m_TuningController.b().whileTrue(sysIdChooser.sysIdQuasistaticForward());
-    m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
+    m_TuningController.a().whileTrue(m_PivotSubsystem.pivotSysIdRoutine.dynamic(SysIdRoutine.Direction.kForward)); //sysIdChooser.sysIdDynamicForward());
+    m_TuningController.x().whileTrue(m_PivotSubsystem.pivotSysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse)); //sysIdChooser.sysIdDynamicReverse());
+    m_TuningController.b().whileTrue(m_PivotSubsystem.pivotSysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward)); //sysIdChooser.sysIdQuasistaticForward());
+    m_TuningController.y().whileTrue(m_PivotSubsystem.pivotSysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse)); //sysIdChooser.sysIdQuasistaticReverse());
   }
 
   public Command getAutonomousCommand() {

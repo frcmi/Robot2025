@@ -11,6 +11,7 @@ public class CommandSupplier extends Command {
     public CommandSupplier() {}
 
     public void setCommand(Command c) {
+        // this.m_requirements.clear();
         currentCommand = c;
     }
 
@@ -32,6 +33,5 @@ public class CommandSupplier extends Command {
     @Override
     public boolean isFinished() {
         return currentCommand.isFinished();
-    }
-    
+    }    
 }

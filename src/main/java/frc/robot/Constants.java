@@ -59,7 +59,7 @@ public final class Constants {
     }
 
     public static class PivotConstants {
-        public static final int motorID = 40;
+        public static final int motorID = 13;
         // TODO: figure out real values
         // The "zero" angle is forward, larger values will rotate upwards
         public static final Angle floorAngle = Degrees.of(0);
@@ -70,15 +70,17 @@ public final class Constants {
 
         public static final Angle maxAngle = Degrees.of(5);
         public static final Angle minAngle = Degrees.of(0);
+        public static final double maxVelocity = 0.0;
+        public static final double maxAccel = 0.0;
 
-        public static final double kP = 1.0;
+        public static final double kP = 1.15;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
 
-        public static final double kS = 0.0;
+        public static final double kS = 0.13;
         public static final double kV = 0.0;
         public static final double kA = 0.0;
-        public static final double kG = 0.0;
+        public static final double kG = 0.52;
     }
 
     public static class ElevatorConstants {
