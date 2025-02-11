@@ -64,7 +64,6 @@ public final class Robot extends TimedRobot {
   @Override
   public void testInit() {
     CommandScheduler.getInstance().cancelAll();
-    this.addPeriodic(m_RobotContainer.m_PivotSubsystem::sysIDLog, Millisecond.of(1));
   }
 
   @Override

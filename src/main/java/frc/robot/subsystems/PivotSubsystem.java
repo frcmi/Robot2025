@@ -63,6 +63,7 @@ public class PivotSubsystem extends SubsystemBase {
     private final UltraDoubleLog setpointPublisher = new UltraDoubleLog("Pivot/Setpoint Rotations");
     private final UltraDoubleLog pidPublisher = new UltraDoubleLog("Pivot/PID Output");
     private final UltraDoubleLog ffPublisher = new UltraDoubleLog("Pivot/FF Output");
+    private final UltraDoubleLog anglePublisher = new UltraDoubleLog("Pivot/Angle");
 
     // private final UltraDoubleLog encoderPublisher = new UltraDoubleLog("Pivot/Encoder Rotations");
     // private final UltraDoubleLog velPublisher = new UltraDoubleLog("Pivot/Velocity");
@@ -154,18 +155,13 @@ public class PivotSubsystem extends SubsystemBase {
         pivotMotor.setControl(motorVoltageControl.withOutput(volts));
     }
 
-    private UltraDoubleLog bruv = new UltraDoubleLog("Pivot/Angle");
-    private double angle = 0;
-
     public Angle getEncoder() {
         double encoderValue = encoder.get() - 0.75;
         if (encoderValue <= -0.2) {
             encoderValue += 1;
         }
 
-        angle = encoderValue;
-
-        return Rotations.of(angle);
+        return Rotations.of(encoderValue);
     }
 
     public void sysIDLog() {
@@ -176,7 +172,7 @@ public class PivotSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        bruv.update(angle);
+        anglePublisher.update(getEncoder().in(Rotations));
         if(pivotMotor.getPosition().getValueAsDouble() <= PivotConstants.minAngle.in(Rotations) &&
            pivotMotor.getPosition().getValueAsDouble() >= PivotConstants.maxAngle.in(Rotations)) {
            pivotMotor.stopMotor();
