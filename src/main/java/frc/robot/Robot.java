@@ -4,13 +4,44 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.TimedRobot;
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+
+import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-public final class Robot extends TimedRobot {
+/**
+ * Please do not initialize this more than once unless you know what you are doing, it will cause problems with AdvantageKit and will cause a resource leak with the power distribution.
+ */
+public final class Robot extends LoggedRobot {
   private Command m_AutonomousCommand;
   private RobotContainer m_RobotContainer;
+
+  @SuppressWarnings("resource")
+  public Robot() {
+    Logger.recordMetadata("Codebase", "2025-Reefscape");
+    Logger.recordMetadata("Git SHA", ""); //TODO: either automate this somehow or put it on the checklist
+    if (isReal()) {
+      Logger.addDataReceiver(new WPILOGWriter());
+      if (!Constants.TelemetryConstants.disableNetworkLogging) {
+        Logger.addDataReceiver(new NT4Publisher());
+      }
+      new PowerDistribution(1, ModuleType.kRev);
+    } else {
+      setUseTiming(false);
+      String logPath = LogFileUtil.findReplayLog();
+      Logger.setReplaySource(new WPILOGReader(logPath));
+      Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+
+      Logger.start();
+    }
+  }
 
   @Override
   public void robotInit() {
