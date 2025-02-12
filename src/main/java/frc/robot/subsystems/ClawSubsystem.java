@@ -6,13 +6,9 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraSupplierLog;
 import frc.robot.Constants.BotType;
@@ -23,8 +19,7 @@ public class ClawSubsystem extends SubsystemBase {
   private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw/Beambreak");
   private final UltraSupplierLog topMotorSpeedPublisher = new UltraSupplierLog("Claw/Intake motor speed", intakeMotor.getVelocity()::getValueAsDouble);
   private final UltraSupplierLog topMotorTempPublisher = new UltraSupplierLog("Claw/Intake motor temperature", intakeMotor.getExternalMotorTemp()::getValueAsDouble);
-  Alert notopAlert = new Alert("Top motor not detected!", AlertType.kError);
-  Alert nobottomAlert = new Alert("Bottom motor not detected!", AlertType.kError);
+  Alert nomotorAlert = new Alert("Claw motor not detected!", AlertType.kError);
 
   public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
@@ -71,7 +66,7 @@ public class ClawSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    notopAlert.set(!intakeMotor.isAlive());
+    nomotorAlert.set(!intakeMotor.isAlive());
     beambreakPublisher.update(beambreak.get());
     topMotorSpeedPublisher.update();
     topMotorTempPublisher.update();

@@ -2,28 +2,22 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -32,8 +26,6 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.PivotConstants;
 import frc.lib.ultralogger.UltraDoubleLog;
@@ -63,62 +55,52 @@ public class PivotSubsystem extends SubsystemBase {
     private final UltraDoubleLog setpointPublisher = new UltraDoubleLog("Pivot/Setpoint Rotations");
     private final UltraDoubleLog pidPublisher = new UltraDoubleLog("Pivot/PID Output");
     private final UltraDoubleLog ffPublisher = new UltraDoubleLog("Pivot/FF Output");
-    private final UltraDoubleLog anglePublisher = new UltraDoubleLog("Pivot/Angle");
+    private final UltraDoubleLog anglePublisher = new UltraDoubleLog("Pivot/Encoder Rotations");
 
     // private final UltraDoubleLog encoderPublisher = new UltraDoubleLog("Pivot/Encoder Rotations");
     // private final UltraDoubleLog velPublisher = new UltraDoubleLog("Pivot/Velocity");
     private ProfiledPIDController pid = new ProfiledPIDController(PivotConstants.kP, PivotConstants.kI, PivotConstants.kD, new Constraints(PivotConstants.maxVelocity, PivotConstants.maxAccel));
     private ArmFeedforward feedforward = new ArmFeedforward(PivotConstants.kS, PivotConstants.kG, PivotConstants.kV, PivotConstants.kA);
 
-
-    public final SysIdRoutine pivotSysIdRoutine = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            Volts.of(0.75).per(Seconds),
-            Volts.of(1.5),
-            Seconds.of(5),
-            (state) -> SignalLogger.writeString("state", state.toString())
-        ), 
-        new Mechanism(this::driveWithVoltage, null, this)
-    );
-
     public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
-        pid.setTolerance(Degrees.of(3.5).in(Radians)); //, Degrees.of(3).in(Radians));
+        pid.setTolerance(Degrees.of(3.5).in(Radians));
         velocity.setUpdateFrequency(1000);
-        // motorPositionControl.withSlot(bot.slotId);
 
-        // pivotMotor.getConfigurator().apply(slot0Configs);
         pivotLigament2d = elevatorLigament.append(new MechanismLigament2d("wrist", 0.5, 90, 6, new Color8Bit(Color.kPurple)));
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);
         TalonFXConfiguration configuration = new TalonFXConfiguration();
         configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotMotor.getConfigurator().apply(configuration);
 
-        setDefaultCommand(this.stop());
+        setDefaultCommand(this.holdPosition());
     }
 
-    public Command stop() {
-        return run(() -> { pivotMotor.set(0); });
+    public Command holdPosition() {
+        return run(() -> {
+            double ff = feedforward.calculate(getEncoderAngle().in(Radians), 0);
+
+            pidPublisher.update(0.0);
+            ffPublisher.update(ff);
+
+            pivotMotor.setControl(motorVoltageControl.withOutput(Volts.of(ff)));
+        });
     }
 
     public Command setAngle(Angle angle) {
         double setpoint = angle.in(Radians);
         return run(() -> {
             setpointPublisher.update(angle.in(Rotations));
-            double currentAngle = getEncoder().in(Radians);
-            double voltage = pid.calculate(currentAngle, setpoint);
-            pidPublisher.update(voltage);
-            double signum = Math.signum(voltage);
-            if (pid.atSetpoint() && pid.getPositionError() < 0) {
-                voltage = 0;
-                if (Math.abs(pid.getPositionError()) < Degrees.of(2).in(Radians)) {
-                    signum = 0;
-                }
-            }
-            double ff = feedforward.calculate(setpoint, signum);
+            double currentAngle = getEncoderAngle().in(Radians);
+            double pidOut = pid.calculate(currentAngle, setpoint);
+            pidPublisher.update(pidOut);
+            
+            double ff = feedforward.calculate(pid.getSetpoint().position, pid.getSetpoint().velocity);
             ffPublisher.update(ff);
-            pivotMotor.setControl(motorVoltageControl.withOutput(Volts.of((voltage + ff))));
-        });
+
+            pivotMotor.setControl(motorVoltageControl.withOutput(Volts.of((pidOut + ff))));
+        }).until(pid::atGoal);
     }
+
     public Command goToAngle(int level) {
         switch(level) {
             case 0:
@@ -135,6 +117,7 @@ public class PivotSubsystem extends SubsystemBase {
                 return goToFloorAngle();
         }
     }
+
     public Command goToFloorAngle() {
         return setAngle(PivotConstants.floorAngle);
     }
@@ -151,11 +134,7 @@ public class PivotSubsystem extends SubsystemBase {
         return setAngle(PivotConstants.bargeAngle);
     }
 
-    private void driveWithVoltage(Voltage volts) {
-        pivotMotor.setControl(motorVoltageControl.withOutput(volts));
-    }
-
-    public Angle getEncoder() {
+    public Angle getEncoderAngle() {
         double encoderValue = encoder.get() - 0.75;
         if (encoderValue <= -0.2) {
             encoderValue += 1;
@@ -165,15 +144,15 @@ public class PivotSubsystem extends SubsystemBase {
     }
 
     public void sysIDLog() {
-        double encoderValue = getEncoder().in(Rotations);
+        double encoderValue = getEncoderAngle().in(Rotations);
 
         SignalLogger.writeDouble("Pivot Angle", encoderValue);
     }
 
     @Override
     public void periodic() {
-        anglePublisher.update(getEncoder().in(Rotations));
-        if(pivotMotor.getPosition().getValueAsDouble() <= PivotConstants.minAngle.in(Rotations) &&
+        anglePublisher.update(getEncoderAngle().in(Rotations));
+        if (pivotMotor.getPosition().getValueAsDouble() <= PivotConstants.minAngle.in(Rotations) &&
            pivotMotor.getPosition().getValueAsDouble() >= PivotConstants.maxAngle.in(Rotations)) {
            pivotMotor.stopMotor();
            limitPassedAlert.set(true);
@@ -185,6 +164,7 @@ public class PivotSubsystem extends SubsystemBase {
             pivotLigament2d.setAngle(pivotMotor.getPosition().getValue().minus(Degrees.of(90)).in(Degrees));
         }
     }
+
     @Override
     public void simulationPeriodic() {
         talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
