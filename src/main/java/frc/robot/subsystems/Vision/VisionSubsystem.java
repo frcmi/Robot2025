@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.Vision;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -10,6 +10,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 
 import frc.robot.Robot;
+import frc.robot.subsystems.Drive.Drive;
 import frc.robot.vision.Camera;
 import frc.robot.vision.LimelightCamera;
 import frc.robot.vision.PhotonlibCamera;
@@ -39,13 +40,13 @@ public final class VisionSubsystem implements Subsystem {
         Simulator sim;
     }
 
-    private CommandSwerveDrivetrain m_Swerve;
+    private Drive m_Swerve;
     private CameraData[] m_Cameras;
 
     private HashSet<Integer> m_ViableResults;
     private int m_Frame;
 
-    public static VisionSubsystem configure(CommandSwerveDrivetrain swerve) {
+    public static VisionSubsystem configure(Drive swerve) {
         var cameras = new CameraDescription[] { /* cameras */ };
 
         AprilTagFieldLayout layout;
@@ -70,7 +71,7 @@ public final class VisionSubsystem implements Subsystem {
         }
     }
 
-    public VisionSubsystem(CommandSwerveDrivetrain swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
+    public VisionSubsystem(Drive swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
         m_Swerve = swerve;
         m_ViableResults = new HashSet<>();
         m_Frame = 0;
@@ -126,14 +127,14 @@ public final class VisionSubsystem implements Subsystem {
 
     @Override
     public void simulationPeriodic() {
-        var pose = m_Swerve.getState().Pose;
+        // var pose = m_Swerve.getState().Pose;
 
         for (var camera : m_Cameras) {
             if (camera.sim == null) {
                 continue;
             }
 
-            camera.sim.update(pose, m_Frame);
+            // camera.sim.update(pose, m_Frame);
         }
 
         m_Frame++;

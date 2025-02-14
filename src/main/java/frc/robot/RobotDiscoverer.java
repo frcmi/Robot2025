@@ -9,7 +9,13 @@ import frc.robot.Constants.RobotDetectionConstants;
 
 public class RobotDiscoverer {
     public static BotType getRobot() {
-        if (Robot.isSimulation()) return BotType.SIM_BOT;
+        if (Robot.isSimulation()) {
+            if (Constants.replay) {
+                return BotType.REPLAY_BOT;
+            } else {
+                return BotType.SIM_BOT;
+            }
+        }
 
         try {
             Enumeration<NetworkInterface> netInterfaces = NetworkInterface.getNetworkInterfaces();

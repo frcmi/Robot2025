@@ -26,7 +26,7 @@ public final class Robot extends LoggedRobot {
   @SuppressWarnings("resource")
   public Robot() {
     Logger.recordMetadata("Codebase", "2025-Reefscape");
-    Logger.recordMetadata("Git SHA", ""); //TODO: either automate this somehow or put it on the checklist
+    Logger.recordMetadata("Git SHA", BuildConstants.GIT_SHA);
     if (isReal()) {
       Logger.addDataReceiver(new WPILOGWriter());
       if (!Constants.TelemetryConstants.disableNetworkLogging) {

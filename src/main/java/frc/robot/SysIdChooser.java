@@ -4,9 +4,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.CommandSupplier;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.ElevatorSubsystem;
-import frc.robot.subsystems.PivotSubsystem;
+import frc.robot.subsystems.Drive.Drive;
+import frc.robot.subsystems.Elevator.ElevatorSubsystem;
+import frc.robot.subsystems.Pivot.PivotSubsystem;
 
 public class SysIdChooser {
     private final SendableChooser<SysIdRoutine> sysIdChooser = new SendableChooser<>();
@@ -16,12 +16,12 @@ public class SysIdChooser {
     private CommandSupplier quasistaticForward = new CommandSupplier();
     private CommandSupplier quasistaticReverse = new CommandSupplier();
 
-    public SysIdChooser(CommandSwerveDrivetrain commandSwerveDrivetrain, 
+    public SysIdChooser(Drive commandSwerveDrivetrain, 
                         ElevatorSubsystem elevatorSubsystem,
                         PivotSubsystem pivotSubsystem) {
-        sysIdChooser.addOption("Swerve Translation", commandSwerveDrivetrain.m_sysIdRoutineTranslation);
-        sysIdChooser.addOption("Swerve Rotation", commandSwerveDrivetrain.m_sysIdRoutineRotation);
-        sysIdChooser.addOption("Swerve Steer", commandSwerveDrivetrain.m_sysIdRoutineSteer);
+        // sysIdChooser.addOption("Swerve Translation", commandSwerveDrivetrain.m_sysIdRoutineTranslation);
+        // sysIdChooser.addOption("Swerve Rotation", commandSwerveDrivetrain.m_sysIdRoutineRotation);
+        // sysIdChooser.addOption("Swerve Steer", commandSwerveDrivetrain.m_sysIdRoutineSteer);
         sysIdChooser.addOption("Elevator", elevatorSubsystem.elevatorSysIdRoutine);
         // Pivot is tuned manually
 

@@ -11,7 +11,8 @@ public final class Constants {
     public enum BotType {
         MAIN_BOT(0),
         ALPHA_BOT(1),
-        SIM_BOT(2);
+        SIM_BOT(2),
+        REPLAY_BOT(-2);
 
         public final int slotId;
 
@@ -19,6 +20,8 @@ public final class Constants {
             this.slotId = slotId;
         }
     }
+
+    public static boolean replay = false;
 
     public static class RobotDetectionConstants {
         // Mac addresses of rios, google it or ask brandon
@@ -59,7 +62,7 @@ public final class Constants {
 
     public static class PivotConstants {
         public static final int motorID = 13;
-        // TODO: figure out real values
+        public static final int encoderID = 0; //TODO: make this
         // The "zero" angle is forward, larger values will rotate upwards
         public static final Angle floorAngle = Degrees.of(0);
         public static final Angle onCoralAngle = Degrees.of(20);
@@ -84,6 +87,9 @@ public final class Constants {
 
     public static class ElevatorConstants {
         public static final int magneticLimitSwitchID = 19;
+
+        public static final int leftMotorID = 9;
+        public static final int rightMotorID = 10;
 
         public static final double elevatorMidpoint = 25d; // does not need to be precise
 
@@ -124,7 +130,7 @@ public final class Constants {
             .withKG(0.16915)
             .withGravityType(GravityTypeValue.Elevator_Static);
 
-        // TODO: get conversion value(if this isn't it)
+        // TODO: get conversion value
         public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
         public static final double gearRatio = 8.0/1.0;
         public static final double elevatorInertia = 0.001; // In Kg Meters^2 
