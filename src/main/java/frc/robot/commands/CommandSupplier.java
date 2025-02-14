@@ -1,45 +1,45 @@
 package frc.robot.commands;
 
-import java.util.Set;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import java.util.Set;
 
 public class CommandSupplier extends Command {
-    private Command currentCommand;
+  private Command currentCommand;
 
-    public CommandSupplier(Command commandToRun) {
-        currentCommand = commandToRun;
-    }
-    public CommandSupplier() {}
+  public CommandSupplier(Command commandToRun) {
+    currentCommand = commandToRun;
+  }
 
-    public void setCommand(Command c) {
-        currentCommand.end(true);
-        currentCommand = c;
-    }
+  public CommandSupplier() {}
 
-    @Override
-    public void execute() {
-        currentCommand.execute();
-    }
+  public void setCommand(Command c) {
+    currentCommand.end(true);
+    currentCommand = c;
+  }
 
-    @Override
-    public String getName() {
-        return currentCommand.getName();
-    }
+  @Override
+  public void execute() {
+    currentCommand.execute();
+  }
 
-    @Override
-    public void initialize() {
-        currentCommand.initialize();
-    }
+  @Override
+  public String getName() {
+    return currentCommand.getName();
+  }
 
-    @Override
-    public Set<Subsystem> getRequirements() {
-        return currentCommand.getRequirements();
-    }
+  @Override
+  public void initialize() {
+    currentCommand.initialize();
+  }
 
-    @Override
-    public boolean isFinished() {
-        return currentCommand.isFinished();
-    }    
+  @Override
+  public Set<Subsystem> getRequirements() {
+    return currentCommand.getRequirements();
+  }
+
+  @Override
+  public boolean isFinished() {
+    return currentCommand.isFinished();
+  }
 }
