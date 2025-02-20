@@ -49,12 +49,11 @@ public class ElevatorSubsystem extends SubsystemBase {
     // Left is main, right is follower
     private final TalonFX elevatorMotorLeft = new TalonFX(9);
     private final TalonFX followerMotor = new TalonFX(10);
-    // 10
     private final TalonFXSimState simState = elevatorMotorLeft.getSimState();
     Alert noelevAlert = new Alert("Elevator motor not detected!", AlertType.kError);
     
-    private final DigitalInput upperDigitalInput = new DigitalInput(3);
-    private final DigitalInput lowerDigitalInput = new DigitalInput(ElevatorConstants.magneticLimitSwitchID);
+    private final DigitalInput upperDigitalInput = new DigitalInput(ElevatorConstants.upperLimitSwitchID);
+    private final DigitalInput lowerDigitalInput = new DigitalInput(ElevatorConstants.lowerLimitSwitchID);
 
     public final SysIdRoutine elevatorSysIdRoutine = new SysIdRoutine(
         new SysIdRoutine.Config(
@@ -69,9 +68,6 @@ public class ElevatorSubsystem extends SubsystemBase {
         () -> !lowerDigitalInput.get()
     );
 
-    // will track the position of the elevator
-    // private final DutyCycleEncoder encoder = new DutyCycleEncoder(ElevatorConstants.absoluteEncoderChannel);
-    
     // will figure out dimensions later
     private final Mechanism2d windmill = new Mechanism2d(1.5, 2.4384);
 
@@ -107,9 +103,9 @@ public class ElevatorSubsystem extends SubsystemBase {
         elevatorPositionControl = elevatorPositionControl.withSlot(bot.slotId);
 
         SoftwareLimitSwitchConfigs softLimitConfig = new SoftwareLimitSwitchConfigs()
-            .withReverseSoftLimitThreshold(0.5)
+            .withReverseSoftLimitThreshold(ElevatorConstants.absoluteBottom)
             .withReverseSoftLimitEnable(true)
-            .withForwardSoftLimitThreshold(57.5)
+            .withForwardSoftLimitThreshold(ElevatorConstants.absoluteTop)
             .withForwardSoftLimitEnable(true);
 
         HardwareLimitSwitchConfigs hardwareLimitSwitchConfigs = new HardwareLimitSwitchConfigs()
@@ -140,23 +136,25 @@ public class ElevatorSubsystem extends SubsystemBase {
         elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
         followerMotor.setNeutralMode(NeutralModeValue.Brake);
         
-
-        // elevatorMotorLeft.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
-        // elevatorMotorRight.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
-        followerMotor.setControl(new Follower(9, true));
-
         simState.Orientation = ChassisReference.CounterClockwise_Positive;
         SmartDashboard.putData("Windmill", windmill);
 
+        setFollowerMode();
         setDefaultCommand(this.stop().withName("Default Stop"));
+    }
+
+    public void setFollowerMode() {
+        followerMotor.setControl(new Follower(9, true));
     }
 
     // rev throughbore encoder, limit on bottom
 
     // I would assume that there is only going to be one motor to extend the elevator but we will see
     public Command extendArm(double rotations){
+
         return run(() -> {});
         // return runOnce(() -> {
+        //     setFollowerMode();
         //     elevatorMotorLeft.setControl(elevatorPositionControl.withPosition(rotations));
         // });
     }
@@ -164,6 +162,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void driveWithVoltage(Voltage volts) {
         sysidVoltagePublisher.update(volts.in(Volts));
 
+        setFollowerMode();
         elevatorMotorLeft.setControl(elevatorVoltageControl.withOutput(volts));
     }
 
@@ -249,6 +248,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         return runOnce(() -> {
             elevatorMotorLeft.setControl(new VoltageOut(0).withLimitReverseMotion(true));
             followerMotor.setControl(new VoltageOut(0).withLimitReverseMotion(true));
+            setFollowerMode();
         });
     }
 

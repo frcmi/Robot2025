@@ -85,14 +85,13 @@ public final class Constants {
     }
 
     public static class ElevatorConstants {
-        public static final int magneticLimitSwitchID = 4;
+        public static final int upperLimitSwitchID = 3;
+        public static final int lowerLimitSwitchID = 4;
 
-        public static final double elevatorMidpoint = 25d; // does not need to be precise
-
-        public static final int absoluteEncoderChannel = 0;
-        public static final int limitSwitchChannel = 1;
-
-        public static final Angle absoluteEncoderOffset = Degrees.of(0);
+        // TODO: double check
+        public static final Angle absoluteBottom = Rotations.of(-0.4);
+        public static final Angle absoluteTop = Rotations.of(57.3);
+        public static final boolean absoluteCinema = true;
 
         public static final double rotationsBeforeZero = 1.5;
         // this is a place holder until we can figure out what the real number of rotation is
@@ -101,7 +100,7 @@ public final class Constants {
         public static final double onCoralHeight = 0.3;
         public static final double reefOneHeight = 0.8;
         public static final double reefTwoHeight = 1.0;
-        public static final double bargeHeight = 1.6;
+        public static final double bargeHeight = 57;
         public static final double slowVoltageDown = -0.32;
         public static final double slowVoltageUp = 1.5;
 

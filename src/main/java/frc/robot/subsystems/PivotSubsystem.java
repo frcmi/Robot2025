@@ -22,6 +22,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -102,7 +103,7 @@ public class PivotSubsystem extends SubsystemBase {
         pid.calculate(0);
 
 
-        setDefaultCommand(this.setAngle(stow));
+        this.setAngle(stow).ignoringDisable(true).schedule();
     }
 
     public boolean closeEnough() {
@@ -125,7 +126,9 @@ public class PivotSubsystem extends SubsystemBase {
             }
             double ff = feedforward.calculate(currentAngle, signum);
             ffPublisher.update(ff);
-            pivotMotor.setControl(motorVoltageControl.withOutput(Volts.of((voltage + ff))));
+            if (DriverStation.isEnabled()) {
+                pivotMotor.setControl(motorVoltageControl.withOutput(Volts.of((voltage + ff))));
+            }
         });
     }
     public Command goToAngle(int level) {
