@@ -28,7 +28,7 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.SysIdRoutine;
 import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
@@ -44,8 +44,8 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public final class RobotContainer {
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private double MaxSpeed = 0; // TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxAngularRate = 0; // Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -79,7 +79,7 @@ public final class RobotContainer {
   private final SysIdChooser sysIdChooser = new SysIdChooser(drivetrain, m_ElevatorSubsystem, m_PivotSubsystem);
 
   Alert onMainAlert = new Alert("Main Bot", AlertType.kInfo);
-  Alert onAlphaAlert = new Alert("Alpha Bot", AlertType.kInfo);
+  Alert onAlphaAlert = new Alert("Alpha Bot", AlertType.kWarning);
   Alert onSimAlert = new Alert("Sim Bot", AlertType.kInfo);
 
   RadioLogger radioLogger = new RadioLogger();
@@ -175,11 +175,13 @@ public final class RobotContainer {
     m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
     m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
 
-    m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
-    m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
+    // m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
+    // m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
 
     m_Controller.povLeft().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0)));
     m_Controller.povRight().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.3)));
+
+    m_Controller.povDown().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
 
 
     // TODO: add elevator and pivot setpoints to intake/shoot
@@ -223,10 +225,10 @@ public final class RobotContainer {
   }
 
   private void configureTuningBindings() {
-    m_TuningController.a().whileTrue(m_PivotSubsystem.pivotSysIdRoutine.dynamic(SysIdRoutine.Direction.kForward)); //sysIdChooser.sysIdDynamicForward());
-    m_TuningController.x().whileTrue(m_PivotSubsystem.pivotSysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse)); //sysIdChooser.sysIdDynamicReverse());
-    m_TuningController.b().whileTrue(m_PivotSubsystem.pivotSysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward)); //sysIdChooser.sysIdQuasistaticForward());
-    m_TuningController.y().whileTrue(m_PivotSubsystem.pivotSysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse)); //sysIdChooser.sysIdQuasistaticReverse());
+    m_TuningController.a().whileTrue(sysIdChooser.sysIdDynamicForward());
+    m_TuningController.x().whileTrue(sysIdChooser.sysIdDynamicReverse());
+    m_TuningController.b().whileTrue(sysIdChooser.sysIdQuasistaticForward());
+    m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
   }
 
   public Command getAutonomousCommand() {

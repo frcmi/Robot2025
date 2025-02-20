@@ -24,7 +24,7 @@ public final class Constants {
     public static class RobotDetectionConstants {
         // Mac addresses of rios, google it or ask brandon
         public static final String mainBotMacAddress = "00:80:2F:40:6D:81";
-        public static final String alphaBotMacAddress = "";
+        public static final String alphaBotMacAddress = "00:80:2F:39:0D:E5";
     }
 
     public static class TelemetryConstants {
@@ -34,7 +34,7 @@ public final class Constants {
         // If true, data won't be sent over network even when not connected to FMS
         public static final boolean disableNetworkLogging = false;
         // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
-        public static final boolean disableDatalog = true;
+        public static final boolean disableDatalog = false;
         // Prefix in NetworkTables, must end with a '/'
         public static final String tabPrefix = "UltraLog/";
         // How often to re-check if the FMS is connected (and disable network logging if so)
@@ -84,7 +84,7 @@ public final class Constants {
     }
 
     public static class ElevatorConstants {
-        public static final int magneticLimitSwitchID = 19;
+        public static final int magneticLimitSwitchID = 4;
 
         public static final double elevatorMidpoint = 25d; // does not need to be precise
 
@@ -102,7 +102,7 @@ public final class Constants {
         public static final double reefTwoHeight = 1.0;
         public static final double bargeHeight = 1.6;
         public static final double slowVoltageDown = -0.32;
-        public static final double slowVoltageUp = 0.32;
+        public static final double slowVoltageUp = 1.5;
 
         public static final int slotId = 1;
 
@@ -113,16 +113,17 @@ public final class Constants {
             .withKS(0.0)
             .withKV(0.0)
             .withKA(0.0)
-            .withKG(0.0);
+            .withKG(0.0)
+            .withGravityType(GravityTypeValue.Elevator_Static);
 
         public static final Slot1Configs alphaBotConfigs = new Slot1Configs()
             .withKP(0.2)
             .withKI(0.0)
             .withKD(0.0)
-            .withKS(0.12631)
-            .withKV(0.11256)
-            .withKA(0.0015562)
-            .withKG(0.16915)
+            .withKS(0.087818)
+            .withKV(0.11882)
+            .withKA(0.0018582)
+            .withKG(0.31307)
             .withGravityType(GravityTypeValue.Elevator_Static);
 
         // TODO: get conversion value(if this isn't it)

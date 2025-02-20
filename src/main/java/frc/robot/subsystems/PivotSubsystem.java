@@ -32,7 +32,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.PivotConstants;
@@ -76,9 +76,10 @@ public class PivotSubsystem extends SubsystemBase {
             Volts.of(0.75).per(Seconds),
             Volts.of(1.5),
             Seconds.of(5),
-            (state) -> SignalLogger.writeString("state", state.toString())
+            (state) -> SignalLogger.writeString("SysIdPivot_State", state.toString())
         ), 
-        new Mechanism(this::driveWithVoltage, null, this)
+        new Mechanism(this::driveWithVoltage, null, this),
+        this
     );
 
     public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
@@ -88,12 +89,12 @@ public class PivotSubsystem extends SubsystemBase {
 
         // pivotMotor.getConfigurator().apply(slot0Configs);
         pivotLigament2d = elevatorLigament.append(new MechanismLigament2d("wrist", 0.5, 90, 6, new Color8Bit(Color.kPurple)));
-        pivotMotor.setNeutralMode(NeutralModeValue.Brake);
         TalonFXConfiguration configuration = new TalonFXConfiguration();
         configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotMotor.getConfigurator().apply(configuration);
+        pivotMotor.setNeutralMode(NeutralModeValue.Brake);
 
-        setDefaultCommand(this.stop());
+        setDefaultCommand(this.setAngle(Rotations.of(0.27261940556548514))); // 0.23930505473262634
     }
 
     public Command stop() {
@@ -114,7 +115,7 @@ public class PivotSubsystem extends SubsystemBase {
                     signum = 0;
                 }
             }
-            double ff = feedforward.calculate(setpoint, signum);
+            double ff = feedforward.calculate(currentAngle, signum);
             ffPublisher.update(ff);
             pivotMotor.setControl(motorVoltageControl.withOutput(Volts.of((voltage + ff))));
         });
@@ -156,8 +157,8 @@ public class PivotSubsystem extends SubsystemBase {
     }
 
     public Angle getEncoder() {
-        double encoderValue = encoder.get() - 0.75;
-        if (encoderValue <= -0.2) {
+        double encoderValue = encoder.get() - 0.75 - 0.38853565346339136 +0.05;
+        if (encoderValue <= -0.3) {
             encoderValue += 1;
         }
 
