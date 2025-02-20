@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 public final class Constants {
     public enum BotType {
@@ -45,7 +46,7 @@ public final class Constants {
         public static final int beambreakChannel = 1;
         public static final int motorControllerID = 23;
         public static final double intakeSpeed = -0.5;
-        public static final double shootSpeed = 0.5;
+        public static final double shootSpeed = 1;
         public static final double stopSpeed = 0.0;
     }
 
@@ -117,14 +118,15 @@ public final class Constants {
             .withGravityType(GravityTypeValue.Elevator_Static);
 
         public static final Slot1Configs alphaBotConfigs = new Slot1Configs()
-            .withKP(0.2)
+            .withKP(0.44)
             .withKI(0.0)
             .withKD(0.0)
-            .withKS(0.087818)
-            .withKV(0.11882)
-            .withKA(0.0018582)
-            .withKG(0.31307)
-            .withGravityType(GravityTypeValue.Elevator_Static);
+            .withKS(0.068905)
+            .withKV(0.12637)
+            .withKA(0.0018766)
+            .withKG(0.51897)
+            .withGravityType(GravityTypeValue.Elevator_Static)
+            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
 
         // TODO: get conversion value(if this isn't it)
         public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 

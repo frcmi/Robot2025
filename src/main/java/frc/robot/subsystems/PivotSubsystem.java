@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -94,11 +95,18 @@ public class PivotSubsystem extends SubsystemBase {
         pivotMotor.getConfigurator().apply(configuration);
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);
 
-        setDefaultCommand(this.setAngle(Rotations.of(0.27261940556548514))); // 0.23930505473262634
+        Angle stow = Rotations.of(0.27261940556548514);
+
+        // makes closeEnough return false on first poll after bot enabled
+        pid.setGoal(stow.in(Radians));
+        pid.calculate(0);
+
+
+        setDefaultCommand(this.setAngle(stow));
     }
 
-    public Command stop() {
-        return run(() -> { pivotMotor.set(0); });
+    public boolean closeEnough() {
+        return Math.abs(pid.getPositionError()) < Degrees.of(2).in(Radians);
     }
 
     public Command setAngle(Angle angle) {
@@ -111,7 +119,7 @@ public class PivotSubsystem extends SubsystemBase {
             double signum = Math.signum(voltage);
             if (pid.atSetpoint() && pid.getPositionError() < 0) {
                 voltage = 0;
-                if (Math.abs(pid.getPositionError()) < Degrees.of(2).in(Radians)) {
+                if (closeEnough()) {
                     signum = 0;
                 }
             }
@@ -173,6 +181,7 @@ public class PivotSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        SmartDashboard.putBoolean("Arm close enough", closeEnough());
         anglePublisher.update(getEncoder().in(Rotations));
         if(pivotMotor.getPosition().getValueAsDouble() <= PivotConstants.minAngle.in(Rotations) &&
            pivotMotor.getPosition().getValueAsDouble() >= PivotConstants.maxAngle.in(Rotations)) {

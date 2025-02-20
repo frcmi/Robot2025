@@ -44,8 +44,8 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public final class RobotContainer {
-    private double MaxSpeed = 0; // TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = 0; // Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -178,7 +178,7 @@ public final class RobotContainer {
     // m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
     // m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
 
-    m_Controller.povLeft().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0)));
+    m_Controller.povLeft().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.066)));
     m_Controller.povRight().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.3)));
 
     m_Controller.povDown().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
@@ -231,7 +231,13 @@ public final class RobotContainer {
     m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
   }
 
+  boolean zeroed = false;
+
   public Command getAutonomousCommand() {
-    return autoChooser.getSelected();
+    Command base = Commands.none();
+    if (!zeroed) {
+      base = Commands.run(() -> { zeroed = true; }).until(m_PivotSubsystem::closeEnough).andThen(m_ElevatorSubsystem.autoHonePose());
+    }
+    return base.andThen(autoChooser.getSelected());
   }
 }

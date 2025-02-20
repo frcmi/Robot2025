@@ -4,7 +4,10 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.HardwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.ParentConfiguration;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -114,22 +117,29 @@ public class ElevatorSubsystem extends SubsystemBase {
             .withReverseLimitAutosetPositionEnable(true)
             .withReverseLimitEnable(true);
 
-        elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
-        followerMotor.setNeutralMode(NeutralModeValue.Brake);
+        MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs()
+            .withMotionMagicCruiseVelocity(Rotations.per(Second).of(150))
+            .withMotionMagicAcceleration(Rotations.per(Second).per(Second).of(200))
+            .withMotionMagicJerk(Rotations.per(Second).per(Second).per(Second).of(350));
 
         elevatorMotorLeft.getConfigurator().apply(ElevatorConstants.realBotConfigs);
         elevatorMotorLeft.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
         elevatorMotorLeft.getConfigurator().apply(hardwareLimitSwitchConfigs);
-        // elevatorMotorLeft.getConfigurator().apply(softLimitConfig);
+        elevatorMotorLeft.getConfigurator().apply(softLimitConfig);
+        elevatorMotorLeft.getConfigurator().apply(motionMagicConfigs);
 
         followerMotor.getConfigurator().apply(ElevatorConstants.realBotConfigs);
         followerMotor.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
         followerMotor.getConfigurator().apply(hardwareLimitSwitchConfigs);
-        // followerMotor.getConfigurator().apply(softLimitConfig);
+        followerMotor.getConfigurator().apply(softLimitConfig);
+        followerMotor.getConfigurator().apply(motionMagicConfigs);
 
         elevatorMotorLeft.setPosition(Rotations.of(1));
         followerMotor.setPosition(Rotations.of(1));
 
+        elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
+        followerMotor.setNeutralMode(NeutralModeValue.Brake);
+        
 
         // elevatorMotorLeft.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
         // elevatorMotorRight.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
