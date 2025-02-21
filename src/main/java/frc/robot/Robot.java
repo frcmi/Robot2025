@@ -33,6 +33,10 @@ public final class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+    if (m_AutonomousCommand != null) {
+      m_AutonomousCommand.cancel();
+    }
+    
     m_AutonomousCommand = m_RobotContainer.getAutonomousCommand();
 
     if (m_AutonomousCommand != null) {

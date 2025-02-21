@@ -27,8 +27,9 @@ public class ClawSubsystem extends SubsystemBase {
     TalonFXSConfiguration configure = new TalonFXSConfiguration();
     configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
     intakeMotor.getConfigurator().apply(configure);
+    intakeMotor.setNeutralMode(NeutralModeValue.Brake);
 
-    // setDefaultCommand(stop());
+    setDefaultCommand(stop());
   }
 
   public boolean isCurrentSpiked() {

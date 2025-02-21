@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.SysIdRoutine;
 import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
@@ -71,7 +72,7 @@ public final class RobotContainer {
   private final SysIdChooser sysIdChooser = new SysIdChooser(drivetrain, m_ElevatorSubsystem, m_PivotSubsystem);
 
   Alert onMainAlert = new Alert("Main Bot", AlertType.kInfo);
-  Alert onAlphaAlert = new Alert("Alpha Bot", AlertType.kInfo);
+  Alert onAlphaAlert = new Alert("Alpha Bot", AlertType.kWarning);
   Alert onSimAlert = new Alert("Sim Bot", AlertType.kInfo);
 
   RadioLogger radioLogger = new RadioLogger();
@@ -163,8 +164,38 @@ public final class RobotContainer {
     m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
     m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
 
+    // m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
+    // m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
+
+    m_Controller.povLeft().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.066)));
+    m_Controller.povRight().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.3)));
+
+    m_Controller.povDown().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
+
+
+    // TODO: add elevator and pivot setpoints to intake/shoot
+
+
+    // when stowing the arm, use the command that goes to the floor position
+    // m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition().andThen(m_ElevatorSubsystem.goToFloorHeightCommand()));
+    // m_Controller.b().onTrue(m_PivotSubsystem.goToOnCoralPosition().andThen(m_ElevatorSubsystem.goToOnCoralHeightCommand()));
+    // there are two heights with the coral, don't be comfused by any of it
+    // m_Controller.x().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefOneHeightCommand()));
+    // m_Controller.y().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefTwoHeightCommand()));
+    // m_Controller.povUp().onTrue(m_PivotSubsystem.goToBargePosition().andThen(m_ElevatorSubsystem.goToBargeHeightCommand()));
+  }
+
+  private void configureSimBindings() {
+    configureSwerveBindings();
+    drivetrain.resetPose(new Pose2d(3, 3, new Rotation2d()));
+
     m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
     m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
+
+    // m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToFloorHeightCommand().andThen(m_PivotSubsystem.goToFloorPosition()));
+    // m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand().andThen(m_PivotSubsystem.goToOnCoralPosition()));
+    // m_Controller.button(3).onTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand().andThen(m_PivotSubsystem.goToReefPosition()));
+    // m_Controller.button(4).onTrue(m_ElevatorSubsystem.goToBargeHeightCommand().andThen(m_PivotSubsystem.goToBargePosition()));
   }
 
   private void configureOperatorBindings() {
@@ -189,7 +220,13 @@ public final class RobotContainer {
     m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
   }
 
+  boolean zeroed = false;
+
   public Command getAutonomousCommand() {
-    return autoChooser.getSelected();
+    Command base = Commands.none();
+    if (!zeroed) {
+      base = Commands.run(() -> { zeroed = true; }).until(m_PivotSubsystem::closeEnough).andThen(m_ElevatorSubsystem.autoHonePose());
+    }
+    return base.andThen(autoChooser.getSelected());
   }
 }

@@ -3,6 +3,11 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.HardwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.ParentConfiguration;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -28,9 +33,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraDoubleLog;
+import frc.lib.ultralogger.UltraStringLog;
+import frc.lib.ultralogger.UltraSupplierLog;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.ElevatorConstants;
 
@@ -39,24 +47,26 @@ import static edu.wpi.first.units.Units.*;
 public class ElevatorSubsystem extends SubsystemBase {
     // Left is main, right is follower
     private final TalonFX elevatorMotorLeft = new TalonFX(9);
-    private final TalonFX elevatorMotorRight = new TalonFX(10);
-    // 10
+    private final TalonFX followerMotor = new TalonFX(10);
     private final TalonFXSimState simState = elevatorMotorLeft.getSimState();
     Alert noelevAlert = new Alert("Elevator motor not detected!", AlertType.kError);
+    
+    private final DigitalInput upperDigitalInput = new DigitalInput(ElevatorConstants.upperLimitSwitchID);
+    private final DigitalInput lowerDigitalInput = new DigitalInput(ElevatorConstants.lowerLimitSwitchID);
 
     public final SysIdRoutine elevatorSysIdRoutine = new SysIdRoutine(
         new SysIdRoutine.Config(
-            Volts.of(1).per(Seconds),
+            Volts.of(2).per(Seconds),
             Volts.of(3),
             Seconds.of(10),
-            (state) -> SignalLogger.writeString("state", state.toString())
+            (state) -> SignalLogger.writeString("SysIdElevator_State", state.toString())
         ), 
-        new Mechanism(this::driveWithVoltage, null, this)
+        new Mechanism(this::driveWithVoltage, null, this),
+        this,
+        () -> !upperDigitalInput.get(),
+        () -> !lowerDigitalInput.get()
     );
 
-    // will track the position of the elevator
-    // private final DutyCycleEncoder encoder = new DutyCycleEncoder(ElevatorConstants.absoluteEncoderChannel);
-    
     // will figure out dimensions later
     private final Mechanism2d windmill = new Mechanism2d(1.5, 2.4384);
 
@@ -74,48 +84,91 @@ public class ElevatorSubsystem extends SubsystemBase {
         true, 
         0.1);
 
-    private final PositionTorqueCurrentFOC elevatorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0));
-    private final VoltageOut elevatorVoltageControl = new VoltageOut(0).withEnableFOC(true);
+    private PositionTorqueCurrentFOC elevatorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0));
+    private final VoltageOut elevatorVoltageControl = new VoltageOut(0);
 
-    private final DigitalInput magneticLimitSwitch = new DigitalInput(ElevatorConstants.magneticLimitSwitchID);
+    private final UltraStringLog commandRunningPublisher = new UltraStringLog("Elevator/Command Running");
+    private final UltraDoubleLog sysidVoltagePublisher = new UltraDoubleLog("Elevator/SysID Commanded Voltage");
+
+    private final UltraSupplierLog leftVelocityPub = new UltraSupplierLog("Elevator/Left Velocity", elevatorMotorLeft.getVelocity());
+    private final UltraSupplierLog leftTempPub = new UltraSupplierLog("Elevator/Left Temp", elevatorMotorLeft.getDeviceTemp());
+    private final UltraSupplierLog leftPosePub = new UltraSupplierLog("Elevator/Left Pose", elevatorMotorLeft.getPosition());
+    private final UltraSupplierLog rightVelocityPub = new UltraSupplierLog("Elevator/Right Velocity", followerMotor.getVelocity());
+    private final UltraSupplierLog rightTempPub = new UltraSupplierLog("Elevator/Right Temp", followerMotor.getDeviceTemp());
+    private final UltraSupplierLog rightPosePub = new UltraSupplierLog("Elevator/Right Pose", followerMotor.getPosition());
 
     // there will be at least one limit switch and an encoder to track the position of the elevator
     public ElevatorSubsystem(BotType bot) {
-        elevatorPositionControl.withSlot(bot.slotId);
+        elevatorPositionControl = elevatorPositionControl.withSlot(bot.slotId);
 
-        elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
-        elevatorMotorRight.setNeutralMode(NeutralModeValue.Brake);
+        SoftwareLimitSwitchConfigs softLimitConfig = new SoftwareLimitSwitchConfigs()
+            .withReverseSoftLimitThreshold(ElevatorConstants.absoluteBottom)
+            .withReverseSoftLimitEnable(true)
+            .withForwardSoftLimitThreshold(ElevatorConstants.absoluteTop)
+            .withForwardSoftLimitEnable(true);
+
+        HardwareLimitSwitchConfigs hardwareLimitSwitchConfigs = new HardwareLimitSwitchConfigs()
+            .withReverseLimitAutosetPositionValue(Rotation.of(0))
+            .withReverseLimitAutosetPositionEnable(true)
+            .withReverseLimitEnable(true);
+
+        MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs()
+            .withMotionMagicCruiseVelocity(Rotations.per(Second).of(150))
+            .withMotionMagicAcceleration(Rotations.per(Second).per(Second).of(200))
+            .withMotionMagicJerk(Rotations.per(Second).per(Second).per(Second).of(350));
 
         elevatorMotorLeft.getConfigurator().apply(ElevatorConstants.realBotConfigs);
         elevatorMotorLeft.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
-        elevatorMotorRight.getConfigurator().apply(ElevatorConstants.realBotConfigs);
-        elevatorMotorRight.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
+        elevatorMotorLeft.getConfigurator().apply(hardwareLimitSwitchConfigs);
+        elevatorMotorLeft.getConfigurator().apply(softLimitConfig);
+        elevatorMotorLeft.getConfigurator().apply(motionMagicConfigs);
 
-        // elevatorMotorLeft.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
-        // elevatorMotorRight.setPosition(encoder.get() + ElevatorConstants.absoluteEncoderOffset.in(Rotations));
-        elevatorMotorRight.setControl(new Follower(9, true));
+        followerMotor.getConfigurator().apply(ElevatorConstants.realBotConfigs);
+        followerMotor.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
+        followerMotor.getConfigurator().apply(hardwareLimitSwitchConfigs);
+        followerMotor.getConfigurator().apply(softLimitConfig);
+        followerMotor.getConfigurator().apply(motionMagicConfigs);
 
+        elevatorMotorLeft.setPosition(Rotations.of(1));
+        followerMotor.setPosition(Rotations.of(1));
+
+        elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
+        followerMotor.setNeutralMode(NeutralModeValue.Brake);
+        
         simState.Orientation = ChassisReference.CounterClockwise_Positive;
         SmartDashboard.putData("Windmill", windmill);
+
+        setFollowerMode();
+        setDefaultCommand(this.stop().withName("Default Stop"));
     }
+
+    public void setFollowerMode() {
+        followerMotor.setControl(new Follower(9, true));
+    }
+
     // rev throughbore encoder, limit on bottom
 
     // I would assume that there is only going to be one motor to extend the elevator but we will see
     public Command extendArm(double rotations){
+
         return run(() -> {});
         // return runOnce(() -> {
+        //     setFollowerMode();
         //     elevatorMotorLeft.setControl(elevatorPositionControl.withPosition(rotations));
         // });
     }
 
     public void driveWithVoltage(Voltage volts) {
+        sysidVoltagePublisher.update(volts.in(Volts));
+
+        setFollowerMode();
         elevatorMotorLeft.setControl(elevatorVoltageControl.withOutput(volts));
     }
 
     public Command goToHeight(int level) {
         switch(level) {
             case 0:
-                return goToFloorHeightCommand();
+                return zeroElevatorDown();
             case 1:
                 return goToOnCoralHeightCommand();
             case 2:
@@ -123,9 +176,9 @@ public class ElevatorSubsystem extends SubsystemBase {
             case 3:
                 return goToReefTwoHeightCommand();
             case 4:
-                return goToBargeHeightCommand();
+                return zeroElevatorUp();
             default:
-                return goToFloorHeightCommand();
+                return zeroElevatorDown();
         }
     }
 
@@ -149,22 +202,16 @@ public class ElevatorSubsystem extends SubsystemBase {
         return (extendArm(ElevatorConstants.bargeHeight * ElevatorConstants.rotationsPerMeter));
     }
 
-    public Command sysIdQuazistatic(SysIdRoutine.Direction dir) {
-        return elevatorSysIdRoutine.quasistatic(dir);
-    }
-
-    public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return elevatorSysIdRoutine.dynamic(dir);
-    }
-
     /** Height is relative to bottom of motor
      */
     public Distance getElevatorHeight() {
         return Meters.of(elevatorMotorLeft.getPosition().getValueAsDouble() * ElevatorConstants.rotationsPerMeter);
     }
 
-    public boolean isCurrentSpiked() {
-        return elevatorMotorLeft.getStatorCurrent().getValueAsDouble() > 1.0;
+    public boolean isAtExtrema() {
+        var signal = elevatorMotorLeft.getVelocity();
+        StatusSignal.refreshAll(signal);
+        return Math.abs(signal.getValueAsDouble()) < 0.2 || !lowerDigitalInput.get();
     }
 
     public boolean isRotationsAlmostAtZero() {
@@ -176,12 +223,32 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public Command stop() {
-        return run(() -> elevatorMotorLeft.setControl(new VoltageOut(0).withLimitReverseMotion(true)));
+        return run(() -> {
+            driveWithVoltage(Volts.of(0));
+            followerMotor.setControl(new Follower(9, true));
+        });
     }
 
     public Command zeroElevatorDown() {
         return goToFloorHeightCommand().until(() -> isRotationsAlmostAtZero()).andThen(driveWithSlowVoltageDown())
-        .until(() -> { return isCurrentSpiked() || magneticLimitSwitch.get(); }).andThen(stop());
+        .until(() -> { return isAtExtrema() || !lowerDigitalInput.get(); }).andThen(stop());
+    }
+
+    public Command autoHoneDown() {
+        return driveWithSlowVoltageDown()
+            .until(this::isAtExtrema).andThen(resetPose()).andThen(stop().withTimeout(0.1));
+    }
+
+    public Command autoHonePose() {
+        return driveWithSlowVoltageUp().withTimeout(0.5).andThen(autoHoneDown());
+    }
+
+    public Command resetPose() {
+        return runOnce(() -> {
+            elevatorMotorLeft.setControl(new VoltageOut(0).withLimitReverseMotion(true));
+            followerMotor.setControl(new VoltageOut(0).withLimitReverseMotion(true));
+            setFollowerMode();
+        });
     }
 
     public boolean isRotationsAlmostAtMax() {
@@ -195,7 +262,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     // this command will definently be changed due to how the elevator needs to be slowed down
     public Command zeroElevatorUp() {
         return goToBargeHeightCommand().until(() -> isRotationsAlmostAtMax()).andThen(driveWithSlowVoltageUp())
-        .until(() -> { return isCurrentSpiked() || magneticLimitSwitch.get(); }).andThen(stop());
+        .until(() -> { return isAtExtrema() || !upperDigitalInput.get(); }).andThen(stop());
     }
 
     UltraDoubleLog setPose = new UltraDoubleLog("Elevator/Set Rotations");
@@ -206,6 +273,23 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        leftVelocityPub.update();
+        leftTempPub.update();
+        leftPosePub.update();
+        rightVelocityPub.update();
+        rightTempPub.update();
+        rightPosePub.update();
+
+        String name = "None";
+        Command cmd = this.getCurrentCommand();
+        if (cmd != null) {
+            name = cmd.getName();
+        }
+        commandRunningPublisher.update(name);
+
+        SmartDashboard.putBoolean("Upper Limit", !upperDigitalInput.get());
+        SmartDashboard.putBoolean("Lower Limit", !lowerDigitalInput.get());
+
         BaseStatusSignal.refreshAll(setPoseSignal, currentPoseSignal);
         setPose.update(setPoseSignal.getValue());
         currentPose.update(currentPoseSignal.getValueAsDouble());
@@ -215,9 +299,9 @@ public class ElevatorSubsystem extends SubsystemBase {
         
         noelevAlert.set(!elevatorMotorLeft.isAlive());
         
-        if (magneticLimitSwitch.get()) {
-            driveWithVoltage(Volts.of(0));
-        }
+        // if (!lowerDigitalInput.get() || !upperDigitalInput.get()) {
+        //     driveWithVoltage(Volts.of(0));
+        // }
     }
 
     @Override

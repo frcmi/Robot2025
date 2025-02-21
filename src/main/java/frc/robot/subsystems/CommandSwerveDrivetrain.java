@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
@@ -69,7 +69,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             output -> setControl(m_translationCharacterization.withVolts(output)),
             null,
             this
-        )
+        ),
+        this
     );
 
     /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
@@ -85,7 +86,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             volts -> setControl(m_steerCharacterization.withVolts(volts)),
             null,
             this
-        )
+        ),
+        this
     );
 
     /*
@@ -112,7 +114,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             },
             null,
             this
-        )
+        ),
+        this
     );
 
     /* The SysId routine to test */
@@ -234,28 +237,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
         return run(() -> this.setControl(requestSupplier.get()));
-    }
-
-    /**
-     * Runs the SysId Quasistatic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Quasistatic test
-     * @return Command to run
-     */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.quasistatic(direction);
-    }
-
-    /**
-     * Runs the SysId Dynamic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Dynamic test
-     * @return Command to run
-     */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.dynamic(direction);
     }
 
     @Override

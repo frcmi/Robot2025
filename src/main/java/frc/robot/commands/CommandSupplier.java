@@ -14,7 +14,10 @@ public class CommandSupplier extends Command {
     public CommandSupplier() {}
 
     public void setCommand(Command c) {
-        currentCommand.end(true);
+        // this.m_requirements.clear();
+        if (currentCommand != null) {
+            currentCommand.end(true);
+        }
         currentCommand = c;
     }
 
@@ -34,12 +37,17 @@ public class CommandSupplier extends Command {
     }
 
     @Override
-    public Set<Subsystem> getRequirements() {
-        return currentCommand.getRequirements();
-    }
-
-    @Override
     public boolean isFinished() {
         return currentCommand.isFinished();
     }    
+
+    @Override
+    public void end(boolean thing) {
+        currentCommand.end(thing);
+    }
+
+    @Override
+    public Set<Subsystem> getRequirements() {
+        return currentCommand.getRequirements();
+    }
 }
