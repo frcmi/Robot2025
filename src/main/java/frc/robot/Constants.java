@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import edu.wpi.first.units.measure.Angle;
 
 public final class Constants {
@@ -23,31 +24,31 @@ public final class Constants {
 
   public static boolean replay = false;
 
-  public static class RobotDetectionConstants {
-    // Mac addresses of rios, google it or ask brandon
-    public static final String mainBotMacAddress = "00:80:2F:40:6D:81";
-    public static final String alphaBotMacAddress = "";
-  }
+    public static class RobotDetectionConstants {
+        // Mac addresses of rios, google it or ask brandon
+        public static final String mainBotMacAddress = "00:80:2F:40:6D:81";
+        public static final String alphaBotMacAddress = "00:80:2F:39:0D:E5";
+    }
 
-  public static class TelemetryConstants {
-    // DON'T ENABLE UNLESS ABSOLUTELY NEEDED
-    // this will fully disable logging even when FMS is connected.
-    public static final boolean killswitch = false;
-    // If true, data won't be sent over network even when not connected to FMS
-    public static final boolean disableNetworkLogging = false;
-    // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
-    public static final boolean disableDatalog = true;
-    // Prefix in NetworkTables, must end with a '/'
-    public static final String tabPrefix = "UltraLog/";
-    // How often to re-check if the FMS is connected (and disable network logging if so)
-    public static final double fmsCheckDelay = 1000;
-  }
+    public static class TelemetryConstants {
+        // DON'T ENABLE UNLESS ABSOLUTELY NEEDED
+        // this will fully disable logging even when FMS is connected.
+        public static final boolean killswitch = false;
+        // If true, data won't be sent over network even when not connected to FMS
+        public static final boolean disableNetworkLogging = false;
+        // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
+        public static final boolean disableDatalog = false;
+        // Prefix in NetworkTables, must end with a '/'
+        public static final String tabPrefix = "UltraLog/";
+        // How often to re-check if the FMS is connected (and disable network logging if so)
+        public static final double fmsCheckDelay = 1000;
+    }
 
   public static class ClawConstants {
     public static final int beambreakID = 1;
     public static final int motorControllerID = 23;
     public static final double intakeSpeed = -0.5;
-    public static final double shootSpeed = 0.5;
+    public static final double shootSpeed = 1;
     public static final double stopSpeed = 0.0;
   }
 
@@ -98,29 +99,28 @@ public final class Constants {
     public static final double kSimulationBotG = 0.8293;
   }
 
-  public static class ElevatorConstants {
-    public static final int magneticLimitSwitchID = 19;
+    public static class ElevatorConstants {
+        public static final int upperLimitSwitchID = 3;
+        public static final int lowerLimitSwitchID = 4;
 
-    public static final int leftMotorID = 9;
-    public static final int rightMotorID = 10;
+        public static final int leftMotorID = 9;
+        public static final int rightMotorID = 10;
 
-    public static final double elevatorMidpoint = 25d; // does not need to be precise
+        // TODO: double check
+        public static final Angle absoluteBottom = Rotations.of(-0.4);
+        public static final Angle absoluteTop = Rotations.of(57.3);
+        public static final boolean absoluteCinema = true;
 
-    public static final int absoluteEncoderID = 0;
-    public static final int limitSwitchID = 2;
-
-    public static final Angle absoluteEncoderOffset = Degrees.of(0);
-
-    public static final double rotationsBeforeZero = 1.5;
-    // this is a place holder until we can figure out what the real number of rotation is
-    public static final double rotationsBeforeMaxHeight = 0.0;
-    public static final double floorHeight = rotationsBeforeZero - 0.5;
-    public static final double onCoralHeight = 0.3;
-    public static final double reefOneHeight = 0.8;
-    public static final double reefTwoHeight = 1.0;
-    public static final double bargeHeight = 1.6;
-    public static final double slowVoltageDown = -0.32;
-    public static final double slowVoltageUp = 0.32;
+        public static final double rotationsBeforeZero = 1.5;
+        // this is a place holder until we can figure out what the real number of rotation is
+        public static final double rotationsBeforeMaxHeight = 0.0;
+        public static final double floorHeight = rotationsBeforeZero - 0.5;
+        public static final double onCoralHeight = 0.3;
+        public static final double reefOneHeight = 0.8;
+        public static final double reefTwoHeight = 1.0;
+        public static final double bargeHeight = 57;
+        public static final double slowVoltageDown = -0.32;
+        public static final double slowVoltageUp = 1.5;
 
     public static final int slotId = 1;
 
@@ -132,18 +132,19 @@ public final class Constants {
             .withKS(0.0)
             .withKV(0.0)
             .withKA(0.0)
-            .withKG(0.0);
+            .withKG(0.0)
+            .withGravityType(GravityTypeValue.Elevator_Static);
 
-    public static final Slot1Configs alphaBotConfigs =
-        new Slot1Configs()
-            .withKP(0.2)
+        public static final Slot1Configs alphaBotConfigs = new Slot1Configs()
+            .withKP(0.44)
             .withKI(0.0)
             .withKD(0.0)
-            .withKS(0.12631)
-            .withKV(0.11256)
-            .withKA(0.0015562)
-            .withKG(0.16915)
-            .withGravityType(GravityTypeValue.Elevator_Static);
+            .withKS(0.068905)
+            .withKV(0.12637)
+            .withKA(0.0018766)
+            .withKG(0.51897)
+            .withGravityType(GravityTypeValue.Elevator_Static)
+            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
 
     public static final Slot1Configs simBotConfigs =
         new Slot1Configs()

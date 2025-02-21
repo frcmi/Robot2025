@@ -18,7 +18,8 @@ public interface ElevatorIO {
     public double rightPosition;
     public boolean rightMotorAlive;
 
-    public boolean limitSwitchState;
+    public boolean upperLimitSwitchState;
+    public boolean lowerLimitSwitchState;
   }
 
   public default void updateInputs(ElevatorInputs inputs) {}

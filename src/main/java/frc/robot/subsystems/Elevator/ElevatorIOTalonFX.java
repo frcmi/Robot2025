@@ -21,7 +21,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private final TalonFX elevatorMotorLeft;
   private final TalonFX elevatorMotorRight;
 
-  private final DigitalInput magneticLimitSwitch;
+  private final DigitalInput upperLimitSwitch;
+  private final DigitalInput lowerLimitSwitch;
 
   private final PositionTorqueCurrentFOC elevatorPositionControl =
       new PositionTorqueCurrentFOC(Degrees.of(0));
@@ -38,10 +39,11 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private final StatusSignal<Temperature> rightMotorTemperature;
   private final StatusSignal<Current> rightMotorStatorCurrent;
 
-  public ElevatorIOTalonFX(BotType bot, int leftMotorID, int rightMotorID, int limitSwitchID) {
+  public ElevatorIOTalonFX(BotType bot, int leftMotorID, int rightMotorID, int upperLimitSwitchID, int lowerLimitSwitchID) {
     elevatorMotorLeft = new TalonFX(leftMotorID);
     elevatorMotorRight = new TalonFX(rightMotorID);
-    magneticLimitSwitch = new DigitalInput(limitSwitchID);
+    upperLimitSwitch = new DigitalInput(upperLimitSwitchID);
+    lowerLimitSwitch = new DigitalInput(lowerLimitSwitchID);
 
     elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
     elevatorMotorRight.setNeutralMode(NeutralModeValue.Brake);
@@ -95,7 +97,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     inputs.rightPosition = rightMotorPosition.getValueAsDouble();
     inputs.rightTemperature = rightMotorTemperature.getValueAsDouble();
 
-    inputs.limitSwitchState = magneticLimitSwitch.get();
+    inputs.upperLimitSwitchState = upperLimitSwitch.get();
+    inputs.lowerLimitSwitchState = lowerLimitSwitch.get();
   }
 
   @Override

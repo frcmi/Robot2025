@@ -3,6 +3,9 @@ package frc.robot.subsystems.Elevator;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.controls.VoltageOut;
+
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
@@ -56,6 +59,40 @@ public class ElevatorSubsystem extends SubsystemBase {
   public void driveWithVoltage(Voltage volts) {
     elevatorIO.runVoltage(volts);
   }
+
+  public Command zeroElevatorDown() {
+      return goToFloorHeightCommand().until(() -> isRotationsAlmostAtZero()).andThen(driveWithSlowVoltageDown())
+      .until(() -> { return isAtExtrema() || !inputs.lowerLimitSwitchState; }).andThen(stop());
+  }
+
+  public Command autoHoneDown() {
+      return driveWithSlowVoltageDown()
+          .until(this::isAtExtrema).andThen(resetPose()).andThen(stop().withTimeout(0.1));
+  }
+
+  public Command autoHonePose() {
+      return driveWithSlowVoltageUp().withTimeout(0.5).andThen(autoHoneDown());
+  }
+
+  public boolean isRotationsAlmostAtMax() {
+    return inputs.leftPosition >= ElevatorConstants.rotationsBeforeMaxHeight;
+  }
+
+  public Command driveWithSlowVoltageUp() {
+      return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageUp)));
+  }
+
+  // this command will definently be changed due to how the elevator needs to be slowed down
+  public Command zeroElevatorUp() {
+      return goToBargeHeightCommand().until(() -> isRotationsAlmostAtMax()).andThen(driveWithSlowVoltageUp())
+      .until(() -> { return isAtExtrema() || !inputs.upperLimitSwitchState; }).andThen(stop());
+  }
+
+  public Command resetPose() {
+        return runOnce(() -> {
+            elevatorIO.runVoltage(Volts.of(0));
+        });
+    }
 
   public Command goToHeight(int level) {
     switch (level) {
@@ -125,34 +162,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     return run(() -> elevatorIO.runVoltage(Volts.of(0)));
   }
 
-  public Command zeroElevatorDown() {
-    return goToFloorHeightCommand()
-        .until(() -> isRotationsAlmostAtZero())
-        .andThen(driveWithSlowVoltageDown())
-        .until(
-            () -> {
-              return isCurrentSpiked() || inputs.limitSwitchState;
-            })
-        .andThen(stop());
-  }
-
-  public boolean isRotationsAlmostAtMax() {
-    return inputs.leftPosition >= ElevatorConstants.rotationsBeforeMaxHeight;
-  }
-
-  public Command driveWithSlowVoltageUp() {
-    return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageUp)));
-  }
-
-  public Command zeroElevatorUp() {
-    return goToBargeHeightCommand()
-        .until(() -> isRotationsAlmostAtMax())
-        .andThen(driveWithSlowVoltageUp())
-        .until(
-            () -> {
-              return isCurrentSpiked() || inputs.limitSwitchState;
-            })
-        .andThen(stop());
+  public boolean isAtExtrema() {
+      double signal = inputs.leftVelocity;
+      return Math.abs(signal) < 0.2 || !inputs.lowerLimitSwitchState;
   }
 
   @Override
@@ -164,7 +176,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     noElevatorAlert.set(inputs.leftMotorAlive && inputs.rightMotorAlive);
 
-    if (inputs.limitSwitchState) {
+    if (inputs.upperLimitSwitchState || inputs.lowerLimitSwitchState) {
       driveWithVoltage(Volts.of(0));
     }
   }

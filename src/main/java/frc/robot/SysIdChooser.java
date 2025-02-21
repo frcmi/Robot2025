@@ -2,7 +2,6 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.CommandSupplier;
 import frc.robot.subsystems.Drive.Drive;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
@@ -24,7 +23,7 @@ public class SysIdChooser {
     // commandSwerveDrivetrain.m_sysIdRoutineTranslation);
     // sysIdChooser.addOption("Swerve Rotation", commandSwerveDrivetrain.m_sysIdRoutineRotation);
     // sysIdChooser.addOption("Swerve Steer", commandSwerveDrivetrain.m_sysIdRoutineSteer);
-    sysIdChooser.addOption("Elevator", elevatorSubsystem.elevatorSysIdRoutine);
+    // sysIdChooser.addOption("Elevator", elevatorSubsystem.elevatorSysIdRoutine);
     // Pivot is tuned manually
 
     sysIdChooser.onChange(this::updateCommands);

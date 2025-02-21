@@ -135,6 +135,13 @@ public class PivotSubsystem extends SubsystemBase {
     }
   }
 
+  public Command goToAngle(Angle angle) {
+    return Commands.runOnce(
+      () -> {
+        setAngle = angle;
+      }, this);
+  }
+
   public Command goToFloorAngle() {
     return Commands.runOnce(
         () -> {
@@ -168,6 +175,10 @@ public class PivotSubsystem extends SubsystemBase {
         () -> {
           setAngle = PivotConstants.bargeAngle;
         });
+  }
+
+  public boolean closeEnough() {
+    return Math.abs(pid.getPositionError()) < Degrees.of(2).in(Radians);
   }
 
   public Angle getEncoderAngle() {

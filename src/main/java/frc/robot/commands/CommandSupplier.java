@@ -10,13 +10,15 @@ public class CommandSupplier extends Command {
   public CommandSupplier(Command commandToRun) {
     currentCommand = commandToRun;
   }
-
   public CommandSupplier() {}
 
-  public void setCommand(Command c) {
-    currentCommand.end(true);
-    currentCommand = c;
-  }
+    public void setCommand(Command c) {
+        // this.m_requirements.clear();
+        if (currentCommand != null) {
+            currentCommand.end(true);
+        }
+        currentCommand = c;
+    }
 
   @Override
   public void execute() {
@@ -42,4 +44,9 @@ public class CommandSupplier extends Command {
   public boolean isFinished() {
     return currentCommand.isFinished();
   }
+
+    @Override
+    public void end(boolean thing) {
+        currentCommand.end(thing);
+    }
 }
