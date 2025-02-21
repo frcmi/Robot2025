@@ -6,6 +6,8 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
@@ -26,6 +28,8 @@ public class ClawIOTalonFXS implements ClawIO {
     TalonFXSConfiguration configuration = new TalonFXSConfiguration();
     configuration.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
     clawMotor.getConfigurator().apply(configuration);
+
+    clawMotor.setNeutralMode(NeutralModeValue.Brake);
 
     motorVelocity = clawMotor.getVelocity();
     motorTemperature = clawMotor.getDeviceTemp();

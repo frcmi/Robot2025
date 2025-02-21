@@ -39,6 +39,7 @@ public class PivotIOTalonFX implements PivotIO {
     TalonFXConfiguration configuration = new TalonFXConfiguration();
     configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     pivotMotor.getConfigurator().apply(configuration);
+    pivotMotor.setNeutralMode(NeutralModeValue.Brake);
   }
 
   @Override

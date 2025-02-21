@@ -14,6 +14,8 @@ public class ClawSubsystem extends SubsystemBase {
 
   public ClawSubsystem(ClawIO clawIO) {
     this.clawIO = clawIO;
+
+    setDefaultCommand(stop());
   }
 
   public boolean isCurrentSpiked() {

@@ -1,8 +1,13 @@
 package frc.robot.subsystems.Elevator;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Second;
 
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.HardwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -45,13 +50,37 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     upperLimitSwitch = new DigitalInput(upperLimitSwitchID);
     lowerLimitSwitch = new DigitalInput(lowerLimitSwitchID);
 
+    SoftwareLimitSwitchConfigs softLimitConfig = new SoftwareLimitSwitchConfigs()
+            .withReverseSoftLimitThreshold(ElevatorConstants.absoluteBottom)
+            .withReverseSoftLimitEnable(true)
+            .withForwardSoftLimitThreshold(ElevatorConstants.absoluteTop)
+            .withForwardSoftLimitEnable(true);
+
+    HardwareLimitSwitchConfigs hardwareLimitSwitchConfigs = new HardwareLimitSwitchConfigs()
+        .withReverseLimitAutosetPositionValue(Rotations.of(0))
+        .withReverseLimitAutosetPositionEnable(true)
+        .withReverseLimitEnable(true);
+
+    MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs()
+        .withMotionMagicCruiseVelocity(Rotations.per(Second).of(150))
+        .withMotionMagicAcceleration(Rotations.per(Second).per(Second).of(200))
+        .withMotionMagicJerk(Rotations.per(Second).per(Second).per(Second).of(350));
+
+    elevatorMotorLeft.getConfigurator().apply(hardwareLimitSwitchConfigs);
+    elevatorMotorLeft.getConfigurator().apply(softLimitConfig);
+    elevatorMotorLeft.getConfigurator().apply(motionMagicConfigs);
+
+    elevatorMotorRight.getConfigurator().apply(hardwareLimitSwitchConfigs);
+    elevatorMotorRight.getConfigurator().apply(softLimitConfig);
+    elevatorMotorRight.getConfigurator().apply(motionMagicConfigs);
+
+    elevatorMotorLeft.setPosition(Rotations.of(1));
+    elevatorMotorRight.setPosition(Rotations.of(1));
+
     elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
     elevatorMotorRight.setNeutralMode(NeutralModeValue.Brake);
 
     elevatorPositionControl.withSlot(bot.slotId);
-
-    elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
-    elevatorMotorRight.setNeutralMode(NeutralModeValue.Brake);
 
     elevatorMotorLeft.getConfigurator().apply(ElevatorConstants.realBotConfigs);
     elevatorMotorLeft.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);

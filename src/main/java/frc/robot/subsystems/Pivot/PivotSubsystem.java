@@ -59,6 +59,7 @@ public class PivotSubsystem extends SubsystemBase {
               PivotConstants.kRealBotI,
               PivotConstants.kRealBotD,
               new Constraints(PivotConstants.maxVelocity, PivotConstants.maxAccel));
+      pid.setTolerance(Degrees.of(3.5).in(Radians));
       feedforward =
           new ArmFeedforward(
               PivotConstants.kRealBotS,
@@ -81,6 +82,7 @@ public class PivotSubsystem extends SubsystemBase {
     }
     pid.setTolerance(Degrees.of(3.5).in(Radians));
     this.pivotIO = pivotIO;
+
     setDefaultCommand(this.setHoldAngle());
   }
 
@@ -110,6 +112,14 @@ public class PivotSubsystem extends SubsystemBase {
 
           double pidOut = pid.calculate(currentAngle, setpoint);
           pidPublisher.update(pidOut);
+
+          double signum = Math.signum(pidOut);
+          if (pid.atSetpoint() && pid.getPositionError() < 0) {
+            pidOut = 0;
+            if (closeEnough()) {
+              signum = 0;
+            }
+          }
 
           double ff = feedforward.calculate(currentAngle, pid.getSetpoint().velocity);
           ffPublisher.update(ff);
@@ -183,19 +193,13 @@ public class PivotSubsystem extends SubsystemBase {
 
   public Angle getEncoderAngle() {
     if (Robot.isReal()) {
-      double encoderValue = inputs.encoderPosition - 0.75;
-      if (encoderValue <= -0.2) {
+      double encoderValue = inputs.encoderPosition - 0.70 - 0.38853565346339136;
+      if (encoderValue <= -0.3) {
         encoderValue += 1;
       }
       return Rotations.of(encoderValue);
     }
     return Rotations.of(inputs.encoderPosition);
-  }
-
-  public void sysIDLog() {
-    double encoderValue = getEncoderAngle().in(Rotations);
-
-    SignalLogger.writeDouble("Pivot Angle", encoderValue);
   }
 
   @Override

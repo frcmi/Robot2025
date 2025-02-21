@@ -28,15 +28,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   private final Alert noElevatorAlert = new Alert("Elevator motor not detected!", AlertType.kError);
 
-  public final SysIdRoutine elevatorSysIdRoutine =
-      new SysIdRoutine(
-          new SysIdRoutine.Config(
-              Volts.of(1).per(Seconds),
-              Volts.of(3),
-              Seconds.of(10),
-              (state) -> SignalLogger.writeString("state", state.toString())),
-          new Mechanism(this::driveWithVoltage, null, this));
-
   private final LoggedMechanism2d windmill = new LoggedMechanism2d(1.5, 2.4384);
 
   private final LoggedMechanismRoot2d root = windmill.getRoot("elevator", 0.75, 0);
@@ -47,6 +38,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     this.elevatorIO = elevatorIO;
     // simState.Orientation = ChassisReference.CounterClockwise_Positive;
     SmartDashboard.putData("Windmill", windmill);
+
+    setDefaultCommand(this.stop());
   }
 
   public Command extendArm(double rotations) {
@@ -129,14 +122,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public Command goToBargeHeightCommand() {
     return (extendArm(ElevatorConstants.bargeHeight * ElevatorConstants.rotationsPerMeter));
-  }
-
-  public Command sysIdQuazistatic(SysIdRoutine.Direction dir) {
-    return elevatorSysIdRoutine.quasistatic(dir);
-  }
-
-  public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-    return elevatorSysIdRoutine.dynamic(dir);
   }
 
   /** Height is relative to bottom of motor */
