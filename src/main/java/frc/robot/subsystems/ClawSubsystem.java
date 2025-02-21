@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraSupplierLog;
 import frc.robot.Constants.BotType;
