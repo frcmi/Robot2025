@@ -9,6 +9,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.ElevatorConstants;
 
 public class ElevatorIOSim implements ElevatorIO {
@@ -49,6 +50,7 @@ public class ElevatorIOSim implements ElevatorIO {
       elevatorSim.setInputVoltage(setVolts.in(Volts));
     } else if (setPosition != null) {
       double pidVal = pid.calculate(inputs.leftPosition, setPosition.in(Rotations));
+      SmartDashboard.putNumber("Pid val", pidVal);
       elevatorSim.setInputVoltage(pidVal + ff.calculate(Math.signum(pidVal)));
     } else {
       elevatorSim.setInputVoltage(ff.calculate(0));
@@ -59,8 +61,7 @@ public class ElevatorIOSim implements ElevatorIO {
     inputs.leftPosition =
         (elevatorSim.getPositionMeters() - ElevatorConstants.minElevatorHeight)
             * ElevatorConstants.rotationsPerMeter;
-    inputs.leftVelocity =
-        elevatorSim.getVelocityMetersPerSecond() * ElevatorConstants.rotationsPerMeter;
+    inputs.leftVelocity = elevatorSim.getVelocityMetersPerSecond();
     if (setPosition != null) {
       inputs.leftSetPoint = setPosition.in(Rotations);
     } else {

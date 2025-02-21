@@ -24,25 +24,25 @@ public final class Constants {
 
   public static boolean replay = false;
 
-    public static class RobotDetectionConstants {
-        // Mac addresses of rios, google it or ask brandon
-        public static final String mainBotMacAddress = "00:80:2F:40:6D:81";
-        public static final String alphaBotMacAddress = "00:80:2F:39:0D:E5";
-    }
+  public static class RobotDetectionConstants {
+    // Mac addresses of rios, google it or ask brandon
+    public static final String mainBotMacAddress = "00:80:2F:40:6D:81";
+    public static final String alphaBotMacAddress = "00:80:2F:39:0D:E5";
+  }
 
-    public static class TelemetryConstants {
-        // DON'T ENABLE UNLESS ABSOLUTELY NEEDED
-        // this will fully disable logging even when FMS is connected.
-        public static final boolean killswitch = false;
-        // If true, data won't be sent over network even when not connected to FMS
-        public static final boolean disableNetworkLogging = false;
-        // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
-        public static final boolean disableDatalog = false;
-        // Prefix in NetworkTables, must end with a '/'
-        public static final String tabPrefix = "UltraLog/";
-        // How often to re-check if the FMS is connected (and disable network logging if so)
-        public static final double fmsCheckDelay = 1000;
-    }
+  public static class TelemetryConstants {
+    // DON'T ENABLE UNLESS ABSOLUTELY NEEDED
+    // this will fully disable logging even when FMS is connected.
+    public static final boolean killswitch = false;
+    // If true, data won't be sent over network even when not connected to FMS
+    public static final boolean disableNetworkLogging = false;
+    // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
+    public static final boolean disableDatalog = false;
+    // Prefix in NetworkTables, must end with a '/'
+    public static final String tabPrefix = "UltraLog/";
+    // How often to re-check if the FMS is connected (and disable network logging if so)
+    public static final double fmsCheckDelay = 1000;
+  }
 
   public static class ClawConstants {
     public static final int beambreakID = 1;
@@ -77,7 +77,7 @@ public final class Constants {
     public static final double maxAccel = 0.0;
 
     public static final double gearRatio = 0.6;
-    public static final double momentOfInertia = 0.01;
+    public static final double momentOfInertia = 0.001;
     public static final double length = 0.5;
 
     public static final double kRealBotP = 1.15;
@@ -89,38 +89,38 @@ public final class Constants {
     public static final double kRealBotA = 0.0;
     public static final double kRealBotG = 0.52;
 
-    public static final double kSimulationBotP = 0.01;
+    public static final double kSimulationBotP = 0.02;
     public static final double kSimulationBotI = 0.0;
     public static final double kSimulationBotD = 0.0;
 
     public static final double kSimulationBotS = 0.0;
     public static final double kSimulationBotV = 0.0;
     public static final double kSimulationBotA = 0.0;
-    public static final double kSimulationBotG = 0.8293;
+    public static final double kSimulationBotG = 0.08293;
   }
 
-    public static class ElevatorConstants {
-        public static final int upperLimitSwitchID = 3;
-        public static final int lowerLimitSwitchID = 4;
+  public static class ElevatorConstants {
+    public static final int upperLimitSwitchID = 3;
+    public static final int lowerLimitSwitchID = 4;
 
-        public static final int leftMotorID = 9;
-        public static final int rightMotorID = 10;
+    public static final int leftMotorID = 9;
+    public static final int rightMotorID = 10;
 
-        // TODO: double check
-        public static final Angle absoluteBottom = Rotations.of(-0.4);
-        public static final Angle absoluteTop = Rotations.of(57.3);
-        public static final boolean absoluteCinema = true;
+    // TODO: double check
+    public static final Angle absoluteBottom = Rotations.of(-0.4);
+    public static final Angle absoluteTop = Rotations.of(57.3);
+    public static final boolean absoluteCinema = true;
 
-        public static final double rotationsBeforeZero = 1.5;
-        // this is a place holder until we can figure out what the real number of rotation is
-        public static final double rotationsBeforeMaxHeight = 0.0;
-        public static final double floorHeight = rotationsBeforeZero - 0.5;
-        public static final double onCoralHeight = 0.3;
-        public static final double reefOneHeight = 0.8;
-        public static final double reefTwoHeight = 1.0;
-        public static final double bargeHeight = 57;
-        public static final double slowVoltageDown = -0.32;
-        public static final double slowVoltageUp = 1.5;
+    public static final double rotationsBeforeZero = 1.5;
+    // this is a place holder until we can figure out what the real number of rotation is
+    public static final double rotationsBeforeMaxHeight = 0.0;
+    public static final double floorHeight = rotationsBeforeZero - 0.5;
+    public static final double onCoralHeight = 25;
+    public static final double reefOneHeight = 30;
+    public static final double reefTwoHeight = 40;
+    public static final double bargeHeight = 57;
+    public static final double slowVoltageDown = -0.32;
+    public static final double slowVoltageUp = 1.5;
 
     public static final int slotId = 1;
 
@@ -135,7 +135,8 @@ public final class Constants {
             .withKG(0.0)
             .withGravityType(GravityTypeValue.Elevator_Static);
 
-        public static final Slot1Configs alphaBotConfigs = new Slot1Configs()
+    public static final Slot1Configs alphaBotConfigs =
+        new Slot1Configs()
             .withKP(0.44)
             .withKI(0.0)
             .withKD(0.0)
@@ -148,7 +149,7 @@ public final class Constants {
 
     public static final Slot1Configs simBotConfigs =
         new Slot1Configs()
-            .withKP(60)
+            .withKP(6)
             .withKI(0.0)
             .withKD(0.0)
             .withKS(0)
@@ -158,7 +159,7 @@ public final class Constants {
             .withGravityType(GravityTypeValue.Elevator_Static);
 
     // TODO: get conversion value
-    public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR
+    public static final double rotationsPerMeter = 29; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR
     public static final double gearRatio = 8.0 / 1.0;
     public static final double elevatorInertia = 0.001; // In Kg Meters^2
     public static final double minElevatorHeight = 0.2; // FOR SIM!!!

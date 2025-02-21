@@ -18,11 +18,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.SysIdRoutine;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.Units;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.ClawConstants;
@@ -31,7 +26,6 @@ import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.Claw.ClawIOTalonFXS;
 import frc.robot.subsystems.Claw.ClawSubsystem;
 import frc.robot.subsystems.Climber.ClimberIOTalonFX;
@@ -42,6 +36,7 @@ import frc.robot.subsystems.Drive.ModuleIOTalonFX;
 import frc.robot.subsystems.Elevator.ElevatorIOSim;
 import frc.robot.subsystems.Elevator.ElevatorIOTalonFX;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.Pivot.PivotIOSim;
 import frc.robot.subsystems.Pivot.PivotIOTalonFX;
 import frc.robot.subsystems.Pivot.PivotSubsystem;
@@ -53,6 +48,7 @@ public final class RobotContainer {
 
   private final CommandXboxController m_Controller = new CommandXboxController(0);
   private final CommandJoystick m_OperatorController = new CommandJoystick(1);
+  private final CommandXboxController m_SimController = new CommandXboxController(3);
 
   public final Drive drivetrain =
       new Drive(
@@ -180,6 +176,7 @@ public final class RobotContainer {
     configureSwerveBindings();
     configureOperatorBindings();
     configureTuningBindings();
+    configureSimBindings();
     m_LedSubsystem.setDefaultCommand(m_LedSubsystem.fauxRSL());
 
     m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intakeWithBeambreak());
@@ -193,11 +190,11 @@ public final class RobotContainer {
     m_Controller.povLeft().whileTrue(m_PivotSubsystem.goToAngle(Rotations.of(0.066)));
     m_Controller.povRight().whileTrue(m_PivotSubsystem.goToAngle(Rotations.of(0.3)));
 
-    m_Controller.povDown().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
-
+    m_Controller
+        .povDown()
+        .whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
 
     // TODO: add elevator and pivot setpoints to intake/shoot
-
 
     // when stowing the arm, use the command that goes to the floor position
     // m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition().andThen(m_ElevatorSubsystem.goToFloorHeightCommand()));
@@ -209,11 +206,8 @@ public final class RobotContainer {
   }
 
   private void configureSimBindings() {
-    configureSwerveBindings();
-    drivetrain.setPose(new Pose2d(3, 3, new Rotation2d()));
-
-    m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
-    m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
+    m_SimController.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
+    m_SimController.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
 
     // m_Controller.button(1).onTrue(m_ElevatorSubsystem.goToFloorHeightCommand().andThen(m_PivotSubsystem.goToFloorPosition()));
     // m_Controller.button(2).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand().andThen(m_PivotSubsystem.goToOnCoralPosition()));
@@ -253,7 +247,13 @@ public final class RobotContainer {
   public Command getAutonomousCommand() {
     Command base = Commands.none();
     if (!zeroed) {
-      base = Commands.run(() -> { zeroed = true; }).until(m_PivotSubsystem::closeEnough).andThen(m_ElevatorSubsystem.autoHonePose());
+      base =
+          Commands.run(
+                  () -> {
+                    zeroed = true;
+                  })
+              .until(m_PivotSubsystem::closeEnough)
+              .andThen(m_ElevatorSubsystem.autoHonePose());
     }
     return base.andThen(autoChooser.getSelected());
   }

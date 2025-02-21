@@ -2,10 +2,6 @@ package frc.robot.subsystems.Elevator;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.controls.VoltageOut;
-
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
@@ -14,8 +10,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.Constants.ElevatorConstants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
@@ -28,7 +22,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   private final Alert noElevatorAlert = new Alert("Elevator motor not detected!", AlertType.kError);
 
-  private final LoggedMechanism2d windmill = new LoggedMechanism2d(1.5, 2.4384);
+  private final LoggedMechanism2d windmill = new LoggedMechanism2d(1.5, 3);
 
   private final LoggedMechanismRoot2d root = windmill.getRoot("elevator", 0.75, 0);
   public final LoggedMechanismLigament2d elevator =
@@ -38,8 +32,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     this.elevatorIO = elevatorIO;
     // simState.Orientation = ChassisReference.CounterClockwise_Positive;
     SmartDashboard.putData("Windmill", windmill);
-
-    setDefaultCommand(this.stop());
   }
 
   public Command extendArm(double rotations) {
@@ -54,17 +46,25 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public Command zeroElevatorDown() {
-      return goToFloorHeightCommand().until(() -> isRotationsAlmostAtZero()).andThen(driveWithSlowVoltageDown())
-      .until(() -> { return isAtExtrema() || !inputs.lowerLimitSwitchState; }).andThen(stop());
+    return goToFloorHeightCommand()
+        .until(() -> isRotationsAlmostAtZero())
+        .andThen(driveWithSlowVoltageDown())
+        .until(
+            () -> {
+              return isAtExtrema() || !inputs.lowerLimitSwitchState;
+            })
+        .andThen(stop());
   }
 
   public Command autoHoneDown() {
-      return driveWithSlowVoltageDown()
-          .until(this::isAtExtrema).andThen(resetPose()).andThen(stop().withTimeout(0.1));
+    return driveWithSlowVoltageDown()
+        .until(this::isAtExtrema)
+        .andThen(resetPose())
+        .andThen(stop().withTimeout(0.1));
   }
 
   public Command autoHonePose() {
-      return driveWithSlowVoltageUp().withTimeout(0.5).andThen(autoHoneDown());
+    return driveWithSlowVoltageUp().withTimeout(0.5).andThen(autoHoneDown());
   }
 
   public boolean isRotationsAlmostAtMax() {
@@ -72,20 +72,27 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public Command driveWithSlowVoltageUp() {
-      return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageUp)));
+    return run(() -> driveWithVoltage(Volts.of(ElevatorConstants.slowVoltageUp)));
   }
 
   // this command will definently be changed due to how the elevator needs to be slowed down
   public Command zeroElevatorUp() {
-      return goToBargeHeightCommand().until(() -> isRotationsAlmostAtMax()).andThen(driveWithSlowVoltageUp())
-      .until(() -> { return isAtExtrema() || !inputs.upperLimitSwitchState; }).andThen(stop());
+    return goToBargeHeightCommand()
+        .until(() -> isRotationsAlmostAtMax())
+        .andThen(driveWithSlowVoltageUp())
+        .until(
+            () -> {
+              return isAtExtrema() || !inputs.upperLimitSwitchState;
+            })
+        .andThen(stop());
   }
 
   public Command resetPose() {
-        return runOnce(() -> {
-            elevatorIO.runVoltage(Volts.of(0));
+    return runOnce(
+        () -> {
+          elevatorIO.runVoltage(Volts.of(0));
         });
-    }
+  }
 
   public Command goToHeight(int level) {
     switch (level) {
@@ -105,23 +112,23 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public Command goToFloorHeightCommand() {
-    return (extendArm(ElevatorConstants.floorHeight * ElevatorConstants.rotationsPerMeter));
+    return (extendArm(ElevatorConstants.floorHeight));
   }
 
   public Command goToOnCoralHeightCommand() {
-    return (extendArm(ElevatorConstants.onCoralHeight * ElevatorConstants.rotationsPerMeter));
+    return (extendArm(ElevatorConstants.onCoralHeight));
   }
 
   public Command goToReefOneHeightCommand() {
-    return (extendArm(ElevatorConstants.reefOneHeight * ElevatorConstants.rotationsPerMeter));
+    return (extendArm(ElevatorConstants.reefOneHeight));
   }
 
   public Command goToReefTwoHeightCommand() {
-    return (extendArm(ElevatorConstants.reefTwoHeight * ElevatorConstants.rotationsPerMeter));
+    return (extendArm(ElevatorConstants.reefTwoHeight));
   }
 
   public Command goToBargeHeightCommand() {
-    return (extendArm(ElevatorConstants.bargeHeight * ElevatorConstants.rotationsPerMeter));
+    return (extendArm(ElevatorConstants.bargeHeight));
   }
 
   /** Height is relative to bottom of motor */
@@ -148,8 +155,8 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public boolean isAtExtrema() {
-      double signal = inputs.leftVelocity;
-      return Math.abs(signal) < 0.2 || !inputs.lowerLimitSwitchState;
+    double signal = inputs.leftVelocity;
+    return Math.abs(signal) < 0.2 || !inputs.lowerLimitSwitchState;
   }
 
   @Override

@@ -1,28 +1,30 @@
 package frc.lib.ultralogger;
 
-import java.io.ObjectInputFilter.Status;
+import com.ctre.phoenix6.StatusSignal;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-
-import com.ctre.phoenix6.StatusSignal;
 
 public class UltraSupplierLog {
   private DoubleSupplier supplier;
   private UltraDoubleLog logEntry;
 
   public UltraSupplierLog(String name, StatusSignal doubleSupplier) {
-      logEntry = new UltraDoubleLog(name);
-      this.supplier = () -> { StatusSignal.refreshAll(doubleSupplier); return doubleSupplier.getValueAsDouble(); };
+    logEntry = new UltraDoubleLog(name);
+    this.supplier =
+        () -> {
+          StatusSignal.refreshAll(doubleSupplier);
+          return doubleSupplier.getValueAsDouble();
+        };
   }
-  
+
   public UltraSupplierLog(String name, Supplier<Double> doubleSupplier) {
-      logEntry = new UltraDoubleLog(name);
-      this.supplier = doubleSupplier::get;
+    logEntry = new UltraDoubleLog(name);
+    this.supplier = doubleSupplier::get;
   }
-  
+
   public UltraSupplierLog(String name, DoubleSupplier doubleSupplier) {
-      logEntry = new UltraDoubleLog(name);
-      this.supplier = doubleSupplier;
+    logEntry = new UltraDoubleLog(name);
+    this.supplier = doubleSupplier;
   }
 
   public void update() {

@@ -44,27 +44,35 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private final StatusSignal<Temperature> rightMotorTemperature;
   private final StatusSignal<Current> rightMotorStatorCurrent;
 
-  public ElevatorIOTalonFX(BotType bot, int leftMotorID, int rightMotorID, int upperLimitSwitchID, int lowerLimitSwitchID) {
+  public ElevatorIOTalonFX(
+      BotType bot,
+      int leftMotorID,
+      int rightMotorID,
+      int upperLimitSwitchID,
+      int lowerLimitSwitchID) {
     elevatorMotorLeft = new TalonFX(leftMotorID);
     elevatorMotorRight = new TalonFX(rightMotorID);
     upperLimitSwitch = new DigitalInput(upperLimitSwitchID);
     lowerLimitSwitch = new DigitalInput(lowerLimitSwitchID);
 
-    SoftwareLimitSwitchConfigs softLimitConfig = new SoftwareLimitSwitchConfigs()
+    SoftwareLimitSwitchConfigs softLimitConfig =
+        new SoftwareLimitSwitchConfigs()
             .withReverseSoftLimitThreshold(ElevatorConstants.absoluteBottom)
             .withReverseSoftLimitEnable(true)
             .withForwardSoftLimitThreshold(ElevatorConstants.absoluteTop)
             .withForwardSoftLimitEnable(true);
 
-    HardwareLimitSwitchConfigs hardwareLimitSwitchConfigs = new HardwareLimitSwitchConfigs()
-        .withReverseLimitAutosetPositionValue(Rotations.of(0))
-        .withReverseLimitAutosetPositionEnable(true)
-        .withReverseLimitEnable(true);
+    HardwareLimitSwitchConfigs hardwareLimitSwitchConfigs =
+        new HardwareLimitSwitchConfigs()
+            .withReverseLimitAutosetPositionValue(Rotations.of(0))
+            .withReverseLimitAutosetPositionEnable(true)
+            .withReverseLimitEnable(true);
 
-    MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs()
-        .withMotionMagicCruiseVelocity(Rotations.per(Second).of(150))
-        .withMotionMagicAcceleration(Rotations.per(Second).per(Second).of(200))
-        .withMotionMagicJerk(Rotations.per(Second).per(Second).per(Second).of(350));
+    MotionMagicConfigs motionMagicConfigs =
+        new MotionMagicConfigs()
+            .withMotionMagicCruiseVelocity(Rotations.per(Second).of(150))
+            .withMotionMagicAcceleration(Rotations.per(Second).per(Second).of(200))
+            .withMotionMagicJerk(Rotations.per(Second).per(Second).per(Second).of(350));
 
     elevatorMotorLeft.getConfigurator().apply(hardwareLimitSwitchConfigs);
     elevatorMotorLeft.getConfigurator().apply(softLimitConfig);

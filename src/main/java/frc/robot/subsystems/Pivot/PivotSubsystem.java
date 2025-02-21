@@ -2,7 +2,6 @@ package frc.robot.subsystems.Pivot;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -147,9 +146,10 @@ public class PivotSubsystem extends SubsystemBase {
 
   public Command goToAngle(Angle angle) {
     return Commands.runOnce(
-      () -> {
-        setAngle = angle;
-      }, this);
+        () -> {
+          setAngle = angle;
+        },
+        this);
   }
 
   public Command goToFloorAngle() {
