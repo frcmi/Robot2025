@@ -53,12 +53,7 @@ public class PivotIOTalonFX implements PivotIO {
   }
 
   @Override
-  public void runMotorDutyCycle(double speed) {
-    pivotMotor.set(speed);
-  }
-
-  @Override
-  public void runMotorVoltageOut(Voltage volts) {
+  public void runVoltage(Voltage volts) {
     pivotMotor.setControl(voltageControl.withOutput(volts));
   }
 }

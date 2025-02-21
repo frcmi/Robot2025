@@ -31,9 +31,11 @@ import frc.robot.subsystems.Climber.ClimberSubsystem;
 import frc.robot.subsystems.Drive.Drive;
 import frc.robot.subsystems.Drive.GyroIOPigeon2;
 import frc.robot.subsystems.Drive.ModuleIOTalonFX;
+import frc.robot.subsystems.Elevator.ElevatorIOSim;
 import frc.robot.subsystems.Elevator.ElevatorIOTalonFX;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.Pivot.PivotIOSim;
 import frc.robot.subsystems.Pivot.PivotIOTalonFX;
 import frc.robot.subsystems.Pivot.PivotSubsystem;
 import frc.robot.subsystems.Vision.VisionSubsystem;
@@ -63,29 +65,24 @@ public final class RobotContainer {
   private ClawSubsystem m_ClawSubsystem =
       new ClawSubsystem(
           new ClawIOTalonFXS(ClawConstants.beambreakID, ClawConstants.motorControllerID));
-  private ElevatorSubsystem m_ElevatorSubsystem =
-      new ElevatorSubsystem(
-          new ElevatorIOTalonFX(
-              botType,
-              ElevatorConstants.leftMotorID,
-              ElevatorConstants.rightMotorID,
-              ElevatorConstants.limitSwitchID));
-  public PivotSubsystem m_PivotSubsystem =
-      new PivotSubsystem(new PivotIOTalonFX(PivotConstants.motorID, PivotConstants.encoderID));
+  private ElevatorSubsystem m_ElevatorSubsystem;
+  public PivotSubsystem m_PivotSubsystem;
 
   private int algaeLevel = 0;
   private UltraDoubleLog levelLog = new UltraDoubleLog("Algae Level");
 
   private final SendableChooser<Command> autoChooser;
-  private final SysIdChooser sysIdChooser =
-      new SysIdChooser(drivetrain, m_ElevatorSubsystem, m_PivotSubsystem);
 
   Alert onMainAlert = new Alert("Main Bot", AlertType.kInfo);
   Alert onAlphaAlert = new Alert("Alpha Bot", AlertType.kInfo);
   Alert onSimAlert = new Alert("Sim Bot", AlertType.kInfo);
 
   public RobotContainer() {
-    initSubsystems();
+    if (Robot.isReal()) {
+      initSubsystems();
+    } else if (Robot.isSimulation()) {
+      initSubsystemsSim();
+    }
 
     switch (botType) {
       case MAIN_BOT:
@@ -111,6 +108,23 @@ public final class RobotContainer {
 
   private void initSubsystems() {
     m_Vision = VisionSubsystem.configure(drivetrain);
+    m_ElevatorSubsystem =
+        new ElevatorSubsystem(
+            new ElevatorIOTalonFX(
+                botType,
+                ElevatorConstants.leftMotorID,
+                ElevatorConstants.rightMotorID,
+                ElevatorConstants.limitSwitchID));
+    m_PivotSubsystem =
+        new PivotSubsystem(
+            botType, new PivotIOTalonFX(PivotConstants.motorID, PivotConstants.encoderID));
+    m_PivotSubsystem.addLigament(m_ElevatorSubsystem.elevator);
+  }
+
+  private void initSubsystemsSim() {
+    m_ElevatorSubsystem = new ElevatorSubsystem(new ElevatorIOSim());
+    m_PivotSubsystem = new PivotSubsystem(botType, new PivotIOSim());
+    m_PivotSubsystem.addLigament(m_ElevatorSubsystem.elevator);
   }
 
   private void changeLevel(boolean moveUp) {
@@ -173,23 +187,28 @@ public final class RobotContainer {
   private void configureOperatorBindings() {
     m_OperatorController.button(1).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
     m_OperatorController.button(2).whileTrue(m_ClawSubsystem.shootWithBeambreak());
+
     m_OperatorController.button(3).whileTrue(m_ElevatorSubsystem.goToReefOneHeightCommand());
     m_OperatorController.button(3).whileTrue(m_PivotSubsystem.goToReefOneAngle());
+
     m_OperatorController.button(4).whileTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand());
     m_OperatorController.button(4).whileTrue(m_PivotSubsystem.goToReefTwoAngle());
+
     m_OperatorController.button(5).whileTrue(m_ElevatorSubsystem.goToBargeHeightCommand());
     m_OperatorController.button(5).onTrue(m_PivotSubsystem.goToBargeAngle());
+
     m_OperatorController.button(6).whileTrue(m_ElevatorSubsystem.goToFloorHeightCommand());
     m_OperatorController.button(6).whileTrue(m_PivotSubsystem.goToFloorAngle());
+
     m_OperatorController.button(7).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand());
     m_OperatorController.button(7).onTrue(m_PivotSubsystem.goToOnCoralAngle());
   }
 
   private void configureTuningBindings() {
-    m_TuningController.a().whileTrue(sysIdChooser.sysIdDynamicForward());
-    m_TuningController.x().whileTrue(sysIdChooser.sysIdDynamicReverse());
-    m_TuningController.b().whileTrue(sysIdChooser.sysIdQuasistaticForward());
-    m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
+    // m_TuningController.a().whileTrue(sysIdChooser.sysIdDynamicForward());
+    // m_TuningController.x().whileTrue(sysIdChooser.sysIdDynamicReverse());
+    // m_TuningController.b().whileTrue(sysIdChooser.sysIdQuasistaticForward());
+    // m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
   }
 
   public Command getAutonomousCommand() {

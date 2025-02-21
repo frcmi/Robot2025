@@ -7,7 +7,6 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,7 +23,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private final ElevatorIO elevatorIO;
   private final ElevatorInputsAutoLogged inputs = new ElevatorInputsAutoLogged();
 
-  private final Alert noelevAlert = new Alert("Elevator motor not detected!", AlertType.kError);
+  private final Alert noElevatorAlert = new Alert("Elevator motor not detected!", AlertType.kError);
 
   public final SysIdRoutine elevatorSysIdRoutine =
       new SysIdRoutine(
@@ -105,7 +104,9 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   /** Height is relative to bottom of motor */
   public Distance getElevatorHeight() {
-    return Meters.of(inputs.leftPosition * ElevatorConstants.rotationsPerMeter);
+    return Meters.of(
+        inputs.leftPosition / ElevatorConstants.rotationsPerMeter
+            + ElevatorConstants.minElevatorHeight);
   }
 
   public boolean isCurrentSpiked() {
@@ -159,11 +160,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     elevatorIO.updateInputs(inputs);
     Logger.processInputs("Elevator", inputs);
 
-    if (RobotBase.isReal()) {
-      elevator.setLength(getElevatorHeight().in(Meters));
-    }
+    elevator.setLength(getElevatorHeight().in(Meters));
 
-    noelevAlert.set(inputs.leftMotorAlive && inputs.rightMotorAlive);
+    noElevatorAlert.set(inputs.leftMotorAlive && inputs.rightMotorAlive);
 
     if (inputs.limitSwitchState) {
       driveWithVoltage(Volts.of(0));

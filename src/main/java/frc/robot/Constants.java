@@ -70,19 +70,32 @@ public final class Constants {
     public static final Angle reefTwoAngle = Degrees.of(45);
     public static final Angle bargeAngle = Degrees.of(90);
 
-    public static final Angle maxAngle = Degrees.of(5);
-    public static final Angle minAngle = Degrees.of(0);
+    public static final Angle maxAngle = Degrees.of(5000);
+    public static final Angle minAngle = Degrees.of(-1000.5);
     public static final double maxVelocity = 0.0;
     public static final double maxAccel = 0.0;
 
-    public static final double kP = 1.15;
-    public static final double kI = 0.0;
-    public static final double kD = 0.0;
+    public static final double gearRatio = 0.6;
+    public static final double momentOfInertia = 0.01;
+    public static final double length = 0.5;
 
-    public static final double kS = 0.13;
-    public static final double kV = 0.0;
-    public static final double kA = 0.0;
-    public static final double kG = 0.52;
+    public static final double kRealBotP = 1.15;
+    public static final double kRealBotI = 0.0;
+    public static final double kRealBotD = 0.0;
+
+    public static final double kRealBotS = 0.13;
+    public static final double kRealBotV = 0.0;
+    public static final double kRealBotA = 0.0;
+    public static final double kRealBotG = 0.52;
+
+    public static final double kSimulationBotP = 0.01;
+    public static final double kSimulationBotI = 0.0;
+    public static final double kSimulationBotD = 0.0;
+
+    public static final double kSimulationBotS = 0.0;
+    public static final double kSimulationBotV = 0.0;
+    public static final double kSimulationBotA = 0.0;
+    public static final double kSimulationBotG = 0.8293;
   }
 
   public static class ElevatorConstants {
@@ -134,13 +147,13 @@ public final class Constants {
 
     public static final Slot1Configs simBotConfigs =
         new Slot1Configs()
-            .withKP(0.2)
+            .withKP(60)
             .withKI(0.0)
             .withKD(0.0)
-            .withKS(0.12631)
-            .withKV(0.11256)
-            .withKA(0.0015562)
-            .withKG(0.16915)
+            .withKS(0)
+            .withKV(0)
+            .withKA(0)
+            .withKG(0.1265)
             .withGravityType(GravityTypeValue.Elevator_Static);
 
     // TODO: get conversion value

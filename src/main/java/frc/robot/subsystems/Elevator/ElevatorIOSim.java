@@ -3,6 +3,7 @@ package frc.robot.subsystems.Elevator;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
+import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
@@ -28,16 +29,29 @@ public class ElevatorIOSim implements ElevatorIO {
           ElevatorConstants.simBotConfigs.kI,
           ElevatorConstants.simBotConfigs.kD);
 
+  private final ElevatorFeedforward ff =
+      new ElevatorFeedforward(
+          ElevatorConstants.simBotConfigs.kS,
+          ElevatorConstants.simBotConfigs.kG,
+          ElevatorConstants.simBotConfigs.kV);
+
   private Voltage setVolts = null;
 
   private Angle setPosition = null;
+
+  public ElevatorIOSim() {
+    elevatorSim.setState(1.4, 0);
+  }
 
   @Override
   public void updateInputs(ElevatorInputs inputs) {
     if (setVolts != null) {
       elevatorSim.setInputVoltage(setVolts.in(Volts));
     } else if (setPosition != null) {
-      elevatorSim.setInputVoltage(pid.calculate(inputs.leftPosition, setPosition.in(Rotations)));
+      double pidVal = pid.calculate(inputs.leftPosition, setPosition.in(Rotations));
+      elevatorSim.setInputVoltage(pidVal + ff.calculate(Math.signum(pidVal)));
+    } else {
+      elevatorSim.setInputVoltage(ff.calculate(0));
     }
 
     elevatorSim.update(0.020);
@@ -47,7 +61,11 @@ public class ElevatorIOSim implements ElevatorIO {
             * ElevatorConstants.rotationsPerMeter;
     inputs.leftVelocity =
         elevatorSim.getVelocityMetersPerSecond() * ElevatorConstants.rotationsPerMeter;
-    inputs.leftSetPoint = setPosition.in(Rotations);
+    if (setPosition != null) {
+      inputs.leftSetPoint = setPosition.in(Rotations);
+    } else {
+      inputs.leftSetPoint = 0;
+    }
     inputs.leftMotorAlive = true;
     inputs.leftTemperature = 0;
 

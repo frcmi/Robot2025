@@ -1,6 +1,5 @@
 package frc.robot.subsystems.Pivot;
 
-import com.ctre.phoenix6.controls.ControlRequest;
 import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -12,6 +11,7 @@ public interface PivotIO {
     public double statorCurrent;
     public boolean motorAlive;
     public double position;
+    public double setPoint;
 
     public double pidOutput;
     public double ffOutput;
@@ -21,9 +21,5 @@ public interface PivotIO {
 
   public default void updateInputs(PivotInputs inputs) {}
 
-  public default void runMotorDutyCycle(double speed) {}
-
-  public default void runMotorVoltageOut(Voltage volts) {}
-
-  public default void runMotorControl(ControlRequest control) {}
+  public default void runVoltage(Voltage volts) {}
 }
