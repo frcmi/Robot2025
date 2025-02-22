@@ -182,7 +182,8 @@ public final class RobotContainer {
   private void configureBindings() {
     configureSwerveBindings();
     configureTuningBindings();
-    configureScuffedBindings();
+    // configureScuffedBindings();
+    configureOperatorBindings();
     m_LedSubsystem.setDefaultCommand(m_LedSubsystem.fauxRSL());
     
     // TODO: correct color
@@ -247,18 +248,16 @@ public final class RobotContainer {
   }
 
   private void configureOperatorBindings() {
-    // m_OperatorController.button(1).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
-    // m_OperatorController.button(2).whileTrue(m_ClawSubsystem.shootWithBeambreak());
-    // m_OperatorController.button(3).whileTrue(m_ElevatorSubsystem.goToReefOneHeightCommand());
-    // m_OperatorController.button(3).whileTrue(m_PivotSubsystem.goToReefOneAngle());
-    // m_OperatorController.button(4).whileTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand());
-    // m_OperatorController.button(4).whileTrue(m_PivotSubsystem.goToReefTwoAngle());
-    // m_OperatorController.button(5).whileTrue(m_ElevatorSubsystem.goToBargeHeightCommand());
-    // m_OperatorController.button(5).onTrue(m_PivotSubsystem.goToBargeAngle());
-    // m_OperatorController.button(6).whileTrue(m_ElevatorSubsystem.goToFloorHeightCommand());
-    // m_OperatorController.button(6).whileTrue(m_PivotSubsystem.goToFloorAngle());
-    // m_OperatorController.button(7).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand());
-    // m_OperatorController.button(7).onTrue(m_PivotSubsystem.goToOnCoralAngle());
+    m_OperatorController.button(7).onTrue(scuffedElevator(Constants.ElevatorConstants.bargeHeight).andThen(scuffedPivot(Constants.PivotConstants.bargeAngle)));
+    m_OperatorController.button(5).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(scuffedPivot(Constants.PivotConstants.floorAngle)));
+    m_OperatorController.button(8).onTrue(scuffedElevator(Constants.ElevatorConstants.stowHeight).andThen(scuffedPivot(Constants.PivotConstants.stowAngle)));
+    m_OperatorController.button(2).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(scuffedPivot(Constants.PivotConstants.processorAngle)));
+    m_OperatorController.button(4).onTrue(scuffedElevator(Constants.ElevatorConstants.reefOneHeight).andThen(scuffedPivot(Constants.PivotConstants.reefOneAngle)));
+    m_OperatorController.button(1).onTrue(scuffedElevator(Constants.ElevatorConstants.reefTwoHeight).andThen(scuffedPivot(Constants.PivotConstants.reefTwoAngle)));
+    m_OperatorController.button(6).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
+    m_OperatorController.button(9).whileTrue(m_ClawSubsystem.intake());
+    // m_OperatorController.button().whileTrue(m_ClawSubsystem.shootWithBeambreak());
+    m_OperatorController.button(3).whileTrue(m_ClawSubsystem.shoot());
   }
 
   private void configureTuningBindings() {
