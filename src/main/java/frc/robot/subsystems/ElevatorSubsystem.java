@@ -3,8 +3,10 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.HardwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.ParentConfiguration;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
@@ -13,6 +15,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
@@ -124,6 +127,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         elevatorMotorLeft.getConfigurator().apply(hardwareLimitSwitchConfigs);
         elevatorMotorLeft.getConfigurator().apply(softLimitConfig);
         elevatorMotorLeft.getConfigurator().apply(motionMagicConfigs);
+        elevatorMotorLeft.getConfigurator().apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
 
         followerMotor.getConfigurator().apply(ElevatorConstants.realBotConfigs);
         followerMotor.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
@@ -165,18 +169,18 @@ public class ElevatorSubsystem extends SubsystemBase {
     public Command holdPose(){
         // return run(() -> {});
         return run(() -> {
-            if (pause) {
-                return;
-            }
+            // if (pause) {
+            //     return;
+            // }
 
-            if (poseToHold == ElevatorConstants.stowHeight) {
-                StatusSignal.refreshAll(currentPoseSignal);
-                if (Math.abs(currentPoseSignal.getValueAsDouble() - 0.2) <= 0.1) {
-                    pause = true;
-                    driveWithVoltage(Volts.of(0));
-                    return;
-                }
-            }
+            // if (poseToHold == ElevatorConstants.stowHeight) {
+            //     StatusSignal.refreshAll(currentPoseSignal);
+            //     if (Math.abs(currentPoseSignal.getValueAsDouble() - 0.2) <= 0.1) {
+            //         pause = true;
+            //         driveWithVoltage(Volts.of(0));
+            //         return;
+            //     }
+            // }
 
             setFollowerMode();
             elevatorMotorLeft.setControl(elevatorPositionControl.withPosition(poseToHold));

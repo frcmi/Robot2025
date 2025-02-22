@@ -69,8 +69,8 @@ public class PivotSubsystem extends SubsystemBase {
 
     // private final UltraDoubleLog encoderPublisher = new UltraDoubleLog("Pivot/Encoder Rotations");
     // private final UltraDoubleLog velPublisher = new UltraDoubleLog("Pivot/Velocity");
-    private ProfiledPIDController pid = new ProfiledPIDController(PivotConstants.kP, PivotConstants.kI, PivotConstants.kD, new Constraints(PivotConstants.maxVelocity, PivotConstants.maxAccel));
-    private ArmFeedforward feedforward = new ArmFeedforward(PivotConstants.kS, PivotConstants.kG, PivotConstants.kV, PivotConstants.kA);
+    private ProfiledPIDController pid = new ProfiledPIDController(PivotConstants.TurboBot.kP, PivotConstants.TurboBot.kI, PivotConstants.TurboBot.kD, new Constraints(PivotConstants.maxVelocity, PivotConstants.maxAccel));
+    private ArmFeedforward feedforward = new ArmFeedforward(PivotConstants.TurboBot.kS, PivotConstants.TurboBot.kG, 0, 0);
 
 
     public final SysIdRoutine pivotSysIdRoutine = new SysIdRoutine(
@@ -84,15 +84,30 @@ public class PivotSubsystem extends SubsystemBase {
         this
     );
 
+    private double offset = PivotConstants.TurboBot.offset;
+    private double discontinuityPoint = PivotConstants.TurboBot.discontinuity;
+
     public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
+        TalonFXConfiguration configuration = new TalonFXConfiguration();
+        
+        if (bot == BotType.ALPHA_BOT) {
+            feedforward = new ArmFeedforward(PivotConstants.AlphaBot.kS, PivotConstants.AlphaBot.kG, 0, 0);
+            offset = PivotConstants.AlphaBot.offset;
+            discontinuityPoint = PivotConstants.AlphaBot.discontinuity;
+
+            pid.setP(PivotConstants.AlphaBot.kP);
+            pid.setI(PivotConstants.AlphaBot.kI);
+            pid.setD(PivotConstants.AlphaBot.kD);
+
+            configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        }
+
         pid.setTolerance(Degrees.of(3.5).in(Radians)); //, Degrees.of(3).in(Radians));
         velocity.setUpdateFrequency(1000);
         // motorPositionControl.withSlot(bot.slotId);
 
         // pivotMotor.getConfigurator().apply(slot0Configs);
         pivotLigament2d = elevatorLigament.append(new MechanismLigament2d("wrist", 0.5, 90, 6, new Color8Bit(Color.kPurple)));
-        TalonFXConfiguration configuration = new TalonFXConfiguration();
-        configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotMotor.getConfigurator().apply(configuration);
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);
 
@@ -175,8 +190,8 @@ public class PivotSubsystem extends SubsystemBase {
     }
 
     public Angle getEncoder() {
-        double encoderValue = encoder.get() - 0.75 - 0.38853565346339136 +0.05;
-        if (encoderValue <= -0.3) {
+        double encoderValue = encoder.get() + offset;
+        if (encoderValue <= discontinuityPoint) {
             encoderValue += 1;
         }
 

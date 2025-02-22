@@ -76,14 +76,29 @@ public final class Constants {
         public static final double maxVelocity = 0.0;
         public static final double maxAccel = 0.0;
 
-        public static final double kP = 1.15;
-        public static final double kI = 0.0;
-        public static final double kD = 0.0;
+        public static class AlphaBot {  
+            public static final double kP = 1.15;
+            public static final double kI = 0.0;
+            public static final double kD = 0.0;
 
-        public static final double kS = 0.13;
-        public static final double kV = 0.0;
-        public static final double kA = 0.0;
-        public static final double kG = 0.52;
+            public static final double kS = 0.13;
+            public static final double kG = 0.52;
+
+            public static final double offset = 0.05 - 0.75 - 0.38853565346339136;
+            public static final double discontinuity = -0.3;
+        }
+
+        public static class TurboBot {
+            public static final double kP = 0.2;
+            public static final double kI = 0.0;
+            public static final double kD = 0.0;
+
+            public static final double kS = 0.28;
+            public static final double kG = 0.539;
+
+            public static final double offset = -0.6544539163613479;
+            public static final double discontinuity = -0.4;
+        }
     }
 
     public static class ElevatorConstants {
@@ -110,14 +125,15 @@ public final class Constants {
         public static final int slotId = 1;
 
         public static final Slot0Configs realBotConfigs = new Slot0Configs()
-            .withKP(0.0)
+            .withKP(0.58)
             .withKI(0.0)
             .withKD(0.0)
-            .withKS(0.0)
-            .withKV(0.0)
-            .withKA(0.0)
-            .withKG(0.0)
-            .withGravityType(GravityTypeValue.Elevator_Static);
+            .withKS(0.17078)
+            .withKV(0.12648)
+            .withKA(0.0027715)
+            .withKG(0.58887)
+            .withGravityType(GravityTypeValue.Elevator_Static)
+            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign);
 
         public static final Slot1Configs alphaBotConfigs = new Slot1Configs()
             .withKP(0.44)
@@ -128,7 +144,7 @@ public final class Constants {
             .withKA(0.0018766)
             .withKG(0.51897)
             .withGravityType(GravityTypeValue.Elevator_Static)
-            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
+            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign);
 
         // TODO: get conversion value(if this isn't it)
         public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 

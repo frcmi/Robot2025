@@ -208,7 +208,14 @@ public final class RobotContainer {
   }
 
   public Command scuffedPivot(Angle rotations) {
-    return Commands.runOnce(() -> m_PivotSubsystem.setAngle(rotations)).andThen(Commands.run(() -> {})).withTimeout(0.1);
+    final Angle rotations2;
+    if (botType == BotType.MAIN_BOT) {
+      rotations2 = rotations.minus(Rotations.of(0.3 - 0.29393715734842896));
+    } else {
+      rotations2 = rotations;
+    }
+
+    return Commands.runOnce(() -> m_PivotSubsystem.setAngle(rotations2)).andThen(Commands.run(() -> {})).withTimeout(0.1);
   }
 
   public void configureScuffedBindings() {
