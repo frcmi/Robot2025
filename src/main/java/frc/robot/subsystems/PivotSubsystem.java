@@ -96,24 +96,29 @@ public class PivotSubsystem extends SubsystemBase {
         pivotMotor.getConfigurator().apply(configuration);
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);
 
-        Angle stow = Rotations.of(0.27261940556548514);
-
         // makes closeEnough return false on first poll after bot enabled
-        pid.setGoal(stow.in(Radians));
+        pid.setGoal(PivotConstants.stowAngle.in(Radians));
         pid.calculate(0);
 
 
-        this.setAngle(stow).ignoringDisable(true).schedule();
+        setDefaultCommand(this.holdAngle());
     }
 
     public boolean closeEnough() {
         return Math.abs(pid.getPositionError()) < Degrees.of(2).in(Radians);
     }
 
-    public Command setAngle(Angle angle) {
-        double setpoint = angle.in(Radians);
+    private Angle currentAngle = PivotConstants.stowAngle;
+
+    public void setAngle(Angle angle) {
+        currentAngle = angle;
+    }
+
+    public Command holdAngle() {
         return run(() -> {
-            setpointPublisher.update(angle.in(Rotations));
+            double setpoint = currentAngle.in(Radians);
+
+            setpointPublisher.update(currentAngle.in(Rotations));
             double currentAngle = getEncoder().in(Radians);
             double voltage = pid.calculate(currentAngle, setpoint);
             pidPublisher.update(voltage);
@@ -131,36 +136,38 @@ public class PivotSubsystem extends SubsystemBase {
             }
         });
     }
-    public Command goToAngle(int level) {
+
+    public void goToAngle(int level) {
         switch(level) {
             case 0:
-                return goToFloorAngle();
+                goToFloorAngle();
             case 1:
-                return goToOnCoralAngle();
+                goToOnCoralAngle();
             case 2:
-                return goToReefOneAngle();
+                goToReefOneAngle();
             case 3:
-                return goToReefTwoAngle();
+                goToReefTwoAngle();
             case 4:
-                return goToBargeAngle();
+                goToBargeAngle();
             default:
-                return goToFloorAngle();
+                goToFloorAngle();
         }
     }
-    public Command goToFloorAngle() {
-        return setAngle(PivotConstants.floorAngle);
+
+    public void goToFloorAngle() {
+        setAngle(PivotConstants.floorAngle);
     }
-    public Command goToOnCoralAngle() {
-        return setAngle(PivotConstants.onCoralAngle);
+    public void goToOnCoralAngle() {
+        setAngle(PivotConstants.onCoralAngle);
     }
-    public Command goToReefOneAngle() {
-        return setAngle(PivotConstants.reefOneAngle);
+    public void goToReefOneAngle() {
+        setAngle(PivotConstants.reefOneAngle);
     }
-    public Command goToReefTwoAngle() {
-        return setAngle(PivotConstants.reefTwoAngle);
+    public void goToReefTwoAngle() {
+        setAngle(PivotConstants.reefTwoAngle);
     }
-    public Command goToBargeAngle() {
-        return setAngle(PivotConstants.bargeAngle);
+    public void goToBargeAngle() {
+        setAngle(PivotConstants.bargeAngle);
     }
 
     private void driveWithVoltage(Voltage volts) {

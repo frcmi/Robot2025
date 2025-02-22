@@ -37,6 +37,7 @@ import frc.robot.subsystems.PivotSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.ElevatorConstants;
@@ -58,6 +59,7 @@ public final class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController m_Controller = new CommandXboxController(0);
+    private final CommandXboxController m_ScuffedController = new CommandXboxController(2);
     private final CommandXboxController m_TuningController = new CommandXboxController(4);
     private final CommandJoystick m_OperatorController = new CommandJoystick(1);
 
@@ -127,8 +129,28 @@ public final class RobotContainer {
       algaeLevel = 0;
 
     levelLog.update((double)algaeLevel);
-    ParallelCommandGroup parallelLevelCommands = new ParallelCommandGroup(m_PivotSubsystem.goToAngle(algaeLevel), m_ElevatorSubsystem.goToHeight(algaeLevel));
+    ParallelCommandGroup parallelLevelCommands = null;// new ParallelCommandGroup(m_PivotSubsystem.goToAngle(algaeLevel), m_ElevatorSubsystem.goToHeight(algaeLevel));
     parallelLevelCommands.schedule();
+  }
+
+  public SwerveRequest getDriveReq() {
+    double multiplier = 1;
+
+    if (m_Controller.rightTrigger().getAsBoolean()) {
+      multiplier /= 4;
+    }
+
+    if (m_ElevatorSubsystem.getElevatorHeight() > 15) {
+      multiplier /= 2;
+    }
+    
+    if (m_ElevatorSubsystem.getElevatorHeight() > 30) {
+      multiplier /= 2;
+    }
+
+    return drive.withVelocityX(-m_Controller.getLeftY() * MaxSpeed * multiplier) // Drive forward with negative Y (forward)
+      .withVelocityY(-m_Controller.getLeftX() * MaxSpeed * multiplier) // Drive left with negative X (left)
+      .withRotationalRate(-m_Controller.getRightX() * MaxAngularRate * multiplier); // Drive counterclockwise with negative X (left)
   }
 
   private void configureSwerveBindings() {
@@ -136,11 +158,7 @@ public final class RobotContainer {
     // and Y is defined as to the left according to WPILib convention.
     drivetrain.setDefaultCommand(
         // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(() ->
-            drive.withVelocityX(-m_Controller.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                .withVelocityY(-m_Controller.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                .withRotationalRate(-m_Controller.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-        )
+        drivetrain.applyRequest(this::getDriveReq)
     );
 
     // m_Controller.a().whileTrue(drivetrain.applyRequest(() -> brake));
@@ -156,7 +174,7 @@ public final class RobotContainer {
     // m_Controller.start().and(m_Controller.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
     // // reset the field-centric heading on left bumper press
-    // m_Controller.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+    m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
@@ -164,36 +182,48 @@ public final class RobotContainer {
   private void configureBindings() {
     configureSwerveBindings();
     configureTuningBindings();
+    configureScuffedBindings();
     m_LedSubsystem.setDefaultCommand(m_LedSubsystem.fauxRSL());
     
     // TODO: correct color
     new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
 
     // TODO: add elevator and pivot setpoints to intake/shoot
-    m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intakeWithBeambreak());
-    m_Controller.rightTrigger().whileTrue(m_ClawSubsystem.shootWithBeambreak());
-    m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
-    m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
+    // m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intakeWithBeambreak());
+    // m_Controller.rightTrigger().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.3)).until(m_PivotSubsystem::closeEnough).andThen(m_ClawSubsystem.shoot()));
+    // m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
+    // m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
 
     // m_Controller.povUp().onTrue(Commands.runOnce(() -> changeLevel(true)));
     // m_Controller.povDown().onTrue(Commands.runOnce(() -> changeLevel(false)));
 
-    m_Controller.povLeft().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.066)));
-    m_Controller.povRight().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.3)));
+    // m_Controller.leftBumper().whileTrue(m_PivotSubsystem.setAngle(Constants.PivotConstants.reefOneAngle));
+    // m_Controller.leftTrigger().whileTrue(m_PivotSubsystem.setAngle(Constants.PivotConstants.reefTwoAngle));
 
     m_Controller.povDown().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
+  }
 
+  public Command scuffedElevator(double rotations) {
+    return Commands.runOnce(() -> m_ElevatorSubsystem.extendArm(rotations)).andThen(Commands.none().withTimeout(0.05));
+  }
 
-    // TODO: add elevator and pivot setpoints to intake/shoot
+  public Command scuffedPivot(Angle rotations) {
+    return Commands.runOnce(() -> m_PivotSubsystem.setAngle(rotations)).andThen(Commands.run(() -> {})).withTimeout(0.1);
+  }
 
+  public void configureScuffedBindings() {
+    m_ScuffedController.y().onTrue(scuffedElevator(Constants.ElevatorConstants.bargeHeight).andThen(scuffedPivot(Constants.PivotConstants.bargeAngle)));
+    m_ScuffedController.a().onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(scuffedPivot(Constants.PivotConstants.floorAngle)));
+    m_ScuffedController.x().onTrue(scuffedElevator(Constants.ElevatorConstants.stowHeight).andThen(scuffedPivot(Constants.PivotConstants.stowAngle)));
+    m_ScuffedController.b().onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(scuffedPivot(Constants.PivotConstants.processorAngle)));
+    m_ScuffedController.povDown().onTrue(scuffedElevator(Constants.ElevatorConstants.reefOneHeight).andThen(scuffedPivot(Constants.PivotConstants.reefOneAngle)));
+    m_ScuffedController.povUp().onTrue(scuffedElevator(Constants.ElevatorConstants.reefTwoHeight).andThen(scuffedPivot(Constants.PivotConstants.reefTwoAngle)));
+    // m_ScuffedController.povLeft().onTrue(scuffedElevator(Constants.ElevatorConstants.onCoralHeight).andThen(scuffedPivot(Constants.PivotConstants.onCoralAngle)));
 
-    // when stowing the arm, use the command that goes to the floor position
-    // m_Controller.a().onTrue(m_PivotSubsystem.goToFloorPosition().andThen(m_ElevatorSubsystem.goToFloorHeightCommand()));
-    // m_Controller.b().onTrue(m_PivotSubsystem.goToOnCoralPosition().andThen(m_ElevatorSubsystem.goToOnCoralHeightCommand()));
-    // there are two heights with the coral, don't be comfused by any of it
-    // m_Controller.x().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefOneHeightCommand()));
-    // m_Controller.y().onTrue(m_PivotSubsystem.goToReefPosition().andThen(m_ElevatorSubsystem.goToReefTwoHeightCommand()));
-    // m_Controller.povUp().onTrue(m_PivotSubsystem.goToBargePosition().andThen(m_ElevatorSubsystem.goToBargeHeightCommand()));
+    m_ScuffedController.leftTrigger().whileTrue(m_ClawSubsystem.intakeWithBeambreak());
+    m_ScuffedController.leftBumper().whileTrue(m_ClawSubsystem.intake());
+    m_ScuffedController.rightTrigger().whileTrue(m_ClawSubsystem.shootWithBeambreak());
+    m_ScuffedController.rightBumper().whileTrue(m_ClawSubsystem.shoot());
   }
 
   private void configureSimBindings() {
@@ -210,18 +240,18 @@ public final class RobotContainer {
   }
 
   private void configureOperatorBindings() {
-    m_OperatorController.button(1).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
-    m_OperatorController.button(2).whileTrue(m_ClawSubsystem.shootWithBeambreak());
-    m_OperatorController.button(3).whileTrue(m_ElevatorSubsystem.goToReefOneHeightCommand());
-    m_OperatorController.button(3).whileTrue(m_PivotSubsystem.goToReefOneAngle());
-    m_OperatorController.button(4).whileTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand());
-    m_OperatorController.button(4).whileTrue(m_PivotSubsystem.goToReefTwoAngle());
-    m_OperatorController.button(5).whileTrue(m_ElevatorSubsystem.goToBargeHeightCommand());
-    m_OperatorController.button(5).onTrue(m_PivotSubsystem.goToBargeAngle());
-    m_OperatorController.button(6).whileTrue(m_ElevatorSubsystem.goToFloorHeightCommand());
-    m_OperatorController.button(6).whileTrue(m_PivotSubsystem.goToFloorAngle());
-    m_OperatorController.button(7).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand());
-    m_OperatorController.button(7).onTrue(m_PivotSubsystem.goToOnCoralAngle());
+    // m_OperatorController.button(1).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
+    // m_OperatorController.button(2).whileTrue(m_ClawSubsystem.shootWithBeambreak());
+    // m_OperatorController.button(3).whileTrue(m_ElevatorSubsystem.goToReefOneHeightCommand());
+    // m_OperatorController.button(3).whileTrue(m_PivotSubsystem.goToReefOneAngle());
+    // m_OperatorController.button(4).whileTrue(m_ElevatorSubsystem.goToReefTwoHeightCommand());
+    // m_OperatorController.button(4).whileTrue(m_PivotSubsystem.goToReefTwoAngle());
+    // m_OperatorController.button(5).whileTrue(m_ElevatorSubsystem.goToBargeHeightCommand());
+    // m_OperatorController.button(5).onTrue(m_PivotSubsystem.goToBargeAngle());
+    // m_OperatorController.button(6).whileTrue(m_ElevatorSubsystem.goToFloorHeightCommand());
+    // m_OperatorController.button(6).whileTrue(m_PivotSubsystem.goToFloorAngle());
+    // m_OperatorController.button(7).onTrue(m_ElevatorSubsystem.goToOnCoralHeightCommand());
+    // m_OperatorController.button(7).onTrue(m_PivotSubsystem.goToOnCoralAngle());
   }
 
   private void configureTuningBindings() {

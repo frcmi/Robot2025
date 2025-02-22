@@ -45,7 +45,7 @@ public final class Constants {
     public static class ClawConstants {
         public static final int beambreakChannel = 1;
         public static final int motorControllerID = 23;
-        public static final double intakeSpeed = -0.5;
+        public static final double intakeSpeed = -0.75;
         public static final double shootSpeed = 1;
         public static final double stopSpeed = 0.0;
     }
@@ -63,11 +63,13 @@ public final class Constants {
         public static final int motorID = 13;
         // TODO: figure out real values
         // The "zero" angle is forward, larger values will rotate upwards
-        public static final Angle floorAngle = Degrees.of(0);
-        public static final Angle onCoralAngle = Degrees.of(20);
-        public static final Angle reefOneAngle = Degrees.of(45);
-        public static final Angle reefTwoAngle = Degrees.of(45);
-        public static final Angle bargeAngle = Degrees.of(90);
+        public static final Angle floorAngle = Rotations.of(0.05876435021910875);
+        public static final Angle onCoralAngle = Rotations.of(0.13607985215199636);
+        public static final Angle reefOneAngle = Rotations.of(0.13396100209902506);
+        public static final Angle reefTwoAngle = Rotations.of(0.14660425241510633);
+        public static final Angle processorAngle = Rotations.of(0.13322460283061502);
+        public static final Angle bargeAngle = Rotations.of(0.3);
+        public static final Angle stowAngle = Rotations.of(0.27261940556548514);
 
         public static final Angle maxAngle = Degrees.of(5);
         public static final Angle minAngle = Degrees.of(0);
@@ -90,17 +92,18 @@ public final class Constants {
 
         // TODO: double check
         public static final Angle absoluteBottom = Rotations.of(-0.4);
-        public static final Angle absoluteTop = Rotations.of(57.3);
-        public static final boolean absoluteCinema = true;
+        public static final Angle absoluteTop = Rotations.of(60);
+        public static final boolean absoluteCinema = absoluteTop.gt(absoluteBottom);
 
         public static final double rotationsBeforeZero = 1.5;
         // this is a place holder until we can figure out what the real number of rotation is
         public static final double rotationsBeforeMaxHeight = 0.0;
-        public static final double floorHeight = rotationsBeforeZero - 0.5;
-        public static final double onCoralHeight = 0.3;
-        public static final double reefOneHeight = 0.8;
-        public static final double reefTwoHeight = 1.0;
-        public static final double bargeHeight = 57;
+        public static final double floorHeight = 0.99169921875;
+        public static final double stowHeight = 0.2;
+        public static final double onCoralHeight = 0.5;
+        public static final double reefOneHeight = 15.19;
+        public static final double reefTwoHeight = 29.85;
+        public static final double bargeHeight = 58.3;
         public static final double slowVoltageDown = -0.32;
         public static final double slowVoltageUp = 1.5;
 
