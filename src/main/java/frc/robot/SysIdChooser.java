@@ -22,8 +22,7 @@ public class SysIdChooser {
         sysIdChooser.addOption("Swerve Translation", commandSwerveDrivetrain.m_sysIdRoutineTranslation);
         sysIdChooser.addOption("Swerve Rotation", commandSwerveDrivetrain.m_sysIdRoutineRotation);
         sysIdChooser.addOption("Swerve Steer", commandSwerveDrivetrain.m_sysIdRoutineSteer);
-        sysIdChooser.addOption("Elevator", elevatorSubsystem.elevatorSysIdRoutine);
-        sysIdChooser.addOption("Pivot", pivotSubsystem.pivotSysIdRoutine);
+        sysIdChooser.setDefaultOption("Elevator", elevatorSubsystem.elevatorSysIdRoutine);
 
         sysIdChooser.onChange(this::updateCommands);
 
