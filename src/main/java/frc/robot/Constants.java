@@ -47,7 +47,7 @@ public final class Constants {
         public static final int motorControllerID = 23;
         public static final double intakeSpeed = -0.75;
         public static final double shootSpeed = 1;
-        public static final double stopSpeed = 0.0;
+        public static final double stopSpeed = -0.03;
     }
 
     public static class ClimberCostansts {

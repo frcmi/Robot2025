@@ -4,12 +4,16 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.BrushedMotorWiringValue;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.TalonFXSSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -45,14 +49,14 @@ import static edu.wpi.first.units.Units.*;
 
 public class PivotSubsystem extends SubsystemBase {
     Alert limitPassedAlert = new Alert("Pivot motor limit has been exceeded! FIX IT!", AlertType.kError);
-    TalonFX pivotMotor = new TalonFX(PivotConstants.motorID);
+    TalonFXS pivotMotor = new TalonFXS(PivotConstants.motorID);
     StatusSignal<AngularVelocity> velocity = pivotMotor.getVelocity();
     Alert nopivotAlert = new Alert("Pivot motor not detected!", AlertType.kError);
     // private final PositionTorqueCurrentFOC motorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0));
     private final VoltageOut motorVoltageControl = new VoltageOut(Volts.of(0));//.withEnableFOC(true);
 
     MechanismLigament2d pivotLigament2d;
-    TalonFXSimState talonFXSim = pivotMotor.getSimState();
+    TalonFXSSimState talonFXSim = pivotMotor.getSimState();
     private static final double kGearRatio = 10.0;
     private final DCMotorSim m_motorSimModel = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(
@@ -88,7 +92,7 @@ public class PivotSubsystem extends SubsystemBase {
     private double discontinuityPoint = PivotConstants.TurboBot.discontinuity;
 
     public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
-        TalonFXConfiguration configuration = new TalonFXConfiguration();
+        TalonFXSConfiguration configuration = new TalonFXSConfiguration();
         
         if (bot == BotType.ALPHA_BOT) {
             feedforward = new ArmFeedforward(PivotConstants.AlphaBot.kS, PivotConstants.AlphaBot.kG, 0, 0);
@@ -100,6 +104,9 @@ public class PivotSubsystem extends SubsystemBase {
             pid.setD(PivotConstants.AlphaBot.kD);
 
             configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+            configuration.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
+            configuration.Commutation.BrushedMotorWiring = BrushedMotorWiringValue.Leads_A_and_B;
         }
 
         pid.setTolerance(Degrees.of(3.5).in(Radians)); //, Degrees.of(3).in(Radians));

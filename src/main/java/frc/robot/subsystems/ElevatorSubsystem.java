@@ -129,7 +129,12 @@ public class ElevatorSubsystem extends SubsystemBase {
         elevatorMotorLeft.getConfigurator().apply(hardwareLimitSwitchConfigs);
         elevatorMotorLeft.getConfigurator().apply(softLimitConfig);
         elevatorMotorLeft.getConfigurator().apply(motionMagicConfigs);
-        elevatorMotorLeft.getConfigurator().apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
+
+        if (bot == BotType.ALPHA_BOT) {
+            elevatorMotorLeft.getConfigurator().apply(new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
+        } else {
+            elevatorMotorLeft.getConfigurator().apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
+        }
 
         followerMotor.getConfigurator().apply(ElevatorConstants.realBotConfigs);
         followerMotor.getConfigurator().apply(ElevatorConstants.alphaBotConfigs);
