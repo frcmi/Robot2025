@@ -2,22 +2,18 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.hardware.traits.CommonTalon;
 import com.ctre.phoenix6.signals.BrushedMotorWiringValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.TalonFXSSimState;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -28,7 +24,6 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -49,14 +44,15 @@ import static edu.wpi.first.units.Units.*;
 
 public class PivotSubsystem extends SubsystemBase {
     Alert limitPassedAlert = new Alert("Pivot motor limit has been exceeded! FIX IT!", AlertType.kError);
-    TalonFXS pivotMotor = new TalonFXS(PivotConstants.motorID);
-    StatusSignal<AngularVelocity> velocity = pivotMotor.getVelocity();
+    TalonFXS pivotMotorAlpha;// = new TalonFXS(PivotConstants.motorID);
+    TalonFX pivotMotorTurbo;
+    StatusSignal<AngularVelocity> velocity; // = pivotMotor.getVelocity();
     Alert nopivotAlert = new Alert("Pivot motor not detected!", AlertType.kError);
     // private final PositionTorqueCurrentFOC motorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0));
     private final VoltageOut motorVoltageControl = new VoltageOut(Volts.of(0));//.withEnableFOC(true);
 
     MechanismLigament2d pivotLigament2d;
-    TalonFXSSimState talonFXSim = pivotMotor.getSimState();
+    // TalonFXSSimState talonFXSim = pivotMotor.getSimState();
     private static final double kGearRatio = 10.0;
     private final DCMotorSim m_motorSimModel = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(
@@ -76,7 +72,6 @@ public class PivotSubsystem extends SubsystemBase {
     private ProfiledPIDController pid = new ProfiledPIDController(PivotConstants.TurboBot.kP, PivotConstants.TurboBot.kI, PivotConstants.TurboBot.kD, new Constraints(PivotConstants.maxVelocity, PivotConstants.maxAccel));
     private ArmFeedforward feedforward = new ArmFeedforward(PivotConstants.TurboBot.kS, PivotConstants.TurboBot.kG, 0, 0);
 
-
     public final SysIdRoutine pivotSysIdRoutine = new SysIdRoutine(
         new SysIdRoutine.Config(
             Volts.of(0.75).per(Seconds),
@@ -92,9 +87,9 @@ public class PivotSubsystem extends SubsystemBase {
     private double discontinuityPoint = PivotConstants.TurboBot.discontinuity;
 
     public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
-        TalonFXSConfiguration configuration = new TalonFXSConfiguration();
-        
         if (bot == BotType.ALPHA_BOT) {
+            TalonFXSConfiguration configuration = new TalonFXSConfiguration();
+            pivotMotorAlpha = new TalonFXS(PivotConstants.motorID);
             feedforward = new ArmFeedforward(PivotConstants.AlphaBot.kS, PivotConstants.AlphaBot.kG, 0, 0);
             offset = PivotConstants.AlphaBot.offset;
             discontinuityPoint = PivotConstants.AlphaBot.discontinuity;
@@ -107,23 +102,39 @@ public class PivotSubsystem extends SubsystemBase {
 
             configuration.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
             configuration.Commutation.BrushedMotorWiring = BrushedMotorWiringValue.Leads_A_and_B;
+            pivotMotorAlpha.getConfigurator().apply(configuration);
+            pivotMotorAlpha.setNeutralMode(NeutralModeValue.Brake);
+        } else {
+            pivotMotorTurbo = new TalonFX(PivotConstants.motorID);
+            pivotMotorTurbo.setNeutralMode(NeutralModeValue.Brake);
         }
 
-        pid.setTolerance(Degrees.of(3.5).in(Radians)); //, Degrees.of(3).in(Radians));
+        pid.setTolerance(Degrees.of(3.5).in(Radians));
         velocity.setUpdateFrequency(1000);
-        // motorPositionControl.withSlot(bot.slotId);
-
-        // pivotMotor.getConfigurator().apply(slot0Configs);
+        
         pivotLigament2d = elevatorLigament.append(new MechanismLigament2d("wrist", 0.5, 90, 6, new Color8Bit(Color.kPurple)));
-        pivotMotor.getConfigurator().apply(configuration);
-        pivotMotor.setNeutralMode(NeutralModeValue.Brake);
 
         // makes closeEnough return false on first poll after bot enabled
         pid.setGoal(PivotConstants.stowAngle.in(Radians));
         pid.calculate(0);
 
-
         setDefaultCommand(this.holdAngle());
+    }
+
+    public CommonTalon getPivotMotor() {
+        if (pivotMotorTurbo != null) {
+            return pivotMotorTurbo;
+        }
+
+        return pivotMotorAlpha;
+    }
+
+    public boolean isAlive() {
+        if (pivotMotorTurbo != null) {
+            return pivotMotorTurbo.isAlive();
+        }
+
+        return pivotMotorAlpha.isAlive();
     }
 
     public boolean closeEnough() {
@@ -154,7 +165,7 @@ public class PivotSubsystem extends SubsystemBase {
             double ff = feedforward.calculate(currentAngle, signum);
             ffPublisher.update(ff);
             if (DriverStation.isEnabled()) {
-                pivotMotor.setControl(motorVoltageControl.withOutput(Volts.of((voltage + ff))));
+                getPivotMotor().setControl(motorVoltageControl.withOutput(Volts.of((voltage + ff))));
             }
         });
     }
@@ -193,7 +204,7 @@ public class PivotSubsystem extends SubsystemBase {
     }
 
     private void driveWithVoltage(Voltage volts) {
-        pivotMotor.setControl(motorVoltageControl.withOutput(volts));
+        getPivotMotor().setControl(motorVoltageControl.withOutput(volts));
     }
 
     public Angle getEncoder() {
@@ -215,25 +226,37 @@ public class PivotSubsystem extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putBoolean("Arm close enough", closeEnough());
         anglePublisher.update(getEncoder().in(Rotations));
-        if(pivotMotor.getPosition().getValueAsDouble() <= PivotConstants.minAngle.in(Rotations) &&
-           pivotMotor.getPosition().getValueAsDouble() >= PivotConstants.maxAngle.in(Rotations)) {
-           pivotMotor.stopMotor();
+        if(getPivotMotor().getPosition().getValueAsDouble() <= PivotConstants.minAngle.in(Rotations) &&
+            getPivotMotor().getPosition().getValueAsDouble() >= PivotConstants.maxAngle.in(Rotations)) {
+            getPivotMotor().setControl(new NeutralOut());
            limitPassedAlert.set(true);
         }
-        nopivotAlert.set(!pivotMotor.isAlive());
+        nopivotAlert.set(!isAlive());
         if (Robot.isReal()) {
-            pivotLigament2d.setAngle(pivotMotor.getPosition().getValue().in(Degrees));
+            pivotLigament2d.setAngle(getPivotMotor().getPosition().getValue().in(Degrees));
         } else if (Robot.isSimulation()) {
-            pivotLigament2d.setAngle(pivotMotor.getPosition().getValue().minus(Degrees.of(90)).in(Degrees));
+            pivotLigament2d.setAngle(getPivotMotor().getPosition().getValue().minus(Degrees.of(90)).in(Degrees));
         }
     }
     @Override
     public void simulationPeriodic() {
-        talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-        var motorVoltage = talonFXSim.getMotorVoltageMeasure();
-        m_motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-        m_motorSimModel.update(0.020);
-        talonFXSim.setRawRotorPosition(m_motorSimModel.getAngularPosition().times(kGearRatio));
-        talonFXSim.setRotorVelocity(m_motorSimModel.getAngularVelocity().times(kGearRatio));
+        if (pivotMotorTurbo != null) {
+            var talonFXSim = pivotMotorTurbo.getSimState();
+            talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+            var motorVoltage = talonFXSim.getMotorVoltageMeasure();
+            m_motorSimModel.setInputVoltage(motorVoltage.in(Volts));
+            m_motorSimModel.update(0.020);
+            talonFXSim.setRawRotorPosition(m_motorSimModel.getAngularPosition().times(kGearRatio));
+            talonFXSim.setRotorVelocity(m_motorSimModel.getAngularVelocity().times(kGearRatio));
+            return;
+        } else {
+            var talonFXSSim = pivotMotorAlpha.getSimState();
+            talonFXSSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+            var motorVoltage = talonFXSSim.getMotorVoltageMeasure();
+            m_motorSimModel.setInputVoltage(motorVoltage.in(Volts));
+            m_motorSimModel.update(0.020);
+            talonFXSSim.setRawRotorPosition(m_motorSimModel.getAngularPosition().times(kGearRatio));
+            talonFXSSim.setRotorVelocity(m_motorSimModel.getAngularVelocity().times(kGearRatio));
+        }
     }
 }
