@@ -49,6 +49,8 @@ import frc.robot.Constants.ElevatorConstants;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.DoubleSupplier;
+
 public class ElevatorSubsystem extends SubsystemBase {
     // Left is main, right is follower
     private final TalonFX elevatorMotorLeft = new TalonFX(9);
@@ -242,6 +244,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         return elevatorMotorLeft.getPosition().getValueAsDouble();
     }
 
+
     public boolean isAtExtrema() {
         var signal = elevatorMotorLeft.getVelocity();
         StatusSignal.refreshAll(signal);
@@ -304,6 +307,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     StatusSignal<Double> setPoseSignal = elevatorMotorLeft.getClosedLoopReference();
     StatusSignal<Angle> currentPoseSignal = elevatorMotorLeft.getPosition();
 
+
+    public Command runSpeed(DoubleSupplier speed) {
+        return run(() -> elevatorMotorLeft.set(speed.getAsDouble() * 0.1));
+    }
 
     @Override
     public void periodic() {

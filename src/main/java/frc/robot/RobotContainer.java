@@ -42,6 +42,7 @@ import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.generated.TunerConstantsAlpha;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public final class RobotContainer {
@@ -53,17 +54,21 @@ public final class RobotContainer {
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+    private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final Telemetry logger = new Telemetry();
 
     private final CommandXboxController m_Controller = new CommandXboxController(0);
     private final CommandXboxController m_ScuffedController = new CommandXboxController(2);
     private final CommandXboxController m_TuningController = new CommandXboxController(4);
     private final CommandJoystick m_OperatorController = new CommandJoystick(1);
 
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    public final CommandSwerveDrivetrain drivetrain;
 
     public final BotType botType = RobotDiscoverer.getRobot();
 
@@ -78,7 +83,7 @@ public final class RobotContainer {
   private UltraDoubleLog levelLog = new UltraDoubleLog("Algae Level");
 
   private final SendableChooser<Command> autoChooser;
-  private final SysIdChooser sysIdChooser = new SysIdChooser(drivetrain, m_ElevatorSubsystem, m_PivotSubsystem);
+  private final SysIdChooser sysIdChooser;
 
   Alert onMainAlert = new Alert("Main Bot", AlertType.kInfo);
   Alert onAlphaAlert = new Alert("Alpha Bot", AlertType.kWarning);
@@ -87,6 +92,13 @@ public final class RobotContainer {
   RadioLogger radioLogger = new RadioLogger();
 
   public RobotContainer() {
+    if (botType == BotType.ALPHA_BOT) {
+      drivetrain = TunerConstantsAlpha.createDrivetrain();
+    } else {
+      drivetrain = TunerConstants.createDrivetrain();
+    }
+    sysIdChooser = new SysIdChooser(drivetrain, m_ElevatorSubsystem, m_PivotSubsystem);
+    
     initSubsystems();
 
     switch (botType) {
@@ -102,6 +114,7 @@ public final class RobotContainer {
     }
 
     autoChooser = AutoBuilder.buildAutoChooser();
+    initManualAutos();
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
     
@@ -111,6 +124,11 @@ public final class RobotContainer {
       configureBindings();
     else if (RobotBase.isSimulation())
       configureSimBindings();
+    m_ElevatorSubsystem.setDefaultCommand(m_ElevatorSubsystem.runSpeed(m_Controller::getLeftY));
+  }
+  
+  private void initManualAutos() {
+    autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityX(-1)).withTimeout(2));
   }
 
   private void initSubsystems() {
@@ -165,13 +183,6 @@ public final class RobotContainer {
     // m_Controller.b().whileTrue(drivetrain.applyRequest(() ->
     //     point.withModuleDirection(new Rotation2d(-m_Controller.getLeftY(), -m_Controller.getLeftX()))
     // ));
-
-    // Run SysId routines when holding back/start and X/Y.
-    // Note that each routine should be run exactly once in a single log.
-    // m_Controller.back().and(m_Controller.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-    // m_Controller.back().and(m_Controller.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-    // m_Controller.start().and(m_Controller.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-    // m_Controller.start().and(m_Controller.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));

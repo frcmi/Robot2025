@@ -147,6 +147,9 @@ public final class Constants {
             .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign);
 
         // TODO: get conversion value(if this isn't it)
+        // TODO: figure out real conversion and heights
+        public static final double inchesPerRotation = 20;
+
         public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
         public static final double gearRatio = 8.0/1.0;
         public static final double elevatorInertia = 0.001; // In Kg Meters^2 

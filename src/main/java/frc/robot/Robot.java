@@ -17,6 +17,7 @@ public final class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     m_RobotContainer = new RobotContainer();
+    m_RobotContainer.drivetrain.orchestra.loadMusic("song.chrp");
   }
 
   @Override
@@ -25,7 +26,9 @@ public final class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    m_RobotContainer.drivetrain.orchestra.pause();
+  }
 
   @Override
   public void disabledPeriodic() {}
