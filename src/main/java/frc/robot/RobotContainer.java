@@ -282,9 +282,9 @@ public final class RobotContainer {
 
   public Command getAutonomousCommand() {
     Command base = Commands.none();
-    if (!zeroed) {
+    if (!zeroed && Robot.isReal()) {
       base = Commands.run(() -> { zeroed = true; }).until(m_PivotSubsystem::closeEnough).andThen(m_ElevatorSubsystem.autoHonePose());
     }
-    return base.andThen(autoChooser.getSelected());
+    return base.andThen(autoChooser.getSelected().asProxy());
   }
 }
