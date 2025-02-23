@@ -125,10 +125,10 @@ public final class Constants {
         public static final int slotId = 1;
 
         public static final Slot0Configs realBotConfigs = new Slot0Configs()
-            .withKP(0.58)
+            .withKP(0.7)
             .withKI(0.0)
             .withKD(0.0)
-            .withKS(0.17078)
+            .withKS(0.16078)
             .withKV(0.12648)
             .withKA(0.0027715)
             .withKG(0.58887)
