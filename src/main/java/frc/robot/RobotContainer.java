@@ -124,7 +124,7 @@ public final class RobotContainer {
       configureBindings();
     else if (RobotBase.isSimulation())
       configureSimBindings();
-    m_ElevatorSubsystem.setDefaultCommand(m_ElevatorSubsystem.runSpeed(m_Controller::getLeftY));
+    // m_ElevatorSubsystem.setDefaultCommand(m_ElevatorSubsystem.runSpeed(m_Controller::getLeftY));
   }
   
   private void initManualAutos() {
@@ -222,7 +222,7 @@ public final class RobotContainer {
   public Command scuffedPivot(Angle rotations) {
     final Angle rotations2;
     if (botType == BotType.MAIN_BOT) {
-      rotations2 = rotations.minus(Rotations.of(0.3 - 0.29393715734842896));
+      rotations2 = rotations.minus(Rotations.of(0.0704 - 0.0311));
     } else {
       rotations2 = rotations;
     }

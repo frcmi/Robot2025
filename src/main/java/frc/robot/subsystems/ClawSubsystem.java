@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.ultralogger.UltraBooleanLog;
@@ -19,19 +20,26 @@ import frc.robot.Constants.BotType;
 import frc.robot.Constants.ClawConstants;
 
 public class ClawSubsystem extends SubsystemBase {
-  private final TalonFXS intakeMotor = new TalonFXS(ClawConstants.motorControllerID);
+  private final TalonFX intakeMotor = new TalonFX(ClawConstants.motorControllerID);
   private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw/Beambreak");
   private final UltraSupplierLog topMotorSpeedPublisher = new UltraSupplierLog("Claw/Intake motor speed", intakeMotor.getVelocity()::getValueAsDouble);
-  private final UltraSupplierLog topMotorTempPublisher = new UltraSupplierLog("Claw/Intake motor temperature", intakeMotor.getExternalMotorTemp()::getValueAsDouble);
+  private final UltraSupplierLog topMotorTempPublisher = new UltraSupplierLog("Claw/Intake motor temperature", intakeMotor.getDeviceTemp()::getValueAsDouble);
   Alert notopAlert = new Alert("Top motor not detected!", AlertType.kError);
   Alert nobottomAlert = new Alert("Bottom motor not detected!", AlertType.kError);
 
   public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
   public ClawSubsystem(BotType bot) {
-    TalonFXSConfiguration configure = new TalonFXSConfiguration();
-    configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
+    TalonFXConfiguration configure = new TalonFXConfiguration();
+
+    if (bot == BotType.ALPHA_BOT) {
+      // configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
+      // intakeMotor.getConfigurator().apply(configure);
+    } else {
+      configure.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    }
     intakeMotor.getConfigurator().apply(configure);
+
     intakeMotor.setNeutralMode(NeutralModeValue.Brake);
 
     setDefaultCommand(stop());
