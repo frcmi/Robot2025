@@ -193,14 +193,14 @@ public class ElevatorSubsystem extends SubsystemBase {
                 return;
             }
 
-            if (poseToHold == ElevatorConstants.stowHeight) {
-                StatusSignal.refreshAll(currentPoseSignal);
-                if (Math.abs(currentPoseSignal.getValueAsDouble() - 0.2) <= 0.1) {
-                    pause = true;
-                    driveWithVoltage(Volts.of(0));
-                    return;
-                }
-            }
+            // if (poseToHold == ElevatorConstants.stowHeight) {
+            //     StatusSignal.refreshAll(currentPoseSignal);
+            //     if (Math.abs(currentPoseSignal.getValueAsDouble() - 0.2) <= 0.1) {
+            //         pause = true;
+            //         driveWithVoltage(Volts.of(0));
+            //         return;
+            //     }
+            // }
 
             setFollowerMode();
             elevatorMotorLeft.setControl(elevatorPositionControl.withPosition(poseToHold));

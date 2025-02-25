@@ -106,6 +106,7 @@ public class PivotSubsystem extends SubsystemBase {
         }
 
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);
+        velocity = pivotMotor.getVelocity();
 
         pid.setTolerance(Degrees.of(3.5).in(Radians));
         velocity.setUpdateFrequency(1000);

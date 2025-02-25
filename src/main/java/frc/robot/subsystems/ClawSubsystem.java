@@ -23,7 +23,7 @@ public class ClawSubsystem extends SubsystemBase {
   private final TalonFXS intakeMotor = new TalonFXS(ClawConstants.motorControllerID);
   private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw/Beambreak");
   private final UltraSupplierLog topMotorSpeedPublisher = new UltraSupplierLog("Claw/Intake motor speed", intakeMotor.getVelocity()::getValueAsDouble);
-  private final UltraSupplierLog topMotorTempPublisher = new UltraSupplierLog("Claw/Intake motor temperature", intakeMotor.getExternalMotorTemp()::getValueAsDouble);
+  private final UltraSupplierLog topMotorTempPublisher = new UltraSupplierLog("Claw/Intake motor temperature", intakeMotor.getDeviceTemp()::getValueAsDouble);
   Alert notopAlert = new Alert("Top motor not detected!", AlertType.kError);
   Alert nobottomAlert = new Alert("Bottom motor not detected!", AlertType.kError);
 
@@ -36,6 +36,7 @@ public class ClawSubsystem extends SubsystemBase {
       configure.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     }
     intakeMotor.getConfigurator().apply(configure);
+
     intakeMotor.setNeutralMode(NeutralModeValue.Brake);
 
     setDefaultCommand(stop());
