@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
@@ -61,7 +60,6 @@ public final class Constants {
 
     public static class PivotConstants {
         public static final int motorID = 13;
-        // TODO: figure out real values
         // The "zero" angle is forward, larger values will rotate upwards
         public static final Angle floorAngle = Rotations.of(0.05876435021910875);
         public static final Angle onCoralAngle = Rotations.of(0.13607985215199636);
@@ -90,6 +88,7 @@ public final class Constants {
         }
 
         public static class TurboBot {
+            // TODO: Had merge conflicts. Either 0.55 or 1.1
             public static final double kP = 0.55;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
@@ -106,7 +105,6 @@ public final class Constants {
         public static final int upperLimitSwitchID = 3;
         public static final int lowerLimitSwitchID = 4;
 
-        // TODO: double check
         public static final Angle absoluteBottom = Rotations.of(-0.4);
         public static final Angle absoluteTop = Rotations.of(60);
         public static final boolean absoluteCinema = absoluteTop.gt(absoluteBottom);
@@ -148,7 +146,6 @@ public final class Constants {
             .withGravityType(GravityTypeValue.Elevator_Static)
             .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign);
 
-        // TODO: get conversion value(if this isn't it)
         // TODO: figure out real conversion and heights
         public static final double inchesPerRotation = 20;
 

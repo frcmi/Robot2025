@@ -16,7 +16,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -28,7 +27,6 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.SysIdRoutine;
 import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
@@ -40,7 +38,6 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
-import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsAlpha;
@@ -148,8 +145,8 @@ public final class RobotContainer {
       algaeLevel = 0;
 
     levelLog.update((double)algaeLevel);
-    ParallelCommandGroup parallelLevelCommands = null;// new ParallelCommandGroup(m_PivotSubsystem.goToAngle(algaeLevel), m_ElevatorSubsystem.goToHeight(algaeLevel));
-    parallelLevelCommands.schedule();
+    // ParallelCommandGroup parallelLevelCommands = new ParallelCommandGroup(m_PivotSubsystem.goToAngle(algaeLevel), m_ElevatorSubsystem.goToHeight(algaeLevel));
+    // parallelLevelCommands.schedule();
   }
 
   public SwerveRequest getDriveReq() {
@@ -201,7 +198,6 @@ public final class RobotContainer {
     // TODO: correct color
     new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
 
-    // TODO: add elevator and pivot setpoints to intake/shoot
     // m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intakeWithBeambreak());
     // m_Controller.rightTrigger().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.3)).until(m_PivotSubsystem::closeEnough).andThen(m_ClawSubsystem.shoot()));
     // m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
