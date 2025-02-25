@@ -35,7 +35,7 @@ public final class Constants {
         // If true, data won't be sent over network even when not connected to FMS
         public static final boolean disableNetworkLogging = false;
         // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
-        public static final boolean disableDatalog = false;
+        public static final boolean disableDatalog = true;
         // Prefix in NetworkTables, must end with a '/'
         public static final String tabPrefix = "UltraLog/";
         // How often to re-check if the FMS is connected (and disable network logging if so)
@@ -47,7 +47,7 @@ public final class Constants {
         public static final int motorControllerID = 23;
         public static final double intakeSpeed = -0.75;
         public static final double shootSpeed = 1;
-        public static final double stopSpeed = -0.03;
+        public static final double stopSpeed = -0.04;
     }
 
     public static class ClimberCostansts {
@@ -70,11 +70,12 @@ public final class Constants {
         public static final Angle processorAngle = Rotations.of(0.13322460283061502);
         public static final Angle bargeAngle = Rotations.of(0.3);
         public static final Angle stowAngle = Rotations.of(0.27261940556548514);
+        public static final Angle coralIntake = Rotations.of(-0.059247502731187396);
 
         public static final Angle maxAngle = Degrees.of(5);
         public static final Angle minAngle = Degrees.of(0);
-        public static final double maxVelocity = 0.0;
-        public static final double maxAccel = 0.0;
+        public static final double maxVelocity = (15) * (44 / 12) * 15d;
+        public static final double maxAccel = maxVelocity * 2.5;
 
         public static class AlphaBot {  
             public static final double kP = 1.15;
@@ -89,7 +90,7 @@ public final class Constants {
         }
 
         public static class TurboBot {
-            public static final double kP = 0.2;
+            public static final double kP = 1.1;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
 
@@ -119,6 +120,7 @@ public final class Constants {
         public static final double reefOneHeight = 15.19;
         public static final double reefTwoHeight = 29.85;
         public static final double bargeHeight = 58.3;
+        public static final double coralIntake = 40.23876953125;
         public static final double slowVoltageDown = -0.32;
         public static final double slowVoltageUp = 1.5;
 

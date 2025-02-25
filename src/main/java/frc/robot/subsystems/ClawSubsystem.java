@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.ultralogger.UltraBooleanLog;
@@ -31,6 +32,9 @@ public class ClawSubsystem extends SubsystemBase {
   public ClawSubsystem(BotType bot) {
     TalonFXSConfiguration configure = new TalonFXSConfiguration();
     configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
+    if (bot == BotType.MAIN_BOT) {
+      configure.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    }
     intakeMotor.getConfigurator().apply(configure);
     intakeMotor.setNeutralMode(NeutralModeValue.Brake);
 

@@ -41,6 +41,7 @@ import edu.wpi.first.units.measure.Angle;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.ElevatorConstants;
+import frc.robot.Constants.PivotConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsAlpha;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -124,11 +125,11 @@ public final class RobotContainer {
       configureBindings();
     else if (RobotBase.isSimulation())
       configureSimBindings();
-    m_ElevatorSubsystem.setDefaultCommand(m_ElevatorSubsystem.runSpeed(m_Controller::getLeftY));
   }
   
   private void initManualAutos() {
-    autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityX(-1)).withTimeout(2));
+    autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(-1)).withTimeout(2));
+    autoChooser.addOption("Coral Yipee", drivetrain.applyRequest(() -> drive.withVelocityY(-0.5).withRotationalRate(0).withVelocityX(0)).withTimeout(4).andThen(scuffedPivot(Rotations.of(0.34605670790141787)).withTimeout(1)).andThen(scuffedPivot(PivotConstants.stowAngle)));
   }
 
   private void initSubsystems() {
@@ -193,7 +194,7 @@ public final class RobotContainer {
   private void configureBindings() {
     configureSwerveBindings();
     configureTuningBindings();
-    // configureScuffedBindings();
+    configureScuffedBindings();
     configureOperatorBindings();
     m_LedSubsystem.setDefaultCommand(m_LedSubsystem.fauxRSL());
     
@@ -222,7 +223,7 @@ public final class RobotContainer {
   public Command scuffedPivot(Angle rotations) {
     final Angle rotations2;
     if (botType == BotType.MAIN_BOT) {
-      rotations2 = rotations.minus(Rotations.of(0.3 - 0.29393715734842896));
+      rotations2 = rotations.minus(Rotations.of(0.0704 - 0.0311));
     } else {
       rotations2 = rotations;
     }
@@ -243,6 +244,9 @@ public final class RobotContainer {
     m_ScuffedController.leftBumper().whileTrue(m_ClawSubsystem.intake());
     m_ScuffedController.rightTrigger().whileTrue(m_ClawSubsystem.shootWithBeambreak());
     m_ScuffedController.rightBumper().whileTrue(m_ClawSubsystem.shoot());
+
+    m_ScuffedController.povRight().whileTrue(scuffedElevator(Constants.ElevatorConstants.coralIntake).andThen(scuffedPivot(Constants.PivotConstants.coralIntake)));
+    m_ScuffedController.povLeft().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
   }
 
   private void configureSimBindings() {
@@ -278,12 +282,10 @@ public final class RobotContainer {
     m_TuningController.y().whileTrue(sysIdChooser.sysIdQuasistaticReverse());
   }
 
-  boolean zeroed = false;
-
   public Command getAutonomousCommand() {
-    Command base = Commands.none();
-    if (!zeroed && Robot.isReal()) {
-      base = Commands.run(() -> { zeroed = true; }).until(m_PivotSubsystem::closeEnough).andThen(m_ElevatorSubsystem.autoHonePose());
+    Command base = scuffedPivot(Rotations.of(0.24423960485599025));
+    if (Robot.isReal()) {
+      base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)).andThen(m_ElevatorSubsystem.autoHonePose());
     }
     return base.andThen(autoChooser.getSelected().asProxy());
   }

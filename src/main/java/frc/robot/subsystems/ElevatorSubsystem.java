@@ -104,6 +104,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final UltraSupplierLog rightTempPub = new UltraSupplierLog("Elevator/Right Temp", followerMotor.getDeviceTemp());
     private final UltraSupplierLog rightPosePub = new UltraSupplierLog("Elevator/Right Pose", followerMotor.getPosition());
 
+    private boolean estop = false;
+
     // there will be at least one limit switch and an encoder to track the position of the elevator
     public ElevatorSubsystem(BotType bot) {
         elevatorPositionControl = elevatorPositionControl.withSlot(bot.slotId);
@@ -165,6 +167,11 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public void setFollowerMode() {
+        if (estop) {
+            elevatorMotorLeft.set(0);
+            return;
+        }
+        
         followerMotor.setControl(new Follower(9, true));
     }
 
@@ -176,6 +183,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     public Command holdPose(){
         // return run(() -> {});
         return run(() -> {
+            if (estop) {
+                elevatorMotorLeft.set(0);
+                return;
+            }
+
+            SmartDashboard.putBoolean("Elevator pause", pause);
             if (pause) {
                 return;
             }
@@ -195,11 +208,17 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public void extendArm(double rotations) {
+        SmartDashboard.putNumber("Elevator Setpoint", rotations);
         pause = false;
         poseToHold = rotations;
     }
 
     public void driveWithVoltage(Voltage volts) {
+        if (estop) {
+            elevatorMotorLeft.set(0);
+            return;
+        }
+
         sysidVoltagePublisher.update(volts.in(Volts));
 
         setFollowerMode();
@@ -319,6 +338,12 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (!upperDigitalInput.get()) {
+            estop = true;
+            setDefaultCommand(stop());
+            elevatorMotorLeft.set(0);
+        }
+
         leftVelocityPub.update();
         leftTempPub.update();
         leftPosePub.update();
