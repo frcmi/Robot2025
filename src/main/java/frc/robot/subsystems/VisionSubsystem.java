@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
@@ -16,152 +17,105 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.vision.Camera;
+import frc.robot.vision.LimelightCamera;
 import frc.robot.vision.PhotonlibCamera;
 import frc.robot.vision.Camera.Result;
-import frc.robot.vision.Camera.Simulator;
-import frc.robot.vision.Camera.Specification;
 
-public final class VisionSubsystem implements Subsystem {
+public final class VisionSubsystem extends SubsystemBase {
     AprilTagFieldLayout fieldLayout;
 
     public static enum CameraType {
-        PHOTONVISION
+        PHOTONVISION,
+        LIMELIGHT
     }
 
     public static class CameraDescription {
         String name;
         CameraType type;
         Transform3d offset;
-        Specification spec;
+
+        public CameraDescription(String name, CameraType type, Transform3d offset) {
+            this.name = name;
+            this.type = type;
+            this.offset = offset;
+        }
     };
 
-    private static class CameraData {
-        Camera camera;
-        Result result;
-        Simulator sim;
-    }
+    private Camera m_Camera;
+    private Result result;
 
-    private CommandSwerveDrivetrain m_Swerve;
-    private CameraData m_Camera;
-
-    private int m_Frame;
-
-    public static VisionSubsystem configure(CommandSwerveDrivetrain swerve) {
-        var cameras = new CameraDescription[] { /* cameras */ };
-
-        AprilTagFieldLayout layout;
+    public VisionSubsystem(CameraDescription camera, String fieldName) {
         try {
-            layout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2024Crescendo.m_resourceFile);
-        } catch (IOException exc) {
-            System.err.println("no such april tag field");
-            layout = null;
+            fieldLayout = AprilTagFieldLayout.loadFromResource(fieldName); //"/edu/wpi/first/apriltag/" + fieldName);
+        } catch (Exception e) {
+            System.out.println("No april tag map called " + fieldName);
+            System.out.println(e);
         }
 
-        return new VisionSubsystem(swerve, cameras, layout);
-    }
+        var desc = camera;
+        result = new Result(); 
 
-    private static Camera createCamera(CameraDescription desc, AprilTagFieldLayout layout) {
         switch (desc.type) {
             case PHOTONVISION:
-                return new PhotonlibCamera(desc.name, desc.offset, layout);
+                m_Camera = new PhotonlibCamera(desc.name, desc.offset, fieldLayout);
             default:
-                return null;
+                m_Camera = new LimelightCamera(desc.name, desc.offset, fieldLayout);
         }
     }
 
-    public VisionSubsystem(CommandSwerveDrivetrain swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
-        m_Swerve = swerve;
-        m_Frame = 0;
-        fieldLayout = layout;
-
-        m_Camera = new CameraData();
-        for (int i = 0; i < cameras.length; i++) {
-            var desc = cameras[i];
-            var data = new CameraData();
-
-            data.camera = createCamera(desc, layout);
-            data.result = new Result();
-
-            if (Robot.isSimulation()) {
-                data.sim = data.camera.createSimulator(desc.spec);
-            }
-        }
-    }
-
-    private static boolean isResultViable(Result result) {
-        if (!result.isNew) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public Result getResult() {
-        return m_Camera.result;
-    }
+    DoublePublisher cameraPublisher = NetworkTableInstance.getDefault()
+        .getDoubleTopic("Test/Camera Distance").publish();
 
     @Override
     public void periodic() {
-        var result = m_Camera.result;
-        m_Camera.camera.update(result);
+        System.out.println("sir");
+        m_Camera.update(result);
+        cameraPublisher.set(result.cameraToTargetDistance.in(Inches));
+        result.isNew = false;
 
-        if (isResultViable(result)) {
-            Transform3d cameraOffset = m_Camera.camera.getOffset();
-            double pitchToTarget = 
-                cameraOffset.getRotation().getMeasureY()
-                .plus(
-                    result.cameraToTargetRotation.getMeasureY()).in(Radians);
+        // var result = m_Camera.result;
+        // m_Camera.camera.update(result);
 
-            double planarDistanceToTarget = result.cameraToTargetDistance.in(Meters) * Math.cos(pitchToTarget);
+        // if (result.isNew) {
+        //     Transform3d cameraOffset = m_Camera.camera.getOffset();
+        //     double pitchToTarget = 
+        //         cameraOffset.getRotation().getMeasureY()
+        //         .plus(
+        //             result.cameraToTargetRotation.getMeasureY()).in(Radians);
 
-            Rotation3d botRotation = 
-                new Rotation3d(
-                    Rotations.of(0), 
-                    Rotations.of(0), 
-                    m_Swerve.getState().Pose.getRotation().getMeasure()
-                );
+        //     double planarDistanceToTarget = result.cameraToTargetDistance.in(Meters) * Math.cos(pitchToTarget);
 
-            Rotation3d botToTargetRotation =
-                botRotation
-                .rotateBy(cameraOffset.getRotation())
-                .rotateBy(result.cameraToTargetRotation);
+        //     Rotation3d botRotation = 
+        //         new Rotation3d(
+        //             Rotations.of(0), 
+        //             Rotations.of(0), 
+        //             Rotations.of(0)
+        //         );
 
-            Translation3d botToTagTranslation =
-                new Translation3d(
-                    planarDistanceToTarget, new Rotation3d()
-                ).rotateBy(
-                    botToTargetRotation.times(-1)
-                );
+        //     Rotation3d botToTargetRotation =
+        //         botRotation
+        //         .rotateBy(cameraOffset.getRotation())
+        //         .rotateBy(result.cameraToTargetRotation);
 
-            Translation3d botTranslation = 
-                fieldLayout.getTagPose(result.targetID).get().getTranslation()
-                .plus(botToTagTranslation);
+        //     Translation3d botToTagTranslation =
+        //         new Translation3d(
+        //             planarDistanceToTarget, new Rotation3d()
+        //         ).rotateBy(
+        //             botToTargetRotation.times(-1)
+        //         );
 
-            m_Swerve.addVisionMeasurement(
-                new Pose2d(
-                    botTranslation.getMeasureX(), 
-                    botTranslation.getMeasureY(), 
-                    new Rotation2d(
-                        botToTargetRotation.getMeasureZ()
-                    )
-                ), 
-                result.timestamp
-            );
+        //     Translation3d botTranslation = 
+        //         fieldLayout.getTagPose(result.targetID).get().getTranslation()
+        //         .plus(botToTagTranslation);
             
-            result.isNew = false;
-        }
-    }
-
-    @Override
-    public void simulationPeriodic() {
-        var pose = m_Swerve.getState().Pose;
-
-        m_Camera.sim.update(pose, m_Frame);
-
-        m_Frame++;
+        //     result.isNew = false;
+        // }
     }
 }

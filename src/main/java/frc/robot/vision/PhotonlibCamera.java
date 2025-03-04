@@ -23,36 +23,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 public final class PhotonlibCamera implements Camera {
-    private static final class PhotonlibSimulator implements Camera.Simulator {
-        private static VisionSystemSim s_System;
-        private static int s_Frame;
-
-        static {
-            s_System = new VisionSystemSim("main");
-            s_Frame = -1;
-        }
-
-        public PhotonlibSimulator(PhotonCameraSim sim, Transform3d transform) {
-            s_System.addCamera(sim, transform);
-        }
-
-        @Override
-        public void update(Pose2d pose, int frame) {
-            if (s_Frame == frame) {
-                return;
-            }
-
-            s_System.update(pose);
-            s_Frame = frame;
-        }
-
-        @Override
-        public void reset(Pose2d pose) {
-            s_System.resetRobotPose(pose);
-        }
-        
-    }
-
     private String m_Name;
     private Transform3d m_Offset;
 
@@ -95,11 +65,12 @@ public final class PhotonlibCamera implements Camera {
         var transform = target.getBestCameraToTarget();
         result.cameraToTargetDistance = Meters.of(transform.getTranslation().getNorm());
         result.cameraToTargetRotation = transform.getRotation();
-        result.timestamp = cameraResult.getTimestampSeconds();
+        // result.timestamp = cameraResult.getTimestampSeconds();
     }
 
     @Override
     public void update(Result result) {
+        System.out.println("its actually so gojoever");
         result.isNew = false;
 
         var results = m_Camera.getAllUnreadResults();
@@ -122,18 +93,4 @@ public final class PhotonlibCamera implements Camera {
     public Transform3d getOffset() {
         return m_Offset;
     }
-
-    @Override
-    public Simulator createSimulator(Specification specification) {
-        var properties = new SimCameraProperties();
-        properties.setCalibration(specification.width, specification.height, specification.fov);
-        properties.setFPS(specification.fps);
-        properties.setAvgLatencyMs(specification.meanLatency);
-        properties.setLatencyStdDevMs(specification.stdDevLatency);
-        properties.setCalibError(specification.meanError, specification.stdDevError);
-        
-        var sim = new PhotonCameraSim(m_Camera, properties);
-        return new PhotonlibSimulator(sim, m_Offset);
-    }
-
 }
