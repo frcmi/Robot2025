@@ -2,13 +2,11 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -22,15 +20,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import frc.robot.SysIdRoutine;
-import frc.lib.ultralogger.UltraDoubleLog;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
@@ -39,6 +35,9 @@ import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
  * Subsystem so it can easily be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
+    public static final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
+    public static final double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
@@ -58,15 +57,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
-    private UltraDoubleLog[] driveTempLogs = new UltraDoubleLog[4];
-    private UltraDoubleLog[] azimuthTempLogs = new UltraDoubleLog[4];
-    private StatusSignal<Temperature>[] driveTemps = new StatusSignal[4];
-    private StatusSignal<Temperature>[] azimuthTemps = new StatusSignal[4];
-
-    public Orchestra orchestra = new Orchestra();
-
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
-    public final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
+    private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
         new SysIdRoutine.Config(
             null,        // Use default ramp rate (1 V/s)
             Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
@@ -78,12 +70,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             output -> setControl(m_translationCharacterization.withVolts(output)),
             null,
             this
-        ),
-        this
+        )
     );
 
     /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
-    public final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
+    private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
         new SysIdRoutine.Config(
             null,        // Use default ramp rate (1 V/s)
             Volts.of(7), // Use dynamic voltage of 7 V
@@ -95,8 +86,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             volts -> setControl(m_steerCharacterization.withVolts(volts)),
             null,
             this
-        ),
-        this
+        )
     );
 
     /*
@@ -104,7 +94,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
      * See the documentation of SwerveRequest.SysIdSwerveRotation for info on importing the log to SysId.
      */
-    public final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
+    private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
         new SysIdRoutine.Config(
             /* This is in radians per second², but SysId only supports "volts per second" */
             Volts.of(Math.PI / 6).per(Second),
@@ -123,12 +113,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             },
             null,
             this
-        ),
-        this
+        )
     );
 
     /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineSteer;
+    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -148,7 +137,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        configureExtras();
+        configureAutoBuilder();
     }
 
     /**
@@ -173,7 +162,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        configureExtras();
+        configureAutoBuilder();
     }
 
     /**
@@ -206,27 +195,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        configureExtras();
-    }
-
-    private void configureExtras() {
-        for (int i = 0; i < 4; i++) {
-            driveTempLogs[i] = new UltraDoubleLog("Swerve/Temps/Drive " + i + " Temp");
-            azimuthTempLogs[i] = new UltraDoubleLog("Swerve/Temps/Azimuth " + i + " Temp");
-
-            var module = this.getModule(i);
-            TalonFX driveMotor = module.getDriveMotor();
-            TalonFX azimuthMotor = module.getSteerMotor();
-
-            orchestra.addInstrument(driveMotor);
-            orchestra.addInstrument(azimuthMotor);
-
-            driveTemps[i] = driveMotor.getDeviceTemp();
-            azimuthTemps[i] = azimuthMotor.getDeviceTemp();
-        }
         configureAutoBuilder();
     }
-    
+
     private void configureAutoBuilder() {
         try {
             var config = RobotConfig.fromGUISettings();
@@ -266,13 +237,30 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return run(() -> this.setControl(requestSupplier.get()));
     }
 
+    /**
+     * Runs the SysId Quasistatic test in the given direction for the routine
+     * specified by {@link #m_sysIdRoutineToApply}.
+     *
+     * @param direction Direction of the SysId Quasistatic test
+     * @return Command to run
+     */
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.quasistatic(direction);
+    }
+
+    /**
+     * Runs the SysId Dynamic test in the given direction for the routine
+     * specified by {@link #m_sysIdRoutineToApply}.
+     *
+     * @param direction Direction of the SysId Dynamic test
+     * @return Command to run
+     */
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.dynamic(direction);
+    }
+
     @Override
     public void periodic() {
-        for (int i = 0; i < 4; i++) {
-            driveTempLogs[i].update(driveTemps[i].getValueAsDouble());
-            azimuthTempLogs[i].update(azimuthTemps[i].getValueAsDouble());
-        }
-
         /*
          * Periodically try to apply the operator perspective.
          * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.

@@ -44,7 +44,7 @@ public final class PhotonlibCamera implements Camera {
 
         for (var target : result.getTargets()) {
             int id = target.getFiducialId();
-            if (id < 1 || id > 16) {
+            if (id < 1 || id > 8) {
                 return false;
             }
         }
