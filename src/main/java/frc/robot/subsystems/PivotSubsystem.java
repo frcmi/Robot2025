@@ -79,15 +79,22 @@ public class PivotSubsystem extends SubsystemBase {
         this
     );
 
+    public Command stop() {
+        return run(() -> {pivotMotor.set(0);});
+    }
+
     private double offset = PivotConstants.TurboBot.offset;
     private double discontinuityPoint = PivotConstants.TurboBot.discontinuity;
+    private double multiplier = -1;
 
     public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
+        // pid.enableContinuousInput(-0.622, 1 - 0.622);
         if (bot == BotType.ALPHA_BOT) {
             TalonFXConfiguration configuration = new TalonFXConfiguration();
             feedforward = new ArmFeedforward(PivotConstants.AlphaBot.kS, PivotConstants.AlphaBot.kG, 0, 0);
             offset = PivotConstants.AlphaBot.offset;
             discontinuityPoint = PivotConstants.AlphaBot.discontinuity;
+            multiplier = 1;
 
             pid.setP(PivotConstants.AlphaBot.kP);
             pid.setI(PivotConstants.AlphaBot.kI);
@@ -141,6 +148,9 @@ public class PivotSubsystem extends SubsystemBase {
                     signum = 0;
                 }
             }
+            if (DriverStation.isAutonomous()) {
+                voltage /= 1.5;
+            }
             double ff = feedforward.calculate(currentAngle, signum);
             ffPublisher.update(ff);
             if (DriverStation.isEnabled()) {
@@ -187,7 +197,8 @@ public class PivotSubsystem extends SubsystemBase {
     }
 
     public Angle getEncoder() {
-        double encoderValue = encoder.get() + offset;
+        double encoderValue = multiplier * encoder.get() + offset;
+
         if (encoderValue <= discontinuityPoint) {
             encoderValue += 1;
         }

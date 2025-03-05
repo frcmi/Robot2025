@@ -16,7 +16,10 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,10 +27,12 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.ClawSubsystem;
+import frc.robot.subsystems.ClawSubsystemTurbo;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
@@ -36,9 +41,12 @@ import frc.robot.subsystems.VisionSubsystem;
 
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.util.datalog.DataLog;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.PivotConstants;
+import frc.robot.Constants.TelemetryConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsAlpha;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -90,6 +98,11 @@ public final class RobotContainer {
   RadioLogger radioLogger = new RadioLogger();
 
   public RobotContainer() {
+    if (!TelemetryConstants.disableDatalog) {
+      DataLogManager.start();
+      DriverStation.startDataLog(DataLogManager.getLog());
+    }
+    
     if (botType == BotType.ALPHA_BOT) {
       drivetrain = TunerConstantsAlpha.createDrivetrain();
     } else {
@@ -111,7 +124,7 @@ public final class RobotContainer {
         break;
     }
 
-    autoChooser = AutoBuilder.buildAutoChooser();
+    autoChooser = new SendableChooser<Command>();
     initManualAutos();
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -123,10 +136,33 @@ public final class RobotContainer {
     else if (RobotBase.isSimulation())
       configureSimBindings();
   }
+
+  public double getTravelDir() {
+    if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue) {
+      return 1;
+    }
+
+    return -1;
+  }
   
   private void initManualAutos() {
-    autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(-1)).withTimeout(2));
-    autoChooser.addOption("Coral Yipee", drivetrain.applyRequest(() -> drive.withVelocityY(-0.5).withRotationalRate(0).withVelocityX(0)).withTimeout(4).andThen(scuffedPivot(Rotations.of(0.34605670790141787)).withTimeout(1)).andThen(scuffedPivot(PivotConstants.stowAngle)));
+    autoChooser.setDefaultOption("None", Commands.none());
+    autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(getTravelDir())).withTimeout(2));
+    autoChooser.addOption("Coral Yipee", 
+      drivetrain.applyRequest(() -> 
+          drive.withVelocityY(getTravelDir() * 0.5).withRotationalRate(0).withVelocityX(0)
+        )
+        .withTimeout(2.87 + 0.05)
+        .andThen(drivetrain.applyRequest(() -> brake).withTimeout(0.5)
+          .andThen(
+            scuffedPivot(Rotations.of(0.08))
+              .andThen(new WaitCommand(3))
+              .andThen(m_ClawSubsystem.intake())
+              .andThen(new WaitCommand(2))
+              .andThen(scuffedPivot(PivotConstants.stowAngle))
+            )
+          )
+      );
   }
 
   private void initSubsystems() {
@@ -150,6 +186,9 @@ public final class RobotContainer {
   }
 
   public SwerveRequest getDriveReq() {
+    if (DriverStation.isAutonomous()) {
+      return brake;
+    }
     double multiplier = 1;
 
     if (m_Controller.rightTrigger().getAsBoolean()) {
@@ -209,7 +248,20 @@ public final class RobotContainer {
     // m_Controller.leftBumper().whileTrue(m_PivotSubsystem.setAngle(Constants.PivotConstants.reefOneAngle));
     // m_Controller.leftTrigger().whileTrue(m_PivotSubsystem.setAngle(Constants.PivotConstants.reefTwoAngle));
 
+    m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
+    m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
+
     m_Controller.povDown().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
+    
+    // m_Controller.rightBumper().onTrue(
+    //   (
+    //     (
+    //       scuffedElevator(ElevatorConstantb  s.stowHeight).alongWith(scuffedPivot(Rotations.of(0.055), false))
+    //     ).andThen(new WaitCommand(1))
+    //   )
+    //     .until(() -> m_PivotSubsystem.closeEnough())
+    //     .andThen(() -> { m_PivotSubsystem.setDefaultCommand(m_PivotSubsystem.stop());})
+    //     .andThen(m_PivotSubsystem.stop()));
   }
 
   public Command scuffedElevator(double rotations) {
@@ -217,9 +269,13 @@ public final class RobotContainer {
   }
 
   public Command scuffedPivot(Angle rotations) {
+    return scuffedPivot(rotations, true);
+  }
+
+  public Command scuffedPivot(Angle rotations, boolean dewit) {
     final Angle rotations2;
-    if (botType == BotType.MAIN_BOT) {
-      rotations2 = rotations.minus(Rotations.of(0.0704 - 0.0311));
+    if (botType == BotType.MAIN_BOT && dewit) {
+      rotations2 = rotations.minus(Rotations.of(0.0704 - 0.06302437657560933));
     } else {
       rotations2 = rotations;
     }
@@ -279,10 +335,12 @@ public final class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    Command base = scuffedPivot(Rotations.of(0.24423960485599025));
-    if (Robot.isReal()) {
-      base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)).andThen(m_ElevatorSubsystem.autoHonePose());
-    }
-    return base.andThen(autoChooser.getSelected().asProxy());
+    Command base = scuffedPivot(Rotations.of(0.241));
+    // if (Robot.isReal()) {
+    //   base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)); //.andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
+    // }
+    Command cmd = autoChooser.getSelected().asProxy();
+    cmd.addRequirements(drivetrain);
+    return base.andThen(cmd).withName("Full auto");
   }
 }

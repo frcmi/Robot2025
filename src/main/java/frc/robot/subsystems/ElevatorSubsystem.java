@@ -96,6 +96,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final UltraSupplierLog rightVelocityPub = new UltraSupplierLog("Elevator/Right Velocity", followerMotor.getVelocity());
     private final UltraSupplierLog rightTempPub = new UltraSupplierLog("Elevator/Right Temp", followerMotor.getDeviceTemp());
     private final UltraSupplierLog rightPosePub = new UltraSupplierLog("Elevator/Right Pose", followerMotor.getPosition());
+    private final Alert estopAlert = new Alert("Elevator E-Stopped", AlertType.kError);
 
     private boolean estop = false;
 
@@ -148,6 +149,9 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         setFollowerMode();
         setDefaultCommand(this.holdPose().withName("Default Hold Pose"));
+        if (estop) {
+            setDefaultCommand(stop());
+        }
     }
 
     StatusSignal<Double> pidError = elevatorMotorLeft.getClosedLoopError();
@@ -155,7 +159,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public boolean closeEnough() {
         StatusSignal.refreshAll(pidError);
 
-        return Math.abs(pidError.getValueAsDouble()) < 0.01;
+        return Math.abs(pidError.getValueAsDouble()) < 0.1;
 
     }
 
@@ -176,6 +180,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     public Command holdPose(){
         // return run(() -> {});
         return run(() -> {
+            // if (true) {
+            //     return;
+            // }
+
             if (estop) {
                 elevatorMotorLeft.set(0);
                 return;
@@ -294,7 +302,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public Command autoHonePose() {
-        return driveWithSlowVoltageUp().withTimeout(0.5).andThen(autoHoneDown());
+        return driveWithSlowVoltageUp().withTimeout(0.5).andThen(autoHoneDown()).withName("Auto Hone");
     }
 
     public Command resetPose() {
@@ -326,15 +334,24 @@ public class ElevatorSubsystem extends SubsystemBase {
 
 
     public Command runSpeed(DoubleSupplier speed) {
+        if (estop) {
+            return run(() -> { elevatorMotorLeft.set(0);});
+        }
+
         return run(() -> elevatorMotorLeft.set(speed.getAsDouble() * 0.1));
     }
 
     @Override
     public void periodic() {
-        if (!upperDigitalInput.get()) {
-            estop = true;
-            setDefaultCommand(stop());
-            elevatorMotorLeft.set(0);
+        estopAlert.set(estop);
+
+        StatusSignal.refreshAll(currentPoseSignal);
+        double currentPoseTHing = currentPoseSignal.getValueAsDouble();
+        if (!upperDigitalInput.get() && poseToHold > currentPoseTHing) {
+            // estop = true;
+            // setDefaultCommand(stop());
+            // elevatorMotorLeft.set(0);
+            extendArm(currentPoseTHing);
         }
 
         leftVelocityPub.update();

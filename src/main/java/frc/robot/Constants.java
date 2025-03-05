@@ -34,7 +34,7 @@ public final class Constants {
         // If true, data won't be sent over network even when not connected to FMS
         public static final boolean disableNetworkLogging = false;
         // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
-        public static final boolean disableDatalog = true;
+        public static final boolean disableDatalog = false;
         // Prefix in NetworkTables, must end with a '/'
         public static final String tabPrefix = "UltraLog/";
         // How often to re-check if the FMS is connected (and disable network logging if so)
@@ -50,7 +50,7 @@ public final class Constants {
     }
 
     public static class ClimberCostansts {
-        public static final int climberMotorID = 0;
+        public static final int climberMotorID = 15;
     }
 
     public static class LEDConstants {
@@ -80,24 +80,24 @@ public final class Constants {
             public static final double kI = 0.0;
             public static final double kD = 0.0;
 
-            public static final double kS = 0.13;
-            public static final double kG = 0.52;
+            public static final double kS = 0.17;
+            public static final double kG = 0.548;
 
-            public static final double offset = 0.05 - 0.75 - 0.38853565346339136;
+            public static final double offset = 0.05 - 0.75 - 0.3885356534633913 - 0.5 + 1;
             public static final double discontinuity = -0.3;
         }
 
         public static class TurboBot {
-            // TODO: Had merge conflicts. Either 0.55 or 1.1
-            public static final double kP = 0.55;
+            public static final double kP = 1.3d;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
 
             public static final double kS = 0.28;
-            public static final double kG = 0.539;
+            // huh
+            public static final double kG = 0.54;
 
-            public static final double offset = -0.6544539163613479;
-            public static final double discontinuity = -0.4;
+            public static final double offset = -0.42773281 - 0.19496280556739046;//-0.6544539163613479 + 0.25 - 0.07500434562510866;
+            public static final double discontinuity = 0.4;//-0.4;
         }
     }
 
@@ -115,9 +115,9 @@ public final class Constants {
         public static final double floorHeight = 0.99169921875;
         public static final double stowHeight = 0.2;
         public static final double onCoralHeight = 0.5;
-        public static final double reefOneHeight = 15.19;
-        public static final double reefTwoHeight = 29.85;
-        public static final double bargeHeight = 58.3;
+        public static final double reefOneHeight = 15.19 + 2;
+        public static final double reefTwoHeight = 29.85 + 2;
+        public static final double bargeHeight = 61.1;
         public static final double coralIntake = 40.23876953125;
         public static final double slowVoltageDown = -0.32;
         public static final double slowVoltageUp = 1.5;
