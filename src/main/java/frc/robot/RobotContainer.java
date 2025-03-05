@@ -30,18 +30,8 @@ import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.VisionSubsystem.CameraDescription;
-import frc.robot.subsystems.VisionSubsystem.CameraType;
-
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest;
-
-import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.subsystems.TrigVisionSubsystem;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraDoubleLog;
@@ -66,7 +56,7 @@ public final class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
 //   private SwerveSubsystem m_Swerve;
-  private VisionSubsystem m_Vision = new VisionSubsystem(new CameraDescription("Camera1", CameraType.LIMELIGHT, new Transform3d(0.0, 0.0, 0.0, new Rotation3d(0, 0, 0))), "2025_frc_april_field_map.json");
+  private TrigVisionSubsystem m_Vision = new TrigVisionSubsystem();
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClawSubsystem m_ClawSubsystem = new ClawSubsystem();
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem();
