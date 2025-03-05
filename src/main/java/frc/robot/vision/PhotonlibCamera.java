@@ -1,8 +1,5 @@
 package frc.robot.vision;
 
-import static edu.wpi.first.units.Units.Meters;
-
-import java.util.List;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
@@ -13,16 +10,44 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
-
-import com.ctre.phoenix6.Timestamp;
-import com.ctre.phoenix6.Timestamp.TimestampSource;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 public final class PhotonlibCamera implements Camera {
+    private static final class PhotonlibSimulator implements Camera.Simulator {
+        private static VisionSystemSim s_System;
+        private static int s_Frame;
+
+        static {
+            s_System = new VisionSystemSim("main");
+            s_Frame = -1;
+        }
+
+        public PhotonlibSimulator(PhotonCameraSim sim, Transform3d transform) {
+            s_System.addCamera(sim, transform);
+        }
+
+        @Override
+        public void update(Pose2d pose, int frame) {
+            if (s_Frame == frame) {
+                return;
+            }
+
+            s_System.update(pose);
+            s_Frame = frame;
+        }
+
+        @Override
+        public void reset(Pose2d pose) {
+            s_System.resetRobotPose(pose);
+        }
+
+    }
+
+    private Optional<Double> m_LastTimestamp;
+
     private String m_Name;
     private Transform3d m_Offset;
 
@@ -30,6 +55,8 @@ public final class PhotonlibCamera implements Camera {
     private PhotonPoseEstimator m_Estimator;
 
     public PhotonlibCamera(String name, Transform3d offset, AprilTagFieldLayout layout) {
+        m_LastTimestamp = Optional.empty();
+
         m_Name = name;
         m_Offset = offset;
 
@@ -44,7 +71,7 @@ public final class PhotonlibCamera implements Camera {
 
         for (var target : result.getTargets()) {
             int id = target.getFiducialId();
-            if (id < 1 || id > 8) {
+            if (id < 1 || id > 16) {
                 return false;
             }
         }
@@ -53,19 +80,45 @@ public final class PhotonlibCamera implements Camera {
     }
 
     private void update(Result result, PhotonPipelineResult cameraResult) {
-        if (!isResultValid(cameraResult)) {
+        Optional<EstimatedRobotPose> estimatedPose = isResultValid(cameraResult) ? m_Estimator.update(cameraResult)
+                : Optional.empty();
+        if (!estimatedPose.isPresent()) {
             return;
         }
 
-        PhotonTrackedTarget target = cameraResult.getBestTarget();
+        var pose = estimatedPose.get();
+        if (m_LastTimestamp.isPresent() && pose.timestampSeconds - m_LastTimestamp.get() > Double.MIN_VALUE) {
+            return;
+        }
 
         result.isNew = true;
-        result.targetID = target.getFiducialId();
+        result.pose = pose.estimatedPose.toPose2d();
+        result.timestamp = pose.timestampSeconds;
 
-        var transform = target.getBestCameraToTarget();
-        result.cameraToTargetDistance = Meters.of(transform.getTranslation().getNorm());
-        result.cameraToTargetRotation = transform.getRotation();
-        // result.timestamp = cameraResult.getTimestampSeconds();
+        result.minDistance = Double.MAX_VALUE;
+        result.maxDistance = Double.MIN_VALUE;
+        result.maxAmbiguity = Double.MIN_VALUE;
+
+        var targets = cameraResult.getTargets();
+        result.tags = new Tag[targets.size()];
+
+        for (int i = 0; i < targets.size(); i++) {
+            var target = targets.get(i);
+            var transform = target.getBestCameraToTarget();
+            double distance = transform.getTranslation().getNorm();
+            double ambiguity = target.getPoseAmbiguity();
+
+            result.minDistance = Math.min(result.minDistance, distance);
+            result.maxDistance = Math.max(result.maxDistance, distance);
+            result.maxAmbiguity = Math.max(result.maxAmbiguity, ambiguity);
+
+            var tag = new Tag();
+            tag.ID = target.getFiducialId();
+            tag.cameraDistance = distance;
+            result.tags[i] = tag;
+        }
+
+        m_LastTimestamp = Optional.of(pose.timestampSeconds);
     }
 
     @Override
@@ -91,5 +144,18 @@ public final class PhotonlibCamera implements Camera {
     @Override
     public Transform3d getOffset() {
         return m_Offset;
+    }
+
+    @Override
+    public Simulator createSimulator(Specification specification) {
+        var properties = new SimCameraProperties();
+        properties.setCalibration(specification.width, specification.height, specification.fov);
+        properties.setFPS(specification.fps);
+        properties.setAvgLatencyMs(specification.meanLatency);
+        properties.setLatencyStdDevMs(specification.stdDevLatency);
+        properties.setCalibError(specification.meanError, specification.stdDevError);
+
+        var sim = new PhotonCameraSim(m_Camera, properties);
+        return new PhotonlibSimulator(sim, m_Offset);
     }
 }

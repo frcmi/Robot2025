@@ -1,55 +1,74 @@
 package frc.robot.vision;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Radians;
-
-import java.util.List;
-import java.util.Optional;
-
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.simulation.PhotonCameraSim;
-import org.photonvision.simulation.SimCameraProperties;
-import org.photonvision.simulation.VisionSystemSim;
-import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
-
-import com.ctre.phoenix6.Timestamp;
-import com.ctre.phoenix6.Timestamp.TimestampSource;
-
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.units.measure.Angle;
 
-public final class LimelightCamera implements Camera {
+import frc.lib.LimelightHelpers;
+
+public class LimelightCamera implements Camera {
     private String m_Name;
     private Transform3d m_Offset;
-    private AprilTagFieldLayout m_Layout;
 
-    private NetworkTable limelightTable = NetworkTableInstance.getDefault().getTable("limelight");
-
-    public LimelightCamera(String name, Transform3d offset, AprilTagFieldLayout layout) {
+    public LimelightCamera(String name, Transform3d offset) {
         m_Name = name;
         m_Offset = offset;
-        m_Layout = layout;
+
+        var translation = m_Offset.getTranslation();
+        var rotation = m_Offset.getRotation();
+
+        double radiansToDegrees = 180 / Math.PI;
+        double roll = rotation.getX() * radiansToDegrees;
+        double pitch = rotation.getY() * radiansToDegrees;
+        double yaw = rotation.getZ() * radiansToDegrees;
+
+        LimelightHelpers.setCameraPose_RobotSpace(m_Name,
+                translation.getX(), translation.getY(), translation.getZ(),
+                roll, pitch, yaw);
     }
 
+    @Override
     public void update(Result result) {
-        result.isNew = true;
-        result.targetID = (int)limelightTable.getEntry("tid").getInteger(-1);
+        var estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_Name);
+        result.isNew = false;
 
-        if (result.targetID < 0) {
-            result.cameraToTargetDistance = Meters.of(-1);
-        } else {
-            Angle angleToGoal = m_Offset.getRotation().getMeasureY().plus(Degrees.of(limelightTable.getEntry("ty").getDouble(0)));
-            result.cameraToTargetDistance = m_Layout.getTagPose(result.targetID).get().getMeasureZ().minus(m_Offset.getMeasureZ()).div(Math.tan(angleToGoal.in(Radians)));
+        if (estimate.tagCount <= 0) {
+            return;
         }
+
+        for (int i = 0; i < estimate.tagCount; i++) {
+            int id = estimate.rawFiducials[i].id;
+            if (id < 1 || id > 16) {
+                return;
+            }
+        }
+
+        result.pose = estimate.pose;
+        result.timestamp = estimate.timestampSeconds;
+        result.isNew = true;
+
+        result.maxAmbiguity = Double.MIN_VALUE;
+        result.maxDistance = Double.MIN_VALUE;
+        result.minDistance = Double.MAX_VALUE;
+
+        result.tags = new Tag[estimate.tagCount];
+        for (int i = 0; i < estimate.tagCount; i++) {
+            var fiducial = estimate.rawFiducials[i];
+
+            result.maxAmbiguity = Math.max(result.maxAmbiguity, fiducial.ambiguity);
+            result.maxDistance = Math.max(result.maxDistance, fiducial.distToCamera);
+            result.minDistance = Math.min(result.minDistance, fiducial.distToCamera);
+
+            var tag = new Tag();
+            tag.ID = fiducial.id;
+            tag.cameraDistance = fiducial.distToCamera;
+            result.tags[i] = tag;
+        }
+    }
+
+    @Override
+    public void setReference(Pose2d pose) {
+        var yaw = pose.getRotation();
+        LimelightHelpers.SetRobotOrientation(m_Name, yaw.getDegrees(), 0, 0, 0, 0, 0);
     }
 
     @Override
@@ -63,5 +82,7 @@ public final class LimelightCamera implements Camera {
     }
 
     @Override
-    public void setReference(Pose2d pose) {}
+    public Simulator createSimulator(Specification specification) {
+        throw new UnsupportedOperationException("The Limelight camera does not have a simulator");
+    }
 }
