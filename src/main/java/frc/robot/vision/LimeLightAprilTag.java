@@ -41,6 +41,9 @@ Gets the target area (ta).
     public double getTargetArea() {
         return limeTable.getEntry("ta").getDouble(0);
     }
+    public double getTargetID() {
+        return limeTable.getEntry("tid").getDouble(-1);
+    }
     /**
 Computes an approximate distance to the target using the vertical offset.
 Uses the formula:
@@ -58,7 +61,7 @@ Make sure to convert angles to radians.
     /**
 Example method to update and print the current LimeLight data.
      */
-    public void update() {
+    public void printValues() {
         if (hasTarget()) {
             double tx = getHorizontalOffset();
             double ty = getVerticalOffset();
