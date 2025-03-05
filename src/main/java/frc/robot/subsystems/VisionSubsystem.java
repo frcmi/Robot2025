@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.vision.Camera;
+import frc.robot.vision.LimeLightAprilTag;
 import frc.robot.vision.LimelightCamera;
 import frc.robot.vision.PhotonlibCamera;
 import frc.robot.vision.Camera.Result;
@@ -50,24 +51,26 @@ public final class VisionSubsystem extends SubsystemBase {
 
     private Camera m_Camera;
     private Result result;
+    private LimeLightAprilTag tag;
 
     public VisionSubsystem(CameraDescription camera, String fieldName) {
-        try {
-            fieldLayout = AprilTagFieldLayout.loadFromResource(fieldName); //"/edu/wpi/first/apriltag/" + fieldName);
-        } catch (Exception e) {
-            System.out.println("No april tag map called " + fieldName);
-            System.out.println(e);
-        }
+        // try {
+        //     fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
+        // } catch (Exception e) {
+        //     System.out.println("No april tag map called " + fieldName);
+        //     System.out.println(e);
+        // }
 
-        var desc = camera;
-        result = new Result(); 
+        // var desc = camera;
+        // result = new Result(); 
 
-        switch (desc.type) {
-            case PHOTONVISION:
-                m_Camera = new PhotonlibCamera(desc.name, desc.offset, fieldLayout);
-            default:
-                m_Camera = new LimelightCamera(desc.name, desc.offset, fieldLayout);
-        }
+        // switch (desc.type) {
+        //     case PHOTONVISION:
+        //         m_Camera = new PhotonlibCamera(desc.name, desc.offset, fieldLayout);
+        //     default:
+        //         m_Camera = new LimelightCamera(desc.name, desc.offset, fieldLayout);
+        // }
+        tag = new LimeLightAprilTag();
     }
 
     DoublePublisher cameraPublisher = NetworkTableInstance.getDefault()
@@ -75,10 +78,12 @@ public final class VisionSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        System.out.println("sir");
-        m_Camera.update(result);
-        cameraPublisher.set(result.cameraToTargetDistance.in(Inches));
-        result.isNew = false;
+        // m_Camera.update(result);
+        if (tag.hasTarget()) {
+            cameraPublisher.set(Meters.of(tag.getDistanceMeters()).in(Inches));
+            
+        }
+        // result.isNew = false;
 
         // var result = m_Camera.result;
         // m_Camera.camera.update(result);

@@ -70,7 +70,6 @@ public final class PhotonlibCamera implements Camera {
 
     @Override
     public void update(Result result) {
-        System.out.println("its actually so gojoever");
         result.isNew = false;
 
         var results = m_Camera.getAllUnreadResults();

@@ -38,22 +38,18 @@ public final class LimelightCamera implements Camera {
         m_Name = name;
         m_Offset = offset;
         m_Layout = layout;
-        
-        if (m_Layout == null) {
-            System.out.println("no work");
-        }
     }
 
     public void update(Result result) {
-        if (m_Layout == null) {
-            System.out.println("why it no work");
-        }
-        System.out.println("sobbing empji");
         result.isNew = true;
         result.targetID = (int)limelightTable.getEntry("tid").getInteger(-1);
 
-        Angle angleToGoalRadians = m_Offset.getRotation().getMeasureY().plus(Degrees.of(limelightTable.getEntry("ty").getDouble(0)));
-        result.cameraToTargetDistance = m_Layout.getTagPose(result.targetID).get().getMeasureZ().minus(m_Offset.getMeasureZ()).div(Math.tan(angleToGoalRadians.in(Radians)));
+        if (result.targetID < 0) {
+            result.cameraToTargetDistance = Meters.of(-1);
+        } else {
+            Angle angleToGoal = m_Offset.getRotation().getMeasureY().plus(Degrees.of(limelightTable.getEntry("ty").getDouble(0)));
+            result.cameraToTargetDistance = m_Layout.getTagPose(result.targetID).get().getMeasureZ().minus(m_Offset.getMeasureZ()).div(Math.tan(angleToGoal.in(Radians)));
+        }
     }
 
     @Override
