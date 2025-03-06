@@ -117,7 +117,7 @@ public class PivotSubsystem extends SubsystemBase {
         pid.setSetpoint(PivotConstants.stowAngle.in(Radians));
         pid.calculate(0);
 
-        setDefaultCommand(this.holdAngle());
+        // setDefaultCommand(this.holdAngle());
     }
 
     public boolean closeEnough() {

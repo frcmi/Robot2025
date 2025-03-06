@@ -8,17 +8,12 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
-import com.pathplanner.lib.auto.AutoBuilder;
-
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -30,31 +25,25 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.ClawSubsystem;
-import frc.robot.subsystems.ClawSubsystemTurbo;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
 import frc.robot.subsystems.TrigVisionSubsystem;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.lib.ultralogger.UltraBooleanLog;
-import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.GlobalVisionSubsystem;
 
-import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.util.datalog.DataLog;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
-import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Constants.TelemetryConstants;
+import frc.robot.commands.AlignBarge;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsAlpha;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -87,7 +76,7 @@ public final class RobotContainer {
 
 //   private SwerveSubsystem m_Swerve;
   private TrigVisionSubsystem m_TrigVision = new TrigVisionSubsystem();
-  private VisionSubsystem m_Vision;
+  private GlobalVisionSubsystem m_GlobalVision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClimberSubsystem m_ClimberSubsystem = new ClimberSubsystem();
   private ClawSubsystem m_ClawSubsystem = new ClawSubsystem(botType);
@@ -193,10 +182,7 @@ public final class RobotContainer {
     // parallelLevelCommands.schedule();
   }
 
-  public SwerveRequest getDriveReq() {
-    if (DriverStation.isAutonomous()) {
-      return brake;
-    }
+  public SwerveRequest.FieldCentric getFieldCentricDriveReq() {
     double multiplier = 1;
 
     if (m_Controller.rightTrigger().getAsBoolean()) {
@@ -216,6 +202,13 @@ public final class RobotContainer {
       .withRotationalRate(-m_Controller.getRightX() * MaxAngularRate * multiplier); // Drive counterclockwise with negative X (left)
   }
 
+  public SwerveRequest getDriveReq() {
+    if (DriverStation.isAutonomous()) {
+      return brake;
+    }
+    return getFieldCentricDriveReq();
+  }
+
   private void configureSwerveBindings() {
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
@@ -231,6 +224,7 @@ public final class RobotContainer {
 
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+    m_Controller.y().and(m_TrigVision::canSeeTag).whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }

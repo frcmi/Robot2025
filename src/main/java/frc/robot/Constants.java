@@ -1,6 +1,8 @@
 package frc.robot;
 
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
+
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -39,6 +41,28 @@ public final class Constants {
         public static final String tabPrefix = "UltraLog/";
         // How often to re-check if the FMS is connected (and disable network logging if so)
         public static final double fmsCheckDelay = 1000;
+    }
+
+    public static class AutoConstants {
+        public static final Distance targetDistanceFromBarge = Inches.of(60);
+        public static class Turbo {
+            public static final double kRotationP = 1.0;
+            public static final double kRotationI = 0.0;
+            public static final double kRotationD = 0.0;
+    
+            public static final double kTranslationP = 1.0;
+            public static final double kTranslationI = 0.0;
+            public static final double kTranslationD = 0.0;
+        }
+        public static class Alpha {
+            public static final double kdP = 1.0;
+            public static final double kdI = 0.0;
+            public static final double kdD = 0.0;
+    
+            public static final double ktP = 1.0;
+            public static final double ktI = 0.0;
+            public static final double ktD = 0.0;
+        }
     }
 
     public static class ClawConstants {

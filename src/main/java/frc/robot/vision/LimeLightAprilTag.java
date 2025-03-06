@@ -10,9 +10,11 @@ public class LimeLightAprilTag {
     // Get the LimeLight NetworkTable. Adjust the table name if necessary.
     private final NetworkTable limeTable = NetworkTableInstance.getDefault().getTable("limelight");
     // Camera and target configuration (modify these to match your setup)
-    private final double cameraHeightMeters = Inches.of(3.5).in(Meters);   // Height of the camera off the ground in meters
+    private final double cameraHeightMeters = Inches.of(10.5).in(Meters);   // Height of the camera off the ground in meters
     private final double targetHeightMeters = Inches.of(73).in(Meters);     // Height of the AprilTag on the field in meters
-    private final double cameraAngleDegrees = 33.5;    // Angle at which the camera is mounted
+    private final double cameraAngleDegrees = 45;    // Angle at which the camera is mounted
+    // 3, 4.75, 10.5
+
     /**
 Checks if a valid target is detected.
 @return true if target is detected; false otherwise.
