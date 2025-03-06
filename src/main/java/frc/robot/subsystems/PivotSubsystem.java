@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
@@ -86,8 +87,10 @@ public class PivotSubsystem extends SubsystemBase {
     private double offset = PivotConstants.TurboBot.offset;
     private double discontinuityPoint = PivotConstants.TurboBot.discontinuity;
     private double multiplier = -1;
+    private BotType botType;
 
     public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
+        botType = bot;
         // pid.enableContinuousInput(-0.622, 1 - 0.622);
         if (bot == BotType.ALPHA_BOT) {
             TalonFXConfiguration configuration = new TalonFXConfiguration();
@@ -120,6 +123,17 @@ public class PivotSubsystem extends SubsystemBase {
         setDefaultCommand(this.holdAngle());
     }
 
+    public Command scuffedPivot(Angle rotations, boolean dewit) {
+        final Angle rotations2;
+        if (botType == BotType.MAIN_BOT && dewit) {
+        rotations2 = rotations.minus(Rotations.of(0.0704 - 0.06302437657560933));
+        } else {
+        rotations2 = rotations;
+        }
+
+        return Commands.runOnce(() -> setAngle(rotations2)).andThen(Commands.run(() -> {})).withTimeout(0.1);
+    }
+
     public boolean closeEnough() {
         return Math.abs(pid.getPositionError()) < Degrees.of(2).in(Radians);
     }
@@ -148,9 +162,9 @@ public class PivotSubsystem extends SubsystemBase {
                     signum = 0;
                 }
             }
-            if (DriverStation.isAutonomous()) {
-                voltage /= 1.5;
-            }
+            // if (DriverStation.isAutonomous()) {
+            //     voltage /= 1.5;
+            // }
             double ff = feedforward.calculate(currentAngle, signum);
             ffPublisher.update(ff);
             if (DriverStation.isEnabled()) {

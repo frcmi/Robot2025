@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.revrobotics.Rev2mDistanceSensor;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -81,7 +82,7 @@ public final class RobotContainer {
   private VisionSubsystem m_Vision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClimberSubsystem m_ClimberSubsystem = new ClimberSubsystem();
-  private ClawSubsystem m_ClawSubsystem = new ClawSubsystem(botType);
+  private ClawSubsystemTurbo m_ClawSubsystem = new ClawSubsystemTurbo(botType);
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem(botType);
   public PivotSubsystem m_PivotSubsystem = new PivotSubsystem(botType, m_ElevatorSubsystem.elevator);
 
@@ -97,7 +98,10 @@ public final class RobotContainer {
 
   RadioLogger radioLogger = new RadioLogger();
 
-  public RobotContainer() {
+  private final Rev2mDistanceSensor distance;
+
+  public RobotContainer(Rev2mDistanceSensor distance) {
+    this.distance = distance;
     if (!TelemetryConstants.disableDatalog) {
       DataLogManager.start();
       DriverStation.startDataLog(DataLogManager.getLog());
@@ -149,20 +153,7 @@ public final class RobotContainer {
     autoChooser.setDefaultOption("None", Commands.none());
     autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(getTravelDir())).withTimeout(2));
     autoChooser.addOption("Coral Yipee", 
-      drivetrain.applyRequest(() -> 
-          drive.withVelocityY(getTravelDir() * 0.5).withRotationalRate(0).withVelocityX(0)
-        )
-        .withTimeout(2.87 + 0.05)
-        .andThen(drivetrain.applyRequest(() -> brake).withTimeout(0.5)
-          .andThen(
-            scuffedPivot(Rotations.of(0.08))
-              .andThen(new WaitCommand(3))
-              .andThen(m_ClawSubsystem.intake())
-              .andThen(new WaitCommand(2))
-              .andThen(scuffedPivot(PivotConstants.stowAngle))
-            )
-          )
-      );
+      CoralAutoBuilder.build(distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem));
   }
 
   private void initSubsystems() {
@@ -269,18 +260,7 @@ public final class RobotContainer {
   }
 
   public Command scuffedPivot(Angle rotations) {
-    return scuffedPivot(rotations, true);
-  }
-
-  public Command scuffedPivot(Angle rotations, boolean dewit) {
-    final Angle rotations2;
-    if (botType == BotType.MAIN_BOT && dewit) {
-      rotations2 = rotations.minus(Rotations.of(0.0704 - 0.06302437657560933));
-    } else {
-      rotations2 = rotations;
-    }
-
-    return Commands.runOnce(() -> m_PivotSubsystem.setAngle(rotations2)).andThen(Commands.run(() -> {})).withTimeout(0.1);
+    return m_PivotSubsystem.scuffedPivot(rotations, true);
   }
 
   public void configureScuffedBindings() {
