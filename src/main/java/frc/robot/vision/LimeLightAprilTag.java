@@ -1,7 +1,9 @@
 package frc.robot.vision;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -12,7 +14,7 @@ public class LimeLightAprilTag {
     // Camera and target configuration (modify these to match your setup)
     private final double cameraHeightMeters = Inches.of(10.5).in(Meters);   // Height of the camera off the ground in meters
     private final double targetHeightMeters = Inches.of(73).in(Meters);     // Height of the AprilTag on the field in meters
-    private final double cameraAngleDegrees = 45;    // Angle at which the camera is mounted
+    private final double cameraAngleDegrees = 67.1;    // Angle at which the camera is mounted
     // 3, 4.75, 10.5
 
     /**
@@ -51,11 +53,17 @@ Make sure to convert angles to radians.
      *
 @return Estimated distance in meters.
      */
-    public double getDistanceMeters() {
+    public double getLateralDistanceMeters() {
         double ty = getVerticalOffset();
         // Combine the mounting angle with the offset
         double angleToTargetRadians = Math.toRadians(cameraAngleDegrees + ty);
         return (targetHeightMeters - cameraHeightMeters) / Math.tan(angleToTargetRadians);
+    }
+    public double getVerticalDistanceMeters() {
+        double tx = getHorizontalOffset();
+        double verticalDist = getLateralDistanceMeters();
+
+        return verticalDist * Math.tan(Degrees.of(tx).in(Radians));
     }
     /**
 Example method to update and print the current LimeLight data.
@@ -64,7 +72,7 @@ Example method to update and print the current LimeLight data.
         if (hasTarget()) {
             double tx = getHorizontalOffset();
             double ty = getVerticalOffset();
-            double distance = getDistanceMeters();
+            double distance = getVerticalDistanceMeters();
             System.out.println("Target Detected!");
             System.out.println("Horizontal Offset (tx): " + tx + " degrees");
             System.out.println("Vertical Offset (ty): " + ty + " degrees");

@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
+import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -30,9 +32,8 @@ public class AlignBarge extends Command {
     private final DoubleSupplier horizontalInputSupplier;
 
     private final PIDController translationPIDController = new PIDController(AutoConstants.Turbo.kTranslationP, AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD);
-    private final PIDController rotationPIDController = new PIDController(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
 
-    private final SwerveRequest.FieldCentric driveRequest = new SwerveRequest.FieldCentric();
+    private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
 
     public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain, DoubleSupplier horizontalInputSupplier) {
         this.vision = vision;
@@ -40,18 +41,19 @@ public class AlignBarge extends Command {
         this.horizontalInputSupplier = horizontalInputSupplier;
 
         addRequirements(drivetrain);
+
+        driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
     }
 
     @Override
     public void execute() {
-        Optional<Distance> distanceOptional = vision.distanceToBarge();
+        Optional<Distance> distanceOptional = vision.getLateralDistanceToBarge();
         if (distanceOptional.isEmpty()) return;
         Distance distance = distanceOptional.get();
 
-        // driveRequest.withRotationalRate(Rotations.of(rotationPIDController.calculate(orientation.in(Rotations), 0)).per(Second));
         driveRequest.withVelocityX(Meters.of(-translationPIDController.calculate(distance.in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters))).per(Second));
         driveRequest.withVelocityY(horizontalInputSupplier.getAsDouble());
-        driveRequest.withRotationalRate(Rotations.of(rotationPIDController.calculate(drivetrain.getPigeon2().getYaw().getValue().in(Rotations), 0.25)).per(Second));
+        driveRequest.withTargetDirection(Rotation2d.fromDegrees(-90));
 
         drivetrain.setControl(driveRequest);
     }

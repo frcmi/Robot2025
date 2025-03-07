@@ -224,7 +224,7 @@ public final class RobotContainer {
 
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-    m_Controller.y().and(m_TrigVision::canSeeTag).whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
+    m_Controller.y().and(m_TrigVision::hasLastPosition).whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
