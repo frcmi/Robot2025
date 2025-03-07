@@ -12,6 +12,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorOutputStatusValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
@@ -98,7 +99,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final UltraSupplierLog rightPosePub = new UltraSupplierLog("Elevator/Right Pose", followerMotor.getPosition());
     private final Alert estopAlert = new Alert("Elevator E-Stopped", AlertType.kError);
 
-    private boolean estop = true;
+    private boolean estop = false;
 
     // there will be at least one limit switch and an encoder to track the position of the elevator
     public ElevatorSubsystem(BotType bot) {
@@ -160,7 +161,6 @@ public class ElevatorSubsystem extends SubsystemBase {
         StatusSignal.refreshAll(pidError);
 
         return Math.abs(pidError.getValueAsDouble()) < 0.1;
-
     }
 
     public void setFollowerMode() {
@@ -176,7 +176,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     // I would assume that there is only going to be one motor to extend the elevator but we will see
     double poseToHold = ElevatorConstants.stowHeight;
-    boolean pause = false;
+    boolean pause = true;
     public Command holdPose(){
         // return run(() -> {});
         return run(() -> {
@@ -298,7 +298,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public Command autoHoneDown() {
         return driveWithSlowVoltageDown()
-            .until(this::isAtExtrema).andThen(resetPose()).andThen(stop().withTimeout(0.1));
+            .until(this::isAtExtrema).andThen(resetPose()).andThen(stop().withTimeout(0.1)).andThen(runOnce(() -> pause = false));
     }
 
     public Command autoHonePose() {

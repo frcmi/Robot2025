@@ -6,6 +6,11 @@ package frc.robot;
 
 import com.revrobotics.Rev2mDistanceSensor;
 import com.revrobotics.Rev2mDistanceSensor.Port;
+import com.revrobotics.Rev2mDistanceSensor.RangeProfile;
+import com.revrobotics.Rev2mDistanceSensor.Unit;
+
+import com.revrobotics.Rev2mDistanceSensor;
+import com.revrobotics.Rev2mDistanceSensor.Port;
 import com.revrobotics.Rev2mDistanceSensor.Unit;
 import com.revrobotics.ColorSensorV3;
 
@@ -18,15 +23,18 @@ import edu.wpi.first.wpilibj.I2C;
 public final class Robot extends TimedRobot {
   private Command m_AutonomousCommand;
   private RobotContainer m_RobotContainer;
+  private Rev2mDistanceSensor distance = new Rev2mDistanceSensor(Port.kMXP, Unit.kInches, RangeProfile.kHighAccuracy);
 
   @Override
   public void robotInit() {
-    m_RobotContainer = new RobotContainer();
+    distance.setAutomaticMode(true);
+    m_RobotContainer = new RobotContainer(distance);
     m_RobotContainer.drivetrain.orchestra.loadMusic("song.chrp");
   }
 
   @Override
   public void robotPeriodic() {
+    SmartDashboard.putNumber("Rev Distance", distance.getRange());
     CommandScheduler.getInstance().run();
   }
 

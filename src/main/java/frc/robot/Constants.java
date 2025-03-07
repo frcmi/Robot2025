@@ -52,7 +52,7 @@ public final class Constants {
             public static final double kRotationI = 0.0;
             public static final double kRotationD = 0.0;
     
-            public static final double kTranslationP = 1.0;
+            public static final double kTranslationP = 1.6;
             public static final double kTranslationI = 0.0;
             public static final double kTranslationD = 0.0;
         }
@@ -122,8 +122,8 @@ public final class Constants {
             // huh
             public static final double kG = 0.54;
 
-            public static final double offset = -0.42773281 - 0.19496280556739046;//-0.6544539163613479 + 0.25 - 0.07500434562510866;
-            public static final double discontinuity = 0.4;//-0.4;
+            public static final double offset = -0.42773281 - 0.19496280556739046 + 0.1321396283034908 - 0.12433917810847951;//-0.6544539163613479 + 0.25 - 0.07500434562510866;
+            public static final double discontinuity = -0.4;
         }
     }
 
