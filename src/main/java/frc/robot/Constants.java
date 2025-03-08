@@ -45,7 +45,7 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static final Distance targetDistanceFromBarge = Inches.of(6);
+        public static final Distance targetDistanceFromBarge = Inches.of(4);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
         public static class Turbo {
             public static final double kRotationP = 5.0;
@@ -81,7 +81,7 @@ public final class Constants {
 
     public static class LEDConstants {
         public static final int ledID = 0;
-        public static final int ledLength = 10;
+        public static final int ledLength = 18;
     }
 
     public static class PivotConstants {

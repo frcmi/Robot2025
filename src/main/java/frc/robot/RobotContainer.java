@@ -79,10 +79,10 @@ public final class RobotContainer {
     public final BotType botType = RobotDiscoverer.getRobot();
 
 //   private SwerveSubsystem m_Swerve;
-  private TrigVisionSubsystem m_TrigVision = new TrigVisionSubsystem();
   private GlobalVisionSubsystem m_GlobalVision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClimberSubsystem m_ClimberSubsystem = new ClimberSubsystem();
+  private TrigVisionSubsystem m_TrigVision = new TrigVisionSubsystem(m_LedSubsystem);
   private ClawSubsystemTurbo m_ClawSubsystem = new ClawSubsystemTurbo(botType);
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem(botType);
   public PivotSubsystem m_PivotSubsystem = new PivotSubsystem(botType, m_ElevatorSubsystem.elevator);
@@ -228,10 +228,9 @@ public final class RobotContainer {
     configureTuningBindings();
     configureScuffedBindings();
     configureOperatorBindings();
-    m_LedSubsystem.setDefaultCommand(m_LedSubsystem.fauxRSL());
     
     // TODO: correct color
-    new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
+    // new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
 
     // m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intakeWithBeambreak());
     // m_Controller.rightTrigger().whileTrue(m_PivotSubsystem.setAngle(Rotations.of(0.3)).until(m_PivotSubsystem::closeEnough).andThen(m_ClawSubsystem.shoot()));

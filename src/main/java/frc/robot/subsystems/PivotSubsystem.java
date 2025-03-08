@@ -45,6 +45,8 @@ public class PivotSubsystem extends SubsystemBase {
     Alert nopivotAlert = new Alert("Pivot motor not detected!", AlertType.kError);
     // private final PositionTorqueCurrentFOC motorPositionControl = new PositionTorqueCurrentFOC(Degrees.of(0));
     private final VoltageOut motorVoltageControl = new VoltageOut(Volts.of(0));//.withEnableFOC(true);
+    private final Alert estopAlert = new Alert("Pivot E-Stopped", AlertType.kError);
+    private boolean estop = false;
 
     MechanismLigament2d pivotLigament2d;
     // TalonFXSSimState talonFXSim = pivotMotor.getSimState();
@@ -146,6 +148,9 @@ public class PivotSubsystem extends SubsystemBase {
 
     public Command holdAngle() {
         return run(() -> {
+            if(estop){
+                return;
+            }
             StatusSignal.refreshAll(velocity);
             double setpoint = currentAngle.in(Radians);
 
@@ -230,6 +235,7 @@ public class PivotSubsystem extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putBoolean("Arm close enough", closeEnough());
         anglePublisher.update(getEncoder().in(Rotations));
+        estopAlert.set(estop);
         if(pivotMotor.getPosition().getValueAsDouble() <= PivotConstants.minAngle.in(Rotations) &&
             pivotMotor.getPosition().getValueAsDouble() >= PivotConstants.maxAngle.in(Rotations)) {
             pivotMotor.setControl(new NeutralOut());
