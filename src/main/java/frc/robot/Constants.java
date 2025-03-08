@@ -48,7 +48,7 @@ public final class Constants {
         public static final Distance targetDistanceFromBarge = Inches.of(6);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
         public static class Turbo {
-            public static final double kRotationP = 1.0;
+            public static final double kRotationP = 5.0;
             public static final double kRotationI = 0.0;
             public static final double kRotationD = 0.0;
     
