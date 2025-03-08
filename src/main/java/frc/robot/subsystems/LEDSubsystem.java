@@ -25,6 +25,8 @@ public class LEDSubsystem extends SubsystemBase {
         led.setLength(ledBuffer.getLength());
         led.setData(ledBuffer);
         led.start();
+
+        this.setDefaultCommand(defaultCommand());
     }
 
     public Command solidColor(Color color) {
@@ -68,6 +70,17 @@ public class LEDSubsystem extends SubsystemBase {
             patternSupplier.get().applyTo(ledBuffer);
             led.setData(ledBuffer);
         }).ignoringDisable(true);
+    }
+
+    public void applyPatternOnce(LEDPattern pattern) {
+        pattern.applyTo(ledBuffer);
+        led.setData(ledBuffer);
+    }
+
+    public Command defaultCommand() {
+        return this.run(() -> {
+            led.setData(ledBuffer);
+        });
     }
 
     public Command applyPattern(LEDPattern pattern) {
