@@ -8,6 +8,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
@@ -20,12 +21,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -36,28 +37,28 @@ import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.TrigVisionSubsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
+import frc.robot.subsystems.GlobalVisionSubsystem;
+
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.util.datalog.DataLog;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
-import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Constants.TelemetryConstants;
+import frc.robot.commands.AlignBarge;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsAlpha;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public final class RobotContainer {
-  private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
-  private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            // .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
@@ -78,9 +79,11 @@ public final class RobotContainer {
 
   public final BotType botType = RobotDiscoverer.getRobot();
 
-  private VisionSubsystem m_Vision; // = new VisionSubsystem();
+//   private SwerveSubsystem m_Swerve;
+  private GlobalVisionSubsystem m_GlobalVision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClimberSubsystem m_ClimberSubsystem = new ClimberSubsystem();
+  private TrigVisionSubsystem m_TrigVision = new TrigVisionSubsystem(m_LedSubsystem);
   private ClawSubsystemTurbo m_ClawSubsystem = new ClawSubsystemTurbo(botType);
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem(botType);
   public PivotSubsystem m_PivotSubsystem = new PivotSubsystem(botType, m_ElevatorSubsystem.elevator);
@@ -152,11 +155,11 @@ public final class RobotContainer {
     autoChooser.setDefaultOption("None", Commands.none());
     autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(getTravelDir())).withTimeout(2));
     autoChooser.addOption("Coral Yipee", 
-      CoralAutoBuilder.build(distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem));
+      CoralAutoBuilder.build(distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+  
   }
 
   private void initSubsystems() {
-    m_Vision = VisionSubsystem.configure(drivetrain);
   }
 
   private void changeLevel(boolean moveUp) {
@@ -175,10 +178,7 @@ public final class RobotContainer {
     // parallelLevelCommands.schedule();
   }
 
-  public SwerveRequest getDriveReq() {
-    if (DriverStation.isAutonomous()) {
-      return brake;
-    }
+  public SwerveRequest.FieldCentric getFieldCentricDriveReq() {
     double multiplier = 1;
 
     if (m_Controller.rightTrigger().getAsBoolean()) {
@@ -198,6 +198,13 @@ public final class RobotContainer {
       .withRotationalRate(-m_Controller.getRightX() * MaxAngularRate * multiplier); // Drive counterclockwise with negative X (left)
   }
 
+  public SwerveRequest getDriveReq() {
+    if (DriverStation.isAutonomous()) {
+      return brake;
+    }
+    return getFieldCentricDriveReq();
+  }
+
   private void configureSwerveBindings() {
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
@@ -213,6 +220,7 @@ public final class RobotContainer {
 
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+    m_Controller.rightBumper().and(m_TrigVision::hasLastPosition).whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
@@ -223,7 +231,6 @@ public final class RobotContainer {
     configureTuningBindings();
     configureScuffedBindings();
     configureOperatorBindings();
-    m_LedSubsystem.setDefaultCommand(m_LedSubsystem.fauxRSL());
     
     new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
 
@@ -314,7 +321,18 @@ public final class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    Command base = scuffedPivot(Rotations.of(0.241));
+    final double sign;
+    
+    if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red) {
+      sign = -1;
+    } else {
+      sign = 1;
+    }
+
+    Command base = scuffedPivot(Rotations.of(0.241))
+      .andThen(Commands.runOnce(() -> {
+        drivetrain.resetRotation(Rotation2d.fromDegrees(sign * 90));
+      }, drivetrain));
     // if (Robot.isReal()) {
     //   base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)); //.andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
     // }

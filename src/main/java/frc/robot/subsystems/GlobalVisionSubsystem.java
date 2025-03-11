@@ -17,7 +17,7 @@ import frc.robot.vision.Camera.Result;
 import frc.robot.vision.Camera.Simulator;
 import frc.robot.vision.Camera.Specification;
 
-public final class VisionSubsystem implements Subsystem {
+public final class GlobalVisionSubsystem implements Subsystem {
     public static final double kMaxAmbiguity = 0.7;
     public static final double kMaxDistance = Units.feetToMeters(10);
 
@@ -45,7 +45,7 @@ public final class VisionSubsystem implements Subsystem {
     private HashSet<Integer> m_ViableResults;
     private int m_Frame;
 
-    public static VisionSubsystem configure(CommandSwerveDrivetrain swerve) {
+    public static GlobalVisionSubsystem configure(CommandSwerveDrivetrain swerve) {
         var cameras = new CameraDescription[] { /* cameras */ };
 
         AprilTagFieldLayout layout;
@@ -56,7 +56,7 @@ public final class VisionSubsystem implements Subsystem {
             layout = null;
         }
 
-        return new VisionSubsystem(swerve, cameras, layout);
+        return new GlobalVisionSubsystem(swerve, cameras, layout);
     }
 
     private static Camera createCamera(CameraDescription desc, AprilTagFieldLayout layout) {
@@ -70,7 +70,7 @@ public final class VisionSubsystem implements Subsystem {
         }
     }
 
-    public VisionSubsystem(CommandSwerveDrivetrain swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
+    public GlobalVisionSubsystem(CommandSwerveDrivetrain swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
         m_Swerve = swerve;
         m_ViableResults = new HashSet<>();
         m_Frame = 0;

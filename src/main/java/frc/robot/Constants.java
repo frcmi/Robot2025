@@ -1,6 +1,9 @@
 package frc.robot;
 
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Time;
+
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -41,6 +44,29 @@ public final class Constants {
         public static final double fmsCheckDelay = 1000;
     }
 
+    public static class AutoConstants {
+        public static final Distance targetDistanceFromBarge = Inches.of(4);
+        public static final Time lastPoseTimeout = Milliseconds.of(50);
+        public static class Turbo {
+            public static final double kRotationP = 5.0;
+            public static final double kRotationI = 0.0;
+            public static final double kRotationD = 0.0;
+    
+            public static final double kTranslationP = 1.6;
+            public static final double kTranslationI = 0.0;
+            public static final double kTranslationD = 0.0;
+        }
+        public static class Alpha {
+            public static final double kdP = 1.0;
+            public static final double kdI = 0.0;
+            public static final double kdD = 0.0;
+    
+            public static final double ktP = 1.0;
+            public static final double ktI = 0.0;
+            public static final double ktD = 0.0;
+        }
+    }
+
     public static class ClawConstants {
         public static final int beambreakChannel = 1;
         public static final int motorControllerID = 23;
@@ -55,7 +81,7 @@ public final class Constants {
 
     public static class LEDConstants {
         public static final int ledID = 0;
-        public static final int ledLength = 10;
+        public static final int ledLength = 18;
     }
 
     public static class PivotConstants {
@@ -88,16 +114,16 @@ public final class Constants {
         }
 
         public static class TurboBot {
-            public static final double kP = 1.3d;
+            public static final double kP = 1.1d;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
 
             public static final double kS = 0.28;
             // huh
-            public static final double kG = 0.54;
+            public static final double kG = 0.536;
 
-            public static final double offset = -0.42773281 - 0.19496280556739046;//-0.6544539163613479 + 0.25 - 0.07500434562510866;
-            public static final double discontinuity = 0.4;//-0.4;
+            public static final double offset = -0.44037826100945654;
+            public static final double discontinuity = -0.4;
         }
     }
 

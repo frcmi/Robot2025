@@ -21,10 +21,14 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -266,12 +270,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return run(() -> this.setControl(requestSupplier.get()));
     }
 
+    private static DoublePublisher yawPublisher = NetworkTableInstance.getDefault().getDoubleTopic("Swerve/Yaw").publish();
+
     @Override
     public void periodic() {
         for (int i = 0; i < 4; i++) {
             driveTempLogs[i].update(driveTemps[i].getValueAsDouble());
             azimuthTempLogs[i].update(azimuthTemps[i].getValueAsDouble());
         }
+
+        yawPublisher.set(getPigeon2().getYaw().getValueAsDouble());
 
         /*
          * Periodically try to apply the operator perspective.

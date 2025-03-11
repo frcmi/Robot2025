@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -24,6 +25,7 @@ public class ClimberSubsystem extends SubsystemBase {
   DutyCycleOut reverse = new DutyCycleOut(0.4).withEnableFOC(true);
 
   public ClimberSubsystem() {
+    SmartDashboard.putNumber("Climber Torque", 17);
     climberMotor.setNeutralMode(NeutralModeValue.Brake);
 
     setDefaultCommand(stop());
@@ -37,7 +39,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
   public Command runMotor(){
     return run(() -> {
-        climberMotor.setControl(control);
+        climberMotor.setControl(control.withOutput(-SmartDashboard.getNumber("Climber Torque", 17)));
     });
   }
 
