@@ -44,13 +44,13 @@ public final class Constants {
     public static class ClawConstants {
         public static final int beambreakChannel = 1;
         public static final int motorControllerID = 23;
-        public static final double intakeSpeed = -0.5;
+        public static final double intakeSpeed = -0.75;
         public static final double shootSpeed = 1;
-        public static final double stopSpeed = 0.0;
+        public static final double stopSpeed = -0.04;
     }
 
     public static class ClimberCostansts {
-        public static final int climberMotorID = 0;
+        public static final int climberMotorID = 15;
     }
 
     public static class LEDConstants {
@@ -60,60 +60,80 @@ public final class Constants {
 
     public static class PivotConstants {
         public static final int motorID = 13;
-        // TODO: figure out real values
         // The "zero" angle is forward, larger values will rotate upwards
-        public static final Angle floorAngle = Degrees.of(0);
-        public static final Angle onCoralAngle = Degrees.of(20);
-        public static final Angle reefOneAngle = Degrees.of(45);
-        public static final Angle reefTwoAngle = Degrees.of(45);
-        public static final Angle bargeAngle = Degrees.of(90);
+        public static final Angle floorAngle = Rotations.of(0.05876435021910875);
+        public static final Angle onCoralAngle = Rotations.of(0.13607985215199636);
+        public static final Angle reefOneAngle = Rotations.of(0.13396100209902506);
+        public static final Angle reefTwoAngle = Rotations.of(0.14660425241510633);
+        public static final Angle processorAngle = Rotations.of(0.13322460283061502);
+        public static final Angle bargeAngle = Rotations.of(0.3);
+        public static final Angle stowAngle = Rotations.of(0.27261940556548514);
+        public static final Angle coralIntake = Rotations.of(-0.059247502731187396);
 
         public static final Angle maxAngle = Degrees.of(5);
         public static final Angle minAngle = Degrees.of(0);
-        public static final double maxVelocity = 0.0;
-        public static final double maxAccel = 0.0;
+        public static final double maxVelocity = (15) * (44 / 12) * 15d;
+        public static final double maxAccel = maxVelocity * 2.5;
 
-        public static final double kP = 1.15;
-        public static final double kI = 0.0;
-        public static final double kD = 0.0;
+        public static class AlphaBot {  
+            public static final double kP = 1.15;
+            public static final double kI = 0.0;
+            public static final double kD = 0.0;
 
-        public static final double kS = 0.13;
-        public static final double kV = 0.0;
-        public static final double kA = 0.0;
-        public static final double kG = 0.52;
+            public static final double kS = 0.17;
+            public static final double kG = 0.548;
+
+            public static final double offset = 0.05 - 0.75 - 0.3885356534633913 - 0.5 + 1;
+            public static final double discontinuity = -0.3;
+        }
+
+        public static class TurboBot {
+            public static final double kP = 1.3d;
+            public static final double kI = 0.0;
+            public static final double kD = 0.0;
+
+            public static final double kS = 0.28;
+            // huh
+            public static final double kG = 0.54;
+
+            public static final double offset = -0.42773281 - 0.19496280556739046;//-0.6544539163613479 + 0.25 - 0.07500434562510866;
+            public static final double discontinuity = 0.4;//-0.4;
+        }
     }
 
     public static class ElevatorConstants {
         public static final int upperLimitSwitchID = 3;
         public static final int lowerLimitSwitchID = 4;
 
-        // TODO: double check
         public static final Angle absoluteBottom = Rotations.of(-0.4);
-        public static final Angle absoluteTop = Rotations.of(57.3);
-        public static final boolean absoluteCinema = true;
+        public static final Angle absoluteTop = Rotations.of(60);
+        public static final boolean absoluteCinema = absoluteTop.gt(absoluteBottom);
 
         public static final double rotationsBeforeZero = 1.5;
         // this is a place holder until we can figure out what the real number of rotation is
         public static final double rotationsBeforeMaxHeight = 0.0;
-        public static final double floorHeight = rotationsBeforeZero - 0.5;
-        public static final double onCoralHeight = 0.3;
-        public static final double reefOneHeight = 0.8;
-        public static final double reefTwoHeight = 1.0;
-        public static final double bargeHeight = 57;
+        public static final double floorHeight = 0.99169921875;
+        public static final double stowHeight = 0.2;
+        public static final double onCoralHeight = 0.5;
+        public static final double reefOneHeight = 15.19 + 2;
+        public static final double reefTwoHeight = 29.85 + 2;
+        public static final double bargeHeight = 61.1;
+        public static final double coralIntake = 40.23876953125;
         public static final double slowVoltageDown = -0.32;
         public static final double slowVoltageUp = 1.5;
 
         public static final int slotId = 1;
 
         public static final Slot0Configs realBotConfigs = new Slot0Configs()
-            .withKP(0.0)
+            .withKP(0.7)
             .withKI(0.0)
             .withKD(0.0)
-            .withKS(0.0)
-            .withKV(0.0)
-            .withKA(0.0)
-            .withKG(0.0)
-            .withGravityType(GravityTypeValue.Elevator_Static);
+            .withKS(0.16078)
+            .withKV(0.12648)
+            .withKA(0.0027715)
+            .withKG(0.58887)
+            .withGravityType(GravityTypeValue.Elevator_Static)
+            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign);
 
         public static final Slot1Configs alphaBotConfigs = new Slot1Configs()
             .withKP(0.44)
@@ -124,9 +144,11 @@ public final class Constants {
             .withKA(0.0018766)
             .withKG(0.51897)
             .withGravityType(GravityTypeValue.Elevator_Static)
-            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
+            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign);
 
-        // TODO: get conversion value(if this isn't it)
+        // TODO: figure out real conversion and heights
+        public static final double inchesPerRotation = 20;
+
         public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
         public static final double gearRatio = 8.0/1.0;
         public static final double elevatorInertia = 0.001; // In Kg Meters^2 

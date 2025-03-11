@@ -1,19 +1,14 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 
-import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import static edu.wpi.first.units.Units.Amps;
 
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.ControlRequest;
@@ -24,33 +19,29 @@ import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraSupplierLog;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.ClawConstants;
 import edu.wpi.first.wpilibj.DriverStation;
 
-public class ClawSubsystem extends SubsystemBase {
-  private final TalonFXS intakeMotor = new TalonFXS(ClawConstants.motorControllerID);
+public class ClawSubsystemTurbo extends SubsystemBase {
+  private final TalonFX intakeMotor = new TalonFX(ClawConstants.motorControllerID);
   private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw/Beambreak");
-  private final StatusSignal<AngularVelocity> motorVelocity = intakeMotor.getVelocity();
-  private final UltraSupplierLog topMotorSpeedPublisher = new UltraSupplierLog("Claw/Intake motor speed", motorVelocity::getValueAsDouble);
+  private final UltraSupplierLog topMotorSpeedPublisher = new UltraSupplierLog("Claw/Intake motor speed", intakeMotor.getVelocity()::getValueAsDouble);
   private final UltraSupplierLog topMotorTempPublisher = new UltraSupplierLog("Claw/Intake motor temperature", intakeMotor.getDeviceTemp()::getValueAsDouble);
   Alert notopAlert = new Alert("Top motor not detected!", AlertType.kError);
   Alert nobottomAlert = new Alert("Bottom motor not detected!", AlertType.kError);
-  LinearFilter filter = LinearFilter.movingAverage(4);
-  double lastVelocity = 0;
 
   public final TorqueCurrentFOC foc = new TorqueCurrentFOC(Amps.of(327 * ClawConstants.shootSpeed));
   public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
-  public ClawSubsystem(BotType bot) {
-    TalonFXSConfiguration configure = new TalonFXSConfiguration();
-    configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
-    // if (bot == BotType.MAIN_BOT) {
-    //   configure.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    // }
+  public ClawSubsystemTurbo(BotType bot) {
+    TalonFXConfiguration configure = new TalonFXConfiguration();
+    // configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
+    if (bot == BotType.MAIN_BOT) {
+      configure.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    }
     intakeMotor.getConfigurator().apply(configure);
 
     intakeMotor.setNeutralMode(NeutralModeValue.Brake);
@@ -81,7 +72,7 @@ public class ClawSubsystem extends SubsystemBase {
   }
 
   public Command intakeWithBeambreak(){
-  return runMotor(new DutyCycleOut(ClawConstants.intakeSpeed)).until(() -> !beambreak.get()).andThen(stop());
+    return runMotor(new DutyCycleOut(ClawConstants.intakeSpeed)).until(() -> !beambreak.get()).andThen(stop());
   }
   
   public Command intake() {
@@ -98,9 +89,6 @@ public class ClawSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    StatusSignal.refreshAll(motorVelocity);
-    lastVelocity = filter.calculate(motorVelocity.getValueAsDouble());
-    SmartDashboard.putNumber("Last velocity", lastVelocity);
     notopAlert.set(!intakeMotor.isAlive());
     beambreakPublisher.update(beambreak.get());
     topMotorSpeedPublisher.update();

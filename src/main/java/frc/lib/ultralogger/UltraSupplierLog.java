@@ -1,6 +1,5 @@
 package frc.lib.ultralogger;
 
-import java.io.ObjectInputFilter.Status;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 

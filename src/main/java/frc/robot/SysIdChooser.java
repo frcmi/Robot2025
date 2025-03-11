@@ -6,7 +6,6 @@ import frc.robot.commands.CommandSupplier;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
-import frc.robot.SysIdRoutine;
 
 public class SysIdChooser {
     private final SendableChooser<SysIdRoutine> sysIdChooser = new SendableChooser<>();
@@ -24,6 +23,7 @@ public class SysIdChooser {
         sysIdChooser.addOption("Swerve Steer", commandSwerveDrivetrain.m_sysIdRoutineSteer);
         sysIdChooser.addOption("Elevator", elevatorSubsystem.elevatorSysIdRoutine);
         // Pivot is tuned manually
+        sysIdChooser.setDefaultOption("Elevator", elevatorSubsystem.elevatorSysIdRoutine);
 
         sysIdChooser.onChange(this::updateCommands);
 
