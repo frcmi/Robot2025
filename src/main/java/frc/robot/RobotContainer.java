@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
@@ -57,7 +58,7 @@ public final class RobotContainer {
     private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            // .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
@@ -154,7 +155,8 @@ public final class RobotContainer {
     autoChooser.setDefaultOption("None", Commands.none());
     autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(getTravelDir())).withTimeout(2));
     autoChooser.addOption("Coral Yipee", 
-      CoralAutoBuilder.build(distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem));
+      CoralAutoBuilder.build(distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+  
   }
 
   private void initSubsystems() {
@@ -319,7 +321,18 @@ public final class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    Command base = scuffedPivot(Rotations.of(0.241));
+    final double sign;
+    
+    if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red) {
+      sign = -1;
+    } else {
+      sign = 1;
+    }
+
+    Command base = scuffedPivot(Rotations.of(0.241))
+      .andThen(Commands.runOnce(() -> {
+        drivetrain.resetRotation(Rotation2d.fromDegrees(sign * 90));
+      }, drivetrain));
     // if (Robot.isReal()) {
     //   base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)); //.andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
     // }

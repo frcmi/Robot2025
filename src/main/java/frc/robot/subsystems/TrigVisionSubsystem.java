@@ -46,11 +46,15 @@ public final class TrigVisionSubsystem extends SubsystemBase {
 
     public double isAlignedTimestamp = 0;
 
+    public boolean isAligned() {
+        return Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) / 1e6 < 0.1;
+    }
+
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Vision Aligned Timestamp", Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) * 1e6);
         if (tag.hasTarget()) {
-            if (Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) / 1e6 > 0.1) {
+            if (!isAligned()) {
                 this.m_LedSubsystem.applyPatternOnce(seeingColor);
             } else {
                 this.m_LedSubsystem.applyPatternOnce(alignedColor);
@@ -70,6 +74,15 @@ public final class TrigVisionSubsystem extends SubsystemBase {
 
     public Command resetLastPose() {
         return run(() -> { lastRecordedPose = Optional.empty(); });
+    }
+
+    public Optional<Long> getTagID() {
+        long tid = tag.getTargetID();
+        if (tid == -1) {
+            return Optional.empty();
+        }
+
+        return Optional.of(tid);
     }
 
     public Optional<Angle> getHorizontalRotation() {

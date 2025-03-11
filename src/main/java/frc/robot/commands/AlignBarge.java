@@ -53,6 +53,12 @@ public class AlignBarge extends Command {
         if (distanceOptional.isEmpty()) return;
         Distance distance = distanceOptional.get();
 
+        Optional<Long> tagID = vision.getTagID();
+        int sign = 1;
+        if (tagID.isPresent() && (tagID.get() == 4 || tagID.get() == 5)) {
+            sign = -1;
+        }
+
         double pidOutput = -translationPIDController.calculate(distance.in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters));
 
         SmartDashboard.putNumber("Auto Align Error", translationPIDController.getError());
@@ -63,9 +69,9 @@ public class AlignBarge extends Command {
         }
         
 
-        driveRequest.withVelocityX(Meters.of(pidOutput).per(Second));
+        driveRequest.withVelocityX(Meters.of(sign * pidOutput).per(Second));
         driveRequest.withVelocityY(horizontalInputSupplier.getAsDouble());
-        driveRequest.withTargetDirection(Rotation2d.fromDegrees(-90));
+        driveRequest.withTargetDirection(Rotation2d.fromDegrees(sign * -90));
 
         drivetrain.setControl(driveRequest);
     }

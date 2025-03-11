@@ -46,6 +46,13 @@ Gets the target area (ta).
         return limeTable.getEntry("ta").getDouble(0);
     }
     /**
+Gets the target id (tod).
+@return The ID of the detected target.
+     */
+    public long getTargetID() {
+        return limeTable.getEntry("tid").getInteger(-1);
+    }
+    /**
 Computes an approximate distance to the target using the vertical offset.
 Uses the formula:
    distance = (targetHeight - cameraHeight) / tan(cameraAngle + ty)
