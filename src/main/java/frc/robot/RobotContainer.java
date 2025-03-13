@@ -58,7 +58,7 @@ public final class RobotContainer {
     private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            // .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
@@ -220,7 +220,7 @@ public final class RobotContainer {
 
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-    m_Controller.rightBumper().and(m_TrigVision::hasLastPosition).whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
+    m_Controller.rightBumper().whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
