@@ -47,19 +47,24 @@ public class AlignBarge extends Command {
         driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
     }
 
+    private double sign = 1;
+
     @Override
     public void execute() {
         Optional<Distance> distanceOptional = vision.getLateralDistanceToBarge();
-        if (distanceOptional.isEmpty()) return;
-        Distance distance = distanceOptional.get();
-
-        Optional<Long> tagID = vision.getTagID();
-        int sign = 1;
-        if (tagID.isPresent() && (tagID.get() == 4 || tagID.get() == 5)) {
-            sign = -1;
+        double pidOutput = 0;
+        if (!distanceOptional.isEmpty()) {
+            pidOutput = -translationPIDController.calculate(distanceOptional.get().in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters));
         }
 
-        double pidOutput = -translationPIDController.calculate(distance.in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters));
+        Optional<Long> tagID = vision.getTagID();
+        if (tagID.isPresent()) {
+            if (tagID.get() == 4 || tagID.get() == 5) {
+                sign = -1;
+            } else {
+                sign = 1;
+            }
+        }
 
         SmartDashboard.putNumber("Auto Align Error", translationPIDController.getError());
         SmartDashboard.putBoolean("Auto Align Close Enough", translationPIDController.atSetpoint());

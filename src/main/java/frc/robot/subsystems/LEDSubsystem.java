@@ -46,7 +46,7 @@ public class LEDSubsystem extends SubsystemBase {
         return applyPattern(pattern);
     }
 
-    private LEDPattern allianceColorGetter() {
+    public LEDPattern allianceColorGetter() {
         Optional<Alliance> alliance = DriverStation.getAlliance();
 
         if (alliance.isEmpty()) {

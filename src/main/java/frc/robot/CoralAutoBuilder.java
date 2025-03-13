@@ -31,7 +31,7 @@ public class CoralAutoBuilder {
     private static final SwerveRequest.FieldCentricFacingAngle finalDrive = new SwerveRequest.FieldCentricFacingAngle()
       .withTargetDirection(Rotation2d.fromDegrees(-90))
       .withVelocityY(1.8)
-      .withVelocityX(0.8)
+      .withVelocityX(0.6)
       .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective);
     private static final SwerveRequest.FieldCentricFacingAngle finalAlign = new SwerveRequest.FieldCentricFacingAngle()
       .withTargetDirection(Rotation2d.fromDegrees(90))
