@@ -31,7 +31,7 @@ public class CoralAutoBuilder {
     private static final SwerveRequest.FieldCentricFacingAngle finalDrive = new SwerveRequest.FieldCentricFacingAngle()
       .withTargetDirection(Rotation2d.fromDegrees(-90))
       .withVelocityY(1.8)
-      .withVelocityX(0.6)
+      .withVelocityX(0.6) // 0.6
       .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective);
     private static final SwerveRequest.FieldCentricFacingAngle finalAlign = new SwerveRequest.FieldCentricFacingAngle()
       .withTargetDirection(Rotation2d.fromDegrees(90))
@@ -71,8 +71,8 @@ public class CoralAutoBuilder {
 
     public static Command build(Rev2mDistanceSensor distance, CommandSwerveDrivetrain swerve, PivotSubsystem pivot, ElevatorSubsystem elevator, ClawSubsystemTurbo claw, TrigVisionSubsystem vision) {
         return (elevator.autoHonePose().asProxy())
-            .andThen(scuffedElevator(elevator, 3))
-            .andThen(pivot.scuffedPivot(Rotations.of(0.075), true))
+            .andThen(scuffedElevator(elevator, 4.5))
+            .andThen(pivot.scuffedPivot(Rotations.of(0.075)))
             .andThen(new WaitCommand(5).until(pivot::closeEnough))
             .andThen(driveCommand(distance, swerve, 23.5, 1).until(() -> distance.getRange() < 23.5 && distance.getRange() != -1))
             .andThen(claw.runMotor(new DutyCycleOut(-0.25)).withTimeout(0.1))
@@ -80,7 +80,7 @@ public class CoralAutoBuilder {
             .andThen(driveCommand(distance, swerve, 23, -1).until(() -> distance.getRange() > 23))
             // .andThen(pivot.scuffedPivot(PivotConstants.stowAngle, true).andThen(new WaitCommand(1)))
             .andThen(scuffedElevator(elevator, ElevatorConstants.reefOneHeight))
-            .andThen(pivot.scuffedPivot(PivotConstants.reefOneAngle, true))
+            .andThen(pivot.scuffedPivot(PivotConstants.reefOneAngle))
             .andThen(new WaitCommand(1))
             .andThen(
                 (
@@ -97,14 +97,14 @@ public class CoralAutoBuilder {
             )
             .andThen(claw.stop().withTimeout(0.1))
             .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight))
-            .andThen(pivot.scuffedPivot(PivotConstants.stowAngle, true))
+            .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
             .andThen(swerve.applyRequest(() -> finalDrive)).until(vision::hasLastPosition)
             .andThen(new AlignBarge(vision, swerve, () -> 0).until(vision::isAligned))
             .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
-            .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle, true))
-            .andThen(Commands.run(() -> {}).until(() -> pivot.closeEnough() && elevator.closeEnough()))
+            .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))
+            .andThen(new WaitCommand(2.5).until(() -> pivot.closeEnough() && elevator.closeEnough()))
             .andThen(claw.shoot().withTimeout(0.5))
-            .andThen(pivot.scuffedPivot(PivotConstants.stowAngle, true))
+            .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
             .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight))
             .andThen(new WaitCommand(1.5).alongWith(claw.stop().withTimeout(0.1)))
             .andThen(swerve.applyRequest(() -> finalAlign));

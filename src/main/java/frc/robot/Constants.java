@@ -45,7 +45,7 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static final Distance targetDistanceFromBarge = Inches.of(4);
+        public static final Distance targetDistanceFromBarge = Inches.of(7);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
         public static class Turbo {
             public static final double kRotationP = 5.0;
@@ -81,12 +81,12 @@ public final class Constants {
 
     public static class LEDConstants {
         public static final int ledID = 0;
-        public static final int ledLength = 18;
+        public static final int ledLength = 20;
     }
 
     public static class PivotConstants {
         public static final int motorID = 13;
-        // The "zero" angle is forward, larger values will rotate upwards
+        // The "zero" angle is right, larger values will rotate upwards
         public static final Angle floorAngle = Rotations.of(0.05876435021910875);
         public static final Angle onCoralAngle = Rotations.of(0.13607985215199636);
         public static final Angle reefOneAngle = Rotations.of(0.13396100209902506);
@@ -114,7 +114,7 @@ public final class Constants {
         }
 
         public static class TurboBot {
-            public static final double kP = 1.1d;
+            public static final double kP = 1.35d;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
 

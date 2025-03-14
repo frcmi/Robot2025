@@ -73,6 +73,9 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     public void applyPatternOnce(LEDPattern pattern) {
+        if (DriverStation.isDisabled()) {
+            pattern = allianceColorGetter();
+        }
         pattern.applyTo(ledBuffer);
         led.setData(ledBuffer);
     }
