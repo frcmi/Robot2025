@@ -120,9 +120,9 @@ public final class Constants {
 
             public static final double kS = 0.28;
             // huh
-            public static final double kG = 0.536;
+            public static final double kG = 0.6;
 
-            public static final double offset = -0.44482048612051217;
+            public static final double offset = -0.0536968513424213 - 0.042272026056800575;
             public static final double discontinuity = -0.4;
         }
     }

@@ -330,6 +330,7 @@ public final class RobotContainer {
     Command base = m_PivotSubsystem.scuffedPivot(Rotations.of(0.241))
       .andThen(Commands.runOnce(() -> {
         drivetrain.resetRotation(Rotation2d.fromDegrees(sign * 90));
+        m_PivotSubsystem.reseedEncoder();
       }, drivetrain)).andThen(m_ElevatorSubsystem.autoHonePose().asProxy().raceWith(m_ClimberSubsystem.runClimberupAuto()));
     // if (Robot.isReal()) {
     //   base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)); //.andThen(m_ElevatorSubsystem.autoHonePose().asProxy());

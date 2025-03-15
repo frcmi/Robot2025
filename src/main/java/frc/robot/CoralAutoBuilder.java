@@ -116,8 +116,8 @@ public class CoralAutoBuilder {
             .andThen(claw.shoot().withTimeout(0.5))
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
             .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight))
-            .andThen(new WaitCommand(1.5).alongWith(claw.stop().withTimeout(0.1)))
-            .andThen(swerve.applyRequest(() -> finalAlign));
+            .andThen(new WaitCommand(1.25).alongWith(claw.stop().withTimeout(0.1)))
+            .andThen(swerve.applyRequest(() -> drive.withVelocityX(1).withVelocityY(0)));
 
         switch (auto) {
             case One:
