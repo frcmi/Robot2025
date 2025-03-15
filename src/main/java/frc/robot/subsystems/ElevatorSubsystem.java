@@ -160,7 +160,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public boolean closeEnough() {
         StatusSignal.refreshAll(pidError);
 
-        return Math.abs(pidError.getValueAsDouble()) < 0.1;
+        return Math.abs(pidError.getValueAsDouble()) < 1.0;
     }
 
     public void setFollowerMode() {
@@ -343,6 +343,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        SmartDashboard.putBoolean("Elevator Close Enough", closeEnough());
         estopAlert.set(estop);
 
         StatusSignal.refreshAll(currentPoseSignal);

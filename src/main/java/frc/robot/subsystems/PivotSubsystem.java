@@ -125,10 +125,10 @@ public class PivotSubsystem extends SubsystemBase {
         setDefaultCommand(this.holdAngle());
     }
 
-    public Command scuffedPivot(Angle rotations, boolean dewit) {
+    public Command scuffedPivot(Angle rotations) {
         final Angle rotations2;
-        if (botType == BotType.MAIN_BOT && dewit) {
-            rotations2 = rotations.minus(Rotations.of(0.0704 - 0.06339682658492063));
+        if (botType == BotType.MAIN_BOT) {
+            rotations2 = rotations.minus(Rotations.of(0.0704 - 0.06741500168537495));
         } else {
             rotations2 = rotations;
         }
