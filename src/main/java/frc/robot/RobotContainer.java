@@ -48,6 +48,7 @@ import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Constants.TelemetryConstants;
+import frc.robot.CoralAutoBuilder.AutoType;
 import frc.robot.commands.AlignBarge;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsAlpha;
@@ -154,9 +155,10 @@ public final class RobotContainer {
   private void initManualAutos() {
     autoChooser.setDefaultOption("None", Commands.none());
     autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(getTravelDir())).withTimeout(2));
-    autoChooser.addOption("Coral Yipee", 
-      CoralAutoBuilder.build(distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-  
+    autoChooser.addOption("L1", CoralAutoBuilder.build(AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("L1 + Intake Algae", CoralAutoBuilder.build(AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("L1 + Shoot Algae", CoralAutoBuilder.build(AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+
   }
 
   private void initSubsystems() {
@@ -328,7 +330,7 @@ public final class RobotContainer {
     Command base = m_PivotSubsystem.scuffedPivot(Rotations.of(0.241))
       .andThen(Commands.runOnce(() -> {
         drivetrain.resetRotation(Rotation2d.fromDegrees(sign * 90));
-      }, drivetrain));
+      }, drivetrain)).andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
     // if (Robot.isReal()) {
     //   base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)); //.andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
     // }

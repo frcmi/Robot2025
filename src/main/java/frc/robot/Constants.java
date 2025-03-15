@@ -114,7 +114,7 @@ public final class Constants {
         }
 
         public static class TurboBot {
-            public static final double kP = 1.35d;
+            public static final double kP = 1.40d;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
 
@@ -122,7 +122,7 @@ public final class Constants {
             // huh
             public static final double kG = 0.536;
 
-            public static final double offset = -0.44037826100945654;
+            public static final double offset = -0.44482048612051217;
             public static final double discontinuity = -0.4;
         }
     }
