@@ -59,7 +59,7 @@ public final class RobotContainer {
     private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            // .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
@@ -330,7 +330,7 @@ public final class RobotContainer {
     Command base = m_PivotSubsystem.scuffedPivot(Rotations.of(0.241))
       .andThen(Commands.runOnce(() -> {
         drivetrain.resetRotation(Rotation2d.fromDegrees(sign * 90));
-      }, drivetrain)).andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
+      }, drivetrain)).andThen(m_ElevatorSubsystem.autoHonePose().asProxy().raceWith(m_ClimberSubsystem.runClimberupAuto()));
     // if (Robot.isReal()) {
     //   base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)); //.andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
     // }

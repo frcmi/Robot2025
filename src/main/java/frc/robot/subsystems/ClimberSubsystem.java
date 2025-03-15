@@ -53,6 +53,10 @@ public class ClimberSubsystem extends SubsystemBase {
     return runMotor(0.4).andThen(stop());
   }
 
+  public Command runClimberupAuto(){
+    return runMotor(0.6).andThen(stop());
+  }
+
   public Command runClimberdown(){
     return runMotor().andThen(stop());
   }

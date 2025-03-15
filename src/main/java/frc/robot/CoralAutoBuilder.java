@@ -112,7 +112,7 @@ public class CoralAutoBuilder {
             .andThen(new AlignBarge(vision, swerve, () -> 0).until(vision::isAligned))
             .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
             .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))
-            .andThen(new WaitCommand(3.0).until(() -> pivot.closeEnough() && elevator.closeEnough()))
+            .andThen(new WaitCommand(3.5).until(() -> pivot.closeEnough() && elevator.closeEnough()))
             .andThen(claw.shoot().withTimeout(0.5))
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
             .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight))
