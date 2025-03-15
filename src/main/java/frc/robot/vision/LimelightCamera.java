@@ -1,6 +1,10 @@
 package frc.robot.vision;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 import frc.lib.LimelightHelpers;
@@ -45,7 +49,9 @@ public class LimelightCamera implements Camera {
         result.pose = estimate.pose;
         result.timestamp = estimate.timestampSeconds;
         result.isNew = true;
+        result.bestTagIndex = -1;
 
+        double minAmbiguity = Double.MAX_VALUE;
         result.maxAmbiguity = Double.MIN_VALUE;
         result.maxDistance = Double.MIN_VALUE;
         result.minDistance = Double.MAX_VALUE;
@@ -54,13 +60,27 @@ public class LimelightCamera implements Camera {
         for (int i = 0; i < estimate.tagCount; i++) {
             var fiducial = estimate.rawFiducials[i];
 
+            if (fiducial.ambiguity < minAmbiguity) {
+                result.bestTagIndex = i;
+                minAmbiguity = fiducial.ambiguity;
+            }
+
             result.maxAmbiguity = Math.max(result.maxAmbiguity, fiducial.ambiguity);
             result.maxDistance = Math.max(result.maxDistance, fiducial.distToCamera);
             result.minDistance = Math.min(result.minDistance, fiducial.distToCamera);
 
             var tag = new Tag();
             tag.ID = fiducial.id;
-            tag.cameraDistance = fiducial.distToCamera;
+            tag.cameraDistance = Meters.of(fiducial.distToCamera);
+            tag.ambiguity = fiducial.ambiguity;
+            tag.area = fiducial.ta;
+
+            // horizontal -> rotate around vertical axis -> yaw
+            // vertical -> rotate around horizontal axis -> pitch
+            var yaw = Degrees.of(fiducial.txnc);
+            var pitch = Degrees.of(fiducial.tync);
+            tag.rotationOffset = new Rotation3d(Degrees.of(0), pitch, yaw);
+
             result.tags[i] = tag;
         }
     }

@@ -1,20 +1,18 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Microseconds;
 import static edu.wpi.first.units.Units.Milliseconds;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
 
+import java.util.HashSet;
 import java.util.Optional;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.LEDPattern;
@@ -24,20 +22,41 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.AutoConstants;
-import frc.robot.vision.LimeLightAprilTag;
-import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.GlobalVisionSubsystem.CameraType;
+import frc.robot.vision.Camera.Tag;
 
 public final class TrigVisionSubsystem extends SubsystemBase {
-    private LimeLightAprilTag tag;
-    private StructPublisher<Pose2d> tagRelativePosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("Vision/Position to Barge", Pose2d.struct).publish();
-    private Optional<Pose2d> lastRecordedPose = Optional.empty();
+    private StructPublisher<Translation3d> tagRelativePosePublisher = NetworkTableInstance.getDefault()
+            .getStructTopic("Vision/Position to Barge", Translation3d.struct).publish();
+    private Optional<Translation3d> lastRecordedOffset = Optional.empty();
     private Time timeSinceTagSeen = Seconds.of(0);
-    private LEDSubsystem m_LedSubsystem;;
+    private LEDSubsystem leds;
+    private GlobalVisionSubsystem globalVision;
+    private int cameraIndex;
 
-    public TrigVisionSubsystem(LEDSubsystem m_LedSubsystem) {
-        tag = new LimeLightAprilTag();
-        this.m_LedSubsystem = m_LedSubsystem;
+    private static final HashSet<Integer> kValidIDs;
+
+    static {
+        kValidIDs = new HashSet<>();
+
+        var validIDs = new int[] {
+                14,
+                15,
+                4,
+                5
+        };
+
+        for (int i = 0; i < validIDs.length; i++) {
+            kValidIDs.add(validIDs[i]);
+        }
+    }
+
+    public TrigVisionSubsystem(LEDSubsystem leds, GlobalVisionSubsystem globalVision) {
+        this.leds = leds;
+        this.globalVision = globalVision;
+
+        // just use the limelight
+        cameraIndex = globalVision.getCameraByType(CameraType.LIMELIGHT);
     }
 
     LEDPattern seeingColor = LEDPattern.solid(new Color(255, 0, 255));
@@ -52,67 +71,84 @@ public final class TrigVisionSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Vision Aligned Timestamp", Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) * 1e6);
-        if (tag.hasTarget()) {
+        SmartDashboard.putNumber("Vision Aligned Timestamp",
+                Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) * 1e6);
+
+        var tag = getBestTag();
+        if (tag != null) {
             if (!isAligned()) {
-                this.m_LedSubsystem.applyPatternOnce(seeingColor);
+                leds.applyPatternOnce(seeingColor);
             } else {
-                this.m_LedSubsystem.applyPatternOnce(alignedColor);
+                leds.applyPatternOnce(alignedColor);
             }
+
+            var camera = globalVision.getCamera(cameraIndex);
+            var cameraOffset = camera.getOffset();
+
+            var tagRotation = cameraOffset.getRotation().plus(tag.rotationOffset);
+            var pitch = tagRotation.getMeasureY();
+            var yaw = tagRotation.getMeasureY();
+            var horizontalDistance = tag.cameraDistance.times(Math.cos(pitch.in(Radians)));
+            var verticalDistance = tag.cameraDistance.times(Math.sin(pitch.in(Radians)));
+            
+            var directDistance = horizontalDistance.times(Math.cos(yaw.in(Radians)));
+            var perpendicularDistance = horizontalDistance.times(Math.sin(yaw.in(Radians)));
+            var cameraToTag = new Translation3d(directDistance, perpendicularDistance, verticalDistance);
+
+            var robotToCamera = cameraOffset.getTranslation();
+            var robotToTag = robotToCamera.plus(cameraToTag);
 
             timeSinceTagSeen = Seconds.of(0);
-            lastRecordedPose = Optional.of(new Pose2d(Meters.of(tag.getVerticalDistanceMeters()), Meters.of(tag.getLateralDistanceMeters()), new Rotation2d()));
-            tagRelativePosePublisher.set(lastRecordedPose.get());
+            lastRecordedOffset = Optional.of(robotToTag);
+            tagRelativePosePublisher.set(robotToTag);
         } else {
-            if (timeSinceTagSeen.gt(AutoConstants.lastPoseTimeout) && lastRecordedPose.isPresent()) {
-                lastRecordedPose = Optional.empty();
+            if (timeSinceTagSeen.gt(AutoConstants.lastPoseTimeout)) {
+                lastRecordedOffset = Optional.empty();
             }
+            
             timeSinceTagSeen = timeSinceTagSeen.plus(Milliseconds.of(20));
-            this.m_LedSubsystem.applyPatternOnce(this.m_LedSubsystem.allianceColorGetter());
+            leds.applyPatternOnce(leds.allianceColorGetter());
         }
     }
 
-    public Command resetLastPose() {
-        return run(() -> { lastRecordedPose = Optional.empty(); });
+    public Command reset() {
+        return run(() -> {
+            lastRecordedOffset = Optional.empty();
+        });
     }
 
-    public Optional<Long> getTagID() {
-        long tid = tag.getTargetID();
-        if (tid == -1) {
-            return Optional.empty();
+    public Tag getBestTag() {
+        if (cameraIndex < 0) {
+            return null;
         }
 
-        return Optional.of(tid);
-    }
-
-    public Optional<Angle> getHorizontalRotation() {
-        if (tag.hasTarget()) {
-            return Optional.of(Degrees.of(tag.getHorizontalOffset()));
-        } else {
-            return Optional.empty();
+        var result = globalVision.getResult(cameraIndex);
+        if (!result.isNew) {
+            return null;
         }
-    }
 
-    public Optional<Distance> getLateralDistanceToBarge() {
-        if (lastRecordedPose.isPresent()) {
-            return Optional.of(lastRecordedPose.get().getMeasureY());
-        } else {
-            return Optional.empty();
+        int bestTag = -1;
+        Distance minDistance = null;
+
+        for (int i = 0; i < result.tags.length; i++) {
+            var tag = result.tags[i];
+            if (!kValidIDs.contains(tag.ID)) {
+                continue;
+            }
+
+            if (minDistance == null || tag.cameraDistance.lt(minDistance)) {
+                bestTag = i;
+                minDistance = tag.cameraDistance;
+            }
         }
+
+        return bestTag < 0 ? null : result.tags[bestTag];
     }
 
-    public Optional<Distance> getVerticalDistanceToBarge() {
-        if (lastRecordedPose.isPresent()) {
-            return Optional.of(lastRecordedPose.get().getMeasureX());
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    public boolean canSeeTag() {
-        return tag.hasTarget();
-    }
-    public boolean hasLastPosition() {
-        return lastRecordedPose.isPresent();
+    /**
+     * Returns the last calculated position relative to the barge.
+     */
+    public Optional<Translation3d> getRobotToTag() {
+        return lastRecordedOffset;
     }
 }

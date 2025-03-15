@@ -33,33 +33,41 @@ public class AlignBarge extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleSupplier horizontalInputSupplier;
 
-    private final PIDController translationPIDController = new PIDController(AutoConstants.Turbo.kTranslationP, AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD);
+    private final PIDController translationPIDController = new PIDController(AutoConstants.Turbo.kTranslationP,
+            AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD);
 
-    private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
+    private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle()
+            .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
 
-    public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain, DoubleSupplier horizontalInputSupplier) {
+    public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain,
+            DoubleSupplier horizontalInputSupplier) {
         this.vision = vision;
         this.drivetrain = drivetrain;
         this.horizontalInputSupplier = horizontalInputSupplier;
 
         addRequirements(drivetrain);
 
-        driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
+        driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI,
+                AutoConstants.Turbo.kRotationD);
     }
 
     private double sign = 1;
 
     @Override
     public void execute() {
-        Optional<Distance> distanceOptional = vision.getLateralDistanceToBarge();
+        var offset = vision.getRobotToTag();
+
         double pidOutput = 0;
-        if (!distanceOptional.isEmpty()) {
-            pidOutput = -translationPIDController.calculate(distanceOptional.get().in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters));
+        if (offset.isPresent()) {
+            var parallelDistance = offset.get().getMeasureX();
+            pidOutput = -translationPIDController.calculate(parallelDistance.in(Meters),
+                    AutoConstants.targetDistanceFromBarge.in(Meters));
         }
 
-        Optional<Long> tagID = vision.getTagID();
-        if (tagID.isPresent()) {
-            if (tagID.get() == 4 || tagID.get() == 5) {
+        var tag = vision.getBestTag();
+        if (tag != null) {
+            int id = tag.ID;
+            if (id == 4 || id == 5) {
                 sign = -1;
             } else {
                 sign = 1;
@@ -72,7 +80,6 @@ public class AlignBarge extends Command {
         if (translationPIDController.atSetpoint()) {
             vision.isAlignedTimestamp = RobotController.getFPGATime();
         }
-        
 
         driveRequest.withVelocityX(Meters.of(sign * pidOutput).per(Second));
         driveRequest.withVelocityY(horizontalInputSupplier.getAsDouble());
@@ -85,5 +92,5 @@ public class AlignBarge extends Command {
     public boolean isFinished() {
         return super.isFinished();
     }
-    
+
 }
