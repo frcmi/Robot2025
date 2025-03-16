@@ -37,28 +37,28 @@ public class ClimberSubsystem extends SubsystemBase {
     });
   }
 
-  public Command runMotor(){
+  public Command runMotorDown(double torque){
     return run(() -> {
-        climberMotor.setControl(control.withOutput(-SmartDashboard.getNumber("Climber Torque", 17)));
+        climberMotor.setControl(control.withOutput(-torque));
     });
   }
 
-  public Command runMotor(double speed){
+  public Command runMotorUp(double speed){
     return run(() -> {
         climberMotor.setControl(reverse.withOutput(speed));
     });
   }
 
   public Command runClimberup(){
-    return runMotor(0.4).andThen(stop());
+    return runMotorUp(0.4).andThen(stop());
   }
 
   public Command runClimberupAuto(){
-    return runMotor(0.6).andThen(stop());
+    return runMotorUp(0.6).andThen(stop());
   }
 
   public Command runClimberdown(){
-    return runMotor().andThen(stop());
+    return runMotorDown(17).andThen(stop());
   }
 
 

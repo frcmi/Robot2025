@@ -250,6 +250,8 @@ public final class RobotContainer {
     // m_Controller.leftTrigger().whileTrue(m_PivotSubsystem.setAngle(Constants.PivotConstants.reefTwoAngle));
 
     m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
+    m_Controller.b().whileTrue(m_ClimberSubsystem.runMotorDown(20));
+
     m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
 
     m_Controller.povDown().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));

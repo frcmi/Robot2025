@@ -35,7 +35,7 @@ public final class Constants {
         // this will fully disable logging even when FMS is connected.
         public static final boolean killswitch = false;
         // If true, data won't be sent over network even when not connected to FMS
-        public static final boolean disableNetworkLogging = false;
+        public static final boolean disableNetworkLogging = true;
         // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
         public static final boolean disableDatalog = false;
         // Prefix in NetworkTables, must end with a '/'
