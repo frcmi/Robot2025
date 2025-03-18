@@ -108,15 +108,15 @@ public class CoralAutoBuilder {
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle));
         
         Command shootBarge = 
-            swerve.applyRequest(() -> finalDrive).until(vision::hasLastPosition)
+            swerve.applyRequest(() -> finalDrive).until(vision::canSeeTag)
             .andThen(new AlignBarge(vision, swerve, () -> 0).until(vision::isAligned))
             .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
             .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))
-            .andThen(new WaitCommand(3.0).until(() -> pivot.closeEnough() && elevator.closeEnough()))
+            .andThen(new WaitCommand(3.5).until(() -> pivot.closeEnough() && elevator.closeEnough()))
             .andThen(claw.shoot().withTimeout(0.5))
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
             .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight))
-            .andThen(new WaitCommand(1.5).alongWith(claw.stop().withTimeout(0.1)))
+            .andThen(new WaitCommand(1.25).alongWith(claw.stop().withTimeout(0.1)))
             .andThen(swerve.applyRequest(() -> finalAlign));
 
         switch (auto) {

@@ -35,7 +35,7 @@ public final class Constants {
         // this will fully disable logging even when FMS is connected.
         public static final boolean killswitch = false;
         // If true, data won't be sent over network even when not connected to FMS
-        public static final boolean disableNetworkLogging = false;
+        public static final boolean disableNetworkLogging = true;
         // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
         public static final boolean disableDatalog = false;
         // Prefix in NetworkTables, must end with a '/'
@@ -45,7 +45,7 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static final Distance targetDistanceFromBarge = Inches.of(7);
+        public static final Distance targetDistanceFromBarge = Inches.of(7.3);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
         public static class Turbo {
             public static final double kRotationP = 5.0;
@@ -120,9 +120,9 @@ public final class Constants {
 
             public static final double kS = 0.28;
             // huh
-            public static final double kG = 0.536;
+            public static final double kG = 0.6;
 
-            public static final double offset = -0.44482048612051217;
+            public static final double offset = -0.0536968513424213 - 0.042272026056800575;
             public static final double discontinuity = -0.4;
         }
     }
