@@ -21,11 +21,13 @@ import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraSupplierLog;
+import frc.robot.Constants;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.ClawConstants;
 import edu.wpi.first.wpilibj.DriverStation;
 
 public class ClawSubsystemTurbo extends SubsystemBase {
+  private final ElevatorSubsystem elevatorSubsystem;
   private final TalonFX intakeMotor = new TalonFX(ClawConstants.motorControllerID);
   private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw/Beambreak");
   private final UltraSupplierLog topMotorSpeedPublisher = new UltraSupplierLog("Claw/Intake motor speed", intakeMotor.getVelocity()::getValueAsDouble);
@@ -36,10 +38,11 @@ public class ClawSubsystemTurbo extends SubsystemBase {
   public final TorqueCurrentFOC foc = new TorqueCurrentFOC(Amps.of(327 * ClawConstants.shootSpeed));
   public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
-  public boolean atProcessor = false;
 
-  public ClawSubsystemTurbo(BotType bot) {
+
+  public ClawSubsystemTurbo(BotType bot, ElevatorSubsystem elevatorSubsystem) {
     TalonFXConfiguration configure = new TalonFXConfiguration();
+    this.elevatorSubsystem = elevatorSubsystem;
     // configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
     if (bot == BotType.MAIN_BOT) {
       configure.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -86,10 +89,13 @@ public class ClawSubsystemTurbo extends SubsystemBase {
   }
 
   public Command shoot() {
-    if (atProcessor)
-      return runMotor(new DutyCycleOut(ClawConstants.shootSpeed));
-    else 
+
+    if(elevatorSubsystem.poseToHold == Constants.ElevatorConstants.onCoralHeight) {
       return runMotor(new DutyCycleOut(ClawConstants.processorShootSpeed));
+    }
+    else 
+      return runMotor(new DutyCycleOut(ClawConstants.shootSpeed));
+      
   }
 
   @Override

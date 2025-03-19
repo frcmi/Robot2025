@@ -175,7 +175,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     // rev throughbore encoder, limit on bottom
 
     // I would assume that there is only going to be one motor to extend the elevator but we will see
-    double poseToHold = ElevatorConstants.stowHeight;
+    public double poseToHold = ElevatorConstants.stowHeight;
     boolean pause = true;
     public Command holdPose(){
         // return run(() -> {});
