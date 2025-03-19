@@ -45,6 +45,8 @@ public class ClawSubsystem extends SubsystemBase {
   public final TorqueCurrentFOC foc = new TorqueCurrentFOC(Amps.of(327 * ClawConstants.shootSpeed));
   public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
+  public boolean atProcessor = false;
+
   public ClawSubsystem(BotType bot) {
     TalonFXSConfiguration configure = new TalonFXSConfiguration();
     configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
@@ -76,6 +78,7 @@ public class ClawSubsystem extends SubsystemBase {
   public Command runMotor(ControlRequest speed){
     return run(() -> {
         SmartDashboard.putBoolean("Claw Spin", true);
+
         intakeMotor.setControl(speed);
     });
   }
@@ -93,7 +96,10 @@ public class ClawSubsystem extends SubsystemBase {
   }
 
   public Command shoot() {
-    return runMotor(new DutyCycleOut(ClawConstants.shootSpeed));
+    if (atProcessor)
+      return runMotor(new DutyCycleOut(ClawConstants.shootSpeed));
+    else 
+      return runMotor(new DutyCycleOut(ClawConstants.processorShootSpeed));
   }
 
   @Override

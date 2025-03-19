@@ -72,6 +72,8 @@ public final class Constants {
         public static final int motorControllerID = 23;
         public static final double intakeSpeed = -0.75;
         public static final double shootSpeed = 1;
+        // TODO: Figure out good speed for shooting at the processor
+        public static final double processorShootSpeed = 0.5;
         public static final double stopSpeed = -0.04;
     }
 
