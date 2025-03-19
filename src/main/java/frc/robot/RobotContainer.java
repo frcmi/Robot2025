@@ -302,15 +302,16 @@ public final class RobotContainer {
   }
 
   private void configureOperatorBindings() {
-    m_OperatorController.button(7).onTrue(scuffedElevator(Constants.ElevatorConstants.bargeHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.bargeAngle)));
-    m_OperatorController.button(5).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.floorAngle)));
-    m_OperatorController.button(8).onTrue(scuffedElevator(Constants.ElevatorConstants.stowHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.stowAngle)));
-    m_OperatorController.button(2).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.processorAngle)));
-    m_OperatorController.button(4).onTrue(scuffedElevator(Constants.ElevatorConstants.reefOneHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefOneAngle)));
-    m_OperatorController.button(1).onTrue(scuffedElevator(Constants.ElevatorConstants.reefTwoHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefTwoAngle)));
+    m_OperatorController.button(7).onTrue(scuffedElevator(Constants.ElevatorConstants.bargeHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.bargeAngle)).andThen(() -> {m_ClawSubsystem.atProcessor = false;}));
+    m_OperatorController.button(5).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.floorAngle)).andThen(() -> {m_ClawSubsystem.atProcessor = false;}));
+    m_OperatorController.button(8).onTrue(scuffedElevator(Constants.ElevatorConstants.stowHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.stowAngle)).andThen(() -> {m_ClawSubsystem.atProcessor = false;}));
+    m_OperatorController.button(2).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.processorAngle)).andThen(() -> {m_ClawSubsystem.atProcessor = true;}));
+    m_OperatorController.button(4).onTrue(scuffedElevator(Constants.ElevatorConstants.reefOneHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefOneAngle)).andThen(() -> {m_ClawSubsystem.atProcessor = false;}));
+    m_OperatorController.button(1).onTrue(scuffedElevator(Constants.ElevatorConstants.reefTwoHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefTwoAngle)).andThen(() -> {m_ClawSubsystem.atProcessor = false;}));
     m_OperatorController.button(6).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
     m_OperatorController.button(9).whileTrue(m_ClawSubsystem.intake());
     // m_OperatorController.button().whileTrue(m_ClawSubsystem.shootWithBeambreak());
+
     m_OperatorController.button(3).whileTrue(m_ClawSubsystem.shoot());
   }
 

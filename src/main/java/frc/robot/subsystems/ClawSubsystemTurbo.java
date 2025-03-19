@@ -36,6 +36,8 @@ public class ClawSubsystemTurbo extends SubsystemBase {
   public final TorqueCurrentFOC foc = new TorqueCurrentFOC(Amps.of(327 * ClawConstants.shootSpeed));
   public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
+  public boolean atProcessor = false;
+
   public ClawSubsystemTurbo(BotType bot) {
     TalonFXConfiguration configure = new TalonFXConfiguration();
     // configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
@@ -84,7 +86,10 @@ public class ClawSubsystemTurbo extends SubsystemBase {
   }
 
   public Command shoot() {
-    return runMotor(new DutyCycleOut(ClawConstants.shootSpeed));
+    if (atProcessor)
+      return runMotor(new DutyCycleOut(ClawConstants.shootSpeed));
+    else 
+      return runMotor(new DutyCycleOut(ClawConstants.processorShootSpeed));
   }
 
   @Override
