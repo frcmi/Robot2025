@@ -45,6 +45,7 @@ import frc.robot.subsystems.GlobalVisionSubsystem;
 
 import edu.wpi.first.units.measure.Angle;
 import frc.lib.ultralogger.UltraDoubleLog;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Constants.TelemetryConstants;
@@ -55,15 +56,13 @@ import frc.robot.generated.TunerConstantsAlpha;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public final class RobotContainer {
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            // .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(AutoConstants.MaxSpeed * 0.1).withRotationalDeadband(AutoConstants.MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(AutoConstants.MaxSpeed * 0.1).withRotationalDeadband(AutoConstants.MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -195,9 +194,9 @@ public final class RobotContainer {
       multiplier /= 2;
     }
 
-    return drive.withVelocityX(-m_Controller.getLeftY() * MaxSpeed * multiplier) // Drive forward with negative Y (forward)
-      .withVelocityY(-m_Controller.getLeftX() * MaxSpeed * multiplier) // Drive left with negative X (left)
-      .withRotationalRate(-m_Controller.getRightX() * MaxAngularRate * multiplier); // Drive counterclockwise with negative X (left)
+    return drive.withVelocityX(-m_Controller.getLeftY() * AutoConstants.MaxSpeed * multiplier) // Drive forward with negative Y (forward)
+      .withVelocityY(-m_Controller.getLeftX() * AutoConstants.MaxSpeed * multiplier) // Drive left with negative X (left)
+      .withRotationalRate(-m_Controller.getRightX() * AutoConstants.MaxAngularRate * multiplier); // Drive counterclockwise with negative X (left)
   }
 
   public SwerveRequest getDriveReq() {

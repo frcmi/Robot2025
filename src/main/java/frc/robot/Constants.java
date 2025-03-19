@@ -1,8 +1,10 @@
 package frc.robot;
 
+import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
+import frc.robot.generated.TunerConstants;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -45,14 +47,18 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static final Distance targetDistanceFromBarge = Inches.of(7.3);
+        public static final Angle cameraAngle = Degrees.of(75);
+        public static final Distance targetDistanceFromBarge = Inches.of(7.0);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
+        public static final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond);
+        public static double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+        public static double MaxAcceleration = 25.0;
         public static class Turbo {
             public static final double kRotationP = 5.0;
             public static final double kRotationI = 0.0;
             public static final double kRotationD = 0.0;
     
-            public static final double kTranslationP = 1.6;
+            public static final double kTranslationP = 2.1;
             public static final double kTranslationI = 0.0;
             public static final double kTranslationD = 0.0;
         }

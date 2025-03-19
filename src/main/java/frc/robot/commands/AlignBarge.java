@@ -14,8 +14,15 @@ import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
@@ -24,6 +31,8 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.ultralogger.UltraDoubleLog;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TrigVisionSubsystem;
@@ -33,10 +42,15 @@ public class AlignBarge extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleSupplier horizontalInputSupplier;
 
-    private final PIDController translationPIDController = new PIDController(AutoConstants.Turbo.kTranslationP, AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD);
+    private final ProfiledPIDController profiledPIDController = new ProfiledPIDController(AutoConstants.Turbo.kTranslationP, AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD, new TrapezoidProfile.Constraints(AutoConstants.MaxSpeed, AutoConstants.MaxAcceleration));
 
     private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
 
+    private final UltraDoubleLog logger = new UltraDoubleLog("Auto/Barge Auto Align Pid Output");
+    private DoublePublisher posePublisher = NetworkTableInstance.getDefault()
+        .getDoubleTopic("Auto/Distance To Barge").publish();
+    private DoublePublisher setPosePublisher = NetworkTableInstance.getDefault()
+        .getDoubleTopic("Auto/Set Distance").publish();
     public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain, DoubleSupplier horizontalInputSupplier) {
         this.vision = vision;
         this.drivetrain = drivetrain;
@@ -54,8 +68,11 @@ public class AlignBarge extends Command {
         Optional<Distance> distanceOptional = vision.getLateralDistanceToBarge();
         double pidOutput = 0;
         if (!distanceOptional.isEmpty()) {
-            pidOutput = -translationPIDController.calculate(distanceOptional.get().in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters));
+            pidOutput = -profiledPIDController.calculate(distanceOptional.get().in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters));
+            posePublisher.set(distanceOptional.get().in(Meters));
+            setPosePublisher.set(AutoConstants.targetDistanceFromBarge.in(Meters));
         }
+        logger.update(pidOutput);
 
         Optional<Long> tagID = vision.getTagID();
         if (tagID.isPresent()) {
@@ -66,10 +83,10 @@ public class AlignBarge extends Command {
             }
         }
 
-        SmartDashboard.putNumber("Auto Align Error", translationPIDController.getError());
-        SmartDashboard.putBoolean("Auto Align Close Enough", translationPIDController.atSetpoint());
+        // SmartDashboard.putNumber("Auto Align Error", profiledPIDController.getError());
+        // SmartDashboard.putBoolean("Auto Align Close Enough", translationPIDController.atSetpoint());
 
-        if (translationPIDController.atSetpoint()) {
+        if (profiledPIDController.atGoal()) {
             vision.isAlignedTimestamp = RobotController.getFPGATime();
         }
         

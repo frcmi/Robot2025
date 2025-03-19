@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.Radians;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import frc.robot.Constants.AutoConstants;
 
 public class LimeLightAprilTag {
     // Get the LimeLight NetworkTable. Adjust the table name if necessary.
@@ -14,7 +15,7 @@ public class LimeLightAprilTag {
     // Camera and target configuration (modify these to match your setup)
     private final double cameraHeightMeters = Inches.of(10.5).in(Meters);   // Height of the camera off the ground in meters
     private final double targetHeightMeters = Inches.of(73).in(Meters);     // Height of the AprilTag on the field in meters
-    private final double cameraAngleDegrees = 60.0;    // Angle at which the camera is mounted
+    private final double cameraAngleDegrees = AutoConstants.cameraAngle.in(Degrees);    // Angle at which the camera is mounted
     // 3, 4.75, 10.5
 
     /**
