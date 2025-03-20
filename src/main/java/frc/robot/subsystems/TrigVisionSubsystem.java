@@ -136,4 +136,8 @@ public final class TrigVisionSubsystem extends SubsystemBase {
     public Optional<Transform3d> getRobotToTag() {
         return lastRecordedOffset;
     }
+
+    public boolean hasLastPosition() {
+        return lastRecordedOffset.isPresent();
+    }
 }

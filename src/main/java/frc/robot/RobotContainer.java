@@ -166,9 +166,6 @@ public final class RobotContainer {
         m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     autoChooser.addOption("L1 + Shoot Algae", CoralAutoBuilder.build(AutoType.Two, distance, drivetrain,
         m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-
-  }
-
   }
 
   private void changeLevel(boolean moveUp) {
