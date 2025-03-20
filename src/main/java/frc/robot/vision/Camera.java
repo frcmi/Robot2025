@@ -2,7 +2,6 @@ package frc.robot.vision;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.units.measure.Distance;
 
@@ -16,7 +15,7 @@ public interface Camera {
         public int ID;
         public Distance cameraDistance;
         public double ambiguity;
-        public Rotation3d rotationOffset;
+        public Transform3d transform;
         public double area;
     }
 

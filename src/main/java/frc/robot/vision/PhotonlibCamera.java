@@ -128,11 +128,7 @@ public final class PhotonlibCamera implements Camera {
             tag.cameraDistance = Meters.of(distance);
             tag.ambiguity = ambiguity;
             tag.area = target.area;
-
-            var roll = Degrees.of(target.skew);
-            var pitch = Degrees.of(target.pitch);
-            var yaw = Degrees.of(target.yaw);
-            tag.rotationOffset = new Rotation3d(roll, pitch, yaw);
+            tag.transform = transform;
 
             result.tags[i] = tag;
         }

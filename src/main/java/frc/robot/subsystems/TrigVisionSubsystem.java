@@ -1,16 +1,12 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Milliseconds;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.HashSet;
 import java.util.Optional;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Distance;
@@ -26,9 +22,9 @@ import frc.robot.subsystems.GlobalVisionSubsystem.CameraType;
 import frc.robot.vision.Camera.Tag;
 
 public final class TrigVisionSubsystem extends SubsystemBase {
-    private StructPublisher<Translation3d> tagRelativePosePublisher = NetworkTableInstance.getDefault()
-            .getStructTopic("Vision/Position to Barge", Translation3d.struct).publish();
-    private Optional<Translation3d> lastRecordedOffset = Optional.empty();
+    private StructPublisher<Transform3d> tagRelativePosePublisher = NetworkTableInstance.getDefault()
+            .getStructTopic("Vision/Position to Barge", Transform3d.struct).publish();
+    private Optional<Transform3d> lastRecordedOffset = Optional.empty();
     private Time timeSinceTagSeen = Seconds.of(0);
     private LEDSubsystem leds;
     private GlobalVisionSubsystem globalVision;
@@ -83,19 +79,8 @@ public final class TrigVisionSubsystem extends SubsystemBase {
             }
 
             var camera = globalVision.getCamera(cameraIndex);
-            var cameraOffset = camera.getOffset();
-
-            var tagRotation = cameraOffset.getRotation().plus(tag.rotationOffset);
-            var pitch = tagRotation.getMeasureY();
-            var yaw = tagRotation.getMeasureY();
-            var horizontalDistance = tag.cameraDistance.times(Math.cos(pitch.in(Radians)));
-            var verticalDistance = tag.cameraDistance.times(Math.sin(pitch.in(Radians)));
-            
-            var directDistance = horizontalDistance.times(Math.cos(yaw.in(Radians)));
-            var perpendicularDistance = horizontalDistance.times(Math.sin(yaw.in(Radians)));
-            var cameraToTag = new Translation3d(directDistance, perpendicularDistance, verticalDistance);
-
-            var robotToCamera = cameraOffset.getTranslation();
+            var robotToCamera = camera.getOffset();
+            var cameraToTag = tag.transform;
             var robotToTag = robotToCamera.plus(cameraToTag);
 
             timeSinceTagSeen = Seconds.of(0);
@@ -148,7 +133,7 @@ public final class TrigVisionSubsystem extends SubsystemBase {
     /**
      * Returns the last calculated position relative to the barge.
      */
-    public Optional<Translation3d> getRobotToTag() {
+    public Optional<Transform3d> getRobotToTag() {
         return lastRecordedOffset;
     }
 }

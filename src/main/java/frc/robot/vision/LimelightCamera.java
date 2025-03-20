@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
@@ -51,14 +52,17 @@ public class LimelightCamera implements Camera {
         result.isNew = true;
         result.bestTagIndex = -1;
 
+        var limelightResults = LimelightHelpers.getLatestResults(m_Name);
+
         double minAmbiguity = Double.MAX_VALUE;
         result.maxAmbiguity = Double.MIN_VALUE;
         result.maxDistance = Double.MIN_VALUE;
         result.minDistance = Double.MAX_VALUE;
 
         result.tags = new Tag[estimate.tagCount];
-        for (int i = 0; i < estimate.tagCount; i++) {
+        for (int i = 0; i < result.tags.length; i++) {
             var fiducial = estimate.rawFiducials[i];
+            var processed = limelightResults.targets_Fiducials[i];
 
             if (fiducial.ambiguity < minAmbiguity) {
                 result.bestTagIndex = i;
@@ -74,12 +78,7 @@ public class LimelightCamera implements Camera {
             tag.cameraDistance = Meters.of(fiducial.distToCamera);
             tag.ambiguity = fiducial.ambiguity;
             tag.area = fiducial.ta;
-
-            // horizontal -> rotate around vertical axis -> yaw
-            // vertical -> rotate around horizontal axis -> pitch
-            var yaw = Degrees.of(fiducial.txnc);
-            var pitch = Degrees.of(fiducial.tync);
-            tag.rotationOffset = new Rotation3d(Degrees.of(0), pitch, yaw);
+            tag.transform = processed.getTargetPose_CameraSpace().minus(new Pose3d());
 
             result.tags[i] = tag;
         }
