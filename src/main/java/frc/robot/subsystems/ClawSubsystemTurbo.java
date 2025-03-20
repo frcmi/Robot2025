@@ -85,17 +85,20 @@ public class ClawSubsystemTurbo extends SubsystemBase {
   }
 
   public Command shootWithBeambreak() {
-    return runMotor(new DutyCycleOut(ClawConstants.shootSpeed)).until(beambreak::get).andThen(stop());
+    return shoot().until(beambreak::get).andThen(stop());
   }
 
   public Command shoot() {
+    return run(() -> {
 
+    
     if(elevatorSubsystem.poseToHold == Constants.ElevatorConstants.onCoralHeight) {
-      return runMotor(new DutyCycleOut(ClawConstants.processorShootSpeed));
+      intakeMotor.setControl(new DutyCycleOut(ClawConstants.processorShootSpeed));
     }
-    else 
-      return runMotor(new DutyCycleOut(ClawConstants.shootSpeed));
-      
+    else {
+     intakeMotor.setControl(new DutyCycleOut(ClawConstants.shootSpeed));
+    }
+    });
   }
 
   @Override
@@ -104,5 +107,7 @@ public class ClawSubsystemTurbo extends SubsystemBase {
     beambreakPublisher.update(beambreak.get());
     topMotorSpeedPublisher.update();
     topMotorTempPublisher.update();
+    SmartDashboard.putNumber("PoseToHold", elevatorSubsystem.poseToHold);
+    SmartDashboard.putBoolean("if statement", elevatorSubsystem.poseToHold == Constants.ElevatorConstants.onCoralHeight);
   }
 }

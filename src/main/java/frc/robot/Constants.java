@@ -79,7 +79,7 @@ public final class Constants {
         public static final double intakeSpeed = -0.75;
         public static final double shootSpeed = 1;
         // TODO: Figure out good speed for shooting at the processor
-        public static final double processorShootSpeed = 0.5;
+        public static final double processorShootSpeed = 0.3;
         public static final double stopSpeed = -0.04;
     }
 
@@ -148,7 +148,7 @@ public final class Constants {
         public static final double rotationsBeforeMaxHeight = 0.0;
         public static final double floorHeight = 0.99169921875;
         public static final double stowHeight = 0.2;
-        public static final double onCoralHeight = 0.5;
+        public static final double onCoralHeight = floorHeight;
         public static final double reefOneHeight = 15.19 + 2;
         public static final double reefTwoHeight = 29.85 + 2;
         public static final double bargeHeight = 61.1;
