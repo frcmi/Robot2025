@@ -39,7 +39,8 @@ public final class TrigVisionSubsystem extends SubsystemBase {
                 14,
                 15,
                 4,
-                5
+                5,
+                2
         };
 
         for (int i = 0; i < validIDs.length; i++) {
@@ -137,7 +138,7 @@ public final class TrigVisionSubsystem extends SubsystemBase {
         return lastRecordedOffset;
     }
 
-    public boolean hasLastPosition() {
+    public boolean canSeeTag() {
         return lastRecordedOffset.isPresent();
     }
 }

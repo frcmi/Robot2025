@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -25,15 +26,19 @@ public final class GlobalVisionSubsystem implements Subsystem {
     public static final double kMaxAmbiguity = 0.7;
     public static final double kMaxDistance = Units.feetToMeters(10);
 
-    public static final Translation3d kLimelightTranslation = new Translation3d(0, 0, 0);
-    public static final Rotation3d kLimelightRotation = new Rotation3d(
-        Radians.of(0),
-        Radians.of(0),
-        Radians.of(0));
+    public static final Translation3d kBargeCameraTranslation = new Translation3d(
+        Inches.of(-8),
+        Inches.of(11),
+        Inches.of(10.25));
 
-    public static final Transform3d kLimelightTransform = new Transform3d(kLimelightTranslation, kLimelightRotation);
+    public static final Rotation3d kBargeCameraRotation = new Rotation3d(
+        Degrees.of(0),
+        Degrees.of(75),
+        Degrees.of(90));
+
+    public static final Transform3d kBargeCameraTransform = new Transform3d(kBargeCameraTranslation, kBargeCameraRotation);
     public static final CameraDescription[] kCameras = new CameraDescription[] {
-        new CameraDescription("limelight", CameraType.LIMELIGHT, kLimelightTransform, null)
+        new CameraDescription("limelight-barge", CameraType.LIMELIGHT, kBargeCameraTransform, null)
     };
 
     public static enum CameraType {
@@ -110,6 +115,8 @@ public final class GlobalVisionSubsystem implements Subsystem {
             if (Robot.isSimulation() && desc.spec != null) {
                 data.sim = data.camera.createSimulator(desc.spec);
             }
+
+            m_Cameras[i] = data;
         }
     }
 
