@@ -27,11 +27,13 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.lib.ultralogger.UltraBooleanLog;
 import frc.lib.ultralogger.UltraSupplierLog;
+import frc.robot.Constants;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.ClawConstants;
 import edu.wpi.first.wpilibj.DriverStation;
 
 public class ClawSubsystem extends SubsystemBase {
+  private final ElevatorSubsystem elevatorSubsystem;
   private final TalonFXS intakeMotor = new TalonFXS(ClawConstants.motorControllerID);
   private final UltraBooleanLog beambreakPublisher = new UltraBooleanLog("Claw/Beambreak");
   private final StatusSignal<AngularVelocity> motorVelocity = intakeMotor.getVelocity();
@@ -45,7 +47,9 @@ public class ClawSubsystem extends SubsystemBase {
   public final TorqueCurrentFOC foc = new TorqueCurrentFOC(Amps.of(327 * ClawConstants.shootSpeed));
   public final DigitalInput beambreak = new DigitalInput(ClawConstants.beambreakChannel);
 
-  public ClawSubsystem(BotType bot) {
+
+  public ClawSubsystem(BotType bot, ElevatorSubsystem elevatorSubsystem) {
+    this.elevatorSubsystem = elevatorSubsystem;
     TalonFXSConfiguration configure = new TalonFXSConfiguration();
     configure.Commutation.MotorArrangement = MotorArrangementValue.NEO_JST;
     // if (bot == BotType.MAIN_BOT) {
@@ -76,6 +80,7 @@ public class ClawSubsystem extends SubsystemBase {
   public Command runMotor(ControlRequest speed){
     return run(() -> {
         SmartDashboard.putBoolean("Claw Spin", true);
+
         intakeMotor.setControl(speed);
     });
   }
@@ -93,7 +98,14 @@ public class ClawSubsystem extends SubsystemBase {
   }
 
   public Command shoot() {
-    return runMotor(new DutyCycleOut(ClawConstants.shootSpeed));
+    return run(() -> {
+    if(elevatorSubsystem.poseToHold == Constants.ElevatorConstants.onCoralHeight) {
+      intakeMotor.setControl(new DutyCycleOut(ClawConstants.processorShootSpeed));
+    }
+    else {
+     intakeMotor.setControl(new DutyCycleOut(ClawConstants.shootSpeed));
+    }
+    });
   }
 
   @Override

@@ -1,8 +1,10 @@
 package frc.robot;
 
+import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
+import frc.robot.generated.TunerConstants;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -35,7 +37,7 @@ public final class Constants {
         // this will fully disable logging even when FMS is connected.
         public static final boolean killswitch = false;
         // If true, data won't be sent over network even when not connected to FMS
-        public static final boolean disableNetworkLogging = false;
+        public static final boolean disableNetworkLogging = true;
         // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
         public static final boolean disableDatalog = false;
         // Prefix in NetworkTables, must end with a '/'
@@ -45,14 +47,18 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static final Distance targetDistanceFromBarge = Inches.of(7);
+        public static final Angle cameraAngle = Degrees.of(75);
+        public static final Distance targetDistanceFromBarge = Inches.of(7.0);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
+        public static final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond);
+        public static double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+        public static double MaxAcceleration = 25.0;
         public static class Turbo {
             public static final double kRotationP = 5.0;
             public static final double kRotationI = 0.0;
             public static final double kRotationD = 0.0;
     
-            public static final double kTranslationP = 1.6;
+            public static final double kTranslationP = 2.1;
             public static final double kTranslationI = 0.0;
             public static final double kTranslationD = 0.0;
         }
@@ -72,6 +78,8 @@ public final class Constants {
         public static final int motorControllerID = 23;
         public static final double intakeSpeed = -0.75;
         public static final double shootSpeed = 1;
+        // TODO: Figure out good speed for shooting at the processor
+        public static final double processorShootSpeed = 0.3;
         public static final double stopSpeed = -0.04;
     }
 
@@ -120,9 +128,9 @@ public final class Constants {
 
             public static final double kS = 0.28;
             // huh
-            public static final double kG = 0.536;
+            public static final double kG = 0.6;
 
-            public static final double offset = -0.44482048612051217;
+            public static final double offset = -0.0536968513424213 - 0.042272026056800575;
             public static final double discontinuity = -0.4;
         }
     }
@@ -140,7 +148,7 @@ public final class Constants {
         public static final double rotationsBeforeMaxHeight = 0.0;
         public static final double floorHeight = 0.99169921875;
         public static final double stowHeight = 0.2;
-        public static final double onCoralHeight = 0.5;
+        public static final double onCoralHeight = floorHeight;
         public static final double reefOneHeight = 15.19 + 2;
         public static final double reefTwoHeight = 29.85 + 2;
         public static final double bargeHeight = 61.1;

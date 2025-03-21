@@ -45,6 +45,7 @@ import frc.robot.subsystems.GlobalVisionSubsystem;
 
 import edu.wpi.first.units.measure.Angle;
 import frc.lib.ultralogger.UltraDoubleLog;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Constants.TelemetryConstants;
@@ -55,22 +56,17 @@ import frc.robot.generated.TunerConstantsAlpha;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public final class RobotContainer {
-  private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top
-                                                                                      // speed
-  private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per
-                                                                                                // second max angular
-                                                                                                // velocity
-  /* Setting up bindings for necessary control of the swerve drive platform */
-  private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-      .withDriveRequestType(DriveRequestType.Velocity)
-      .withSteerRequestType(SteerRequestType.MotionMagicExpo);
-  private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
-      .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-      .withDriveRequestType(DriveRequestType.Velocity)
-      .withSteerRequestType(SteerRequestType.MotionMagicExpo);
-  private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-  private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+    /* Setting up bindings for necessary control of the swerve drive platform */
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(AutoConstants.MaxSpeed * 0.1).withRotationalDeadband(AutoConstants.MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+    private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
+            .withDeadband(AutoConstants.MaxSpeed * 0.1).withRotationalDeadband(AutoConstants.MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   private final Telemetry logger = new Telemetry();
 
@@ -88,8 +84,8 @@ public final class RobotContainer {
   private TrigVisionSubsystem m_TrigVision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClimberSubsystem m_ClimberSubsystem = new ClimberSubsystem();
-  private ClawSubsystemTurbo m_ClawSubsystem = new ClawSubsystemTurbo(botType);
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem(botType);
+  private ClawSubsystemTurbo m_ClawSubsystem = new ClawSubsystemTurbo(botType, m_ElevatorSubsystem);
   public PivotSubsystem m_PivotSubsystem = new PivotSubsystem(botType, m_ElevatorSubsystem.elevator);
 
   private int algaeLevel = 0;
@@ -201,11 +197,9 @@ public final class RobotContainer {
       multiplier /= 2;
     }
 
-    return drive.withVelocityX(-m_Controller.getLeftY() * MaxSpeed * multiplier) // Drive forward with negative Y
-                                                                                 // (forward)
-        .withVelocityY(-m_Controller.getLeftX() * MaxSpeed * multiplier) // Drive left with negative X (left)
-        .withRotationalRate(-m_Controller.getRightX() * MaxAngularRate * multiplier); // Drive counterclockwise with
-                                                                                      // negative X (left)
+    return drive.withVelocityX(-m_Controller.getLeftY() * AutoConstants.MaxSpeed * multiplier) // Drive forward with negative Y (forward)
+      .withVelocityY(-m_Controller.getLeftX() * AutoConstants.MaxSpeed * multiplier) // Drive left with negative X (left)
+      .withRotationalRate(-m_Controller.getRightX() * AutoConstants.MaxAngularRate * multiplier); // Drive counterclockwise with negative X (left)
   }
 
   public SwerveRequest getDriveReq() {
@@ -230,10 +224,10 @@ public final class RobotContainer {
 
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-    m_Controller.rightBumper().whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> {
-      return getFieldCentricDriveReq().VelocityY;
-    }));
-
+    m_Controller.rightBumper().whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
+    
+    m_Controller.y().whileTrue(drivetrain.applyRequest(() -> brake));
+    
     drivetrain.registerTelemetry(logger::telemeterize);
   }
 
@@ -260,6 +254,8 @@ public final class RobotContainer {
     // m_Controller.leftTrigger().whileTrue(m_PivotSubsystem.setAngle(Constants.PivotConstants.reefTwoAngle));
 
     m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
+    m_Controller.b().whileTrue(m_ClimberSubsystem.runMotorDown(20));
+
     m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
 
     m_Controller.povDown().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
@@ -335,6 +331,7 @@ public final class RobotContainer {
     m_OperatorController.button(6).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
     m_OperatorController.button(9).whileTrue(m_ClawSubsystem.intake());
     // m_OperatorController.button().whileTrue(m_ClawSubsystem.shootWithBeambreak());
+
     m_OperatorController.button(3).whileTrue(m_ClawSubsystem.shoot());
   }
 
@@ -355,9 +352,10 @@ public final class RobotContainer {
     }
 
     Command base = m_PivotSubsystem.scuffedPivot(Rotations.of(0.241))
-        .andThen(Commands.runOnce(() -> {
-          drivetrain.resetRotation(Rotation2d.fromDegrees(sign * 90));
-        }, drivetrain)).andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
+      .andThen(Commands.runOnce(() -> {
+        drivetrain.resetRotation(Rotation2d.fromDegrees(sign * 90));
+        m_PivotSubsystem.reseedEncoder();
+      }, drivetrain)).andThen(m_ElevatorSubsystem.autoHonePose().asProxy().raceWith(m_ClimberSubsystem.runClimberupAuto()));
     // if (Robot.isReal()) {
     // base = base.andThen(Commands.run(() ->
     // {}).until(m_PivotSubsystem::closeEnough));
