@@ -58,13 +58,14 @@ public class PivotSubsystem extends SubsystemBase {
       DCMotor.getKrakenX60Foc(1)
     );
 
-    private final DutyCycleEncoder encoder = new DutyCycleEncoder(0);
+    private final DutyCycleEncoder encoder = new DutyCycleEncoder(5);
     private final UltraDoubleLog setpointPublisher = new UltraDoubleLog("Pivot/Setpoint Rotations");
     private final UltraDoubleLog velocityPublisher = new UltraDoubleLog("Pivot/Velocity");
     private final UltraDoubleLog velocitySetpointPublisher = new UltraDoubleLog("Pivot/Setpoint Velocity");
     private final UltraDoubleLog pidPublisher = new UltraDoubleLog("Pivot/PID Output");
     private final UltraDoubleLog ffPublisher = new UltraDoubleLog("Pivot/FF Output");
-    private final UltraDoubleLog anglePublisher = new UltraDoubleLog("Pivot/Angle");
+    private final UltraDoubleLog internalAnglePublisher = new UltraDoubleLog("Pivot/Internal Encoder Rotations");
+    private final UltraDoubleLog absoluteAnglePublisher = new UltraDoubleLog("Pivot/REV Encoder Rotations");
 
     // private final UltraDoubleLog encoderPublisher = new UltraDoubleLog("Pivot/Encoder Rotations");
     // private final UltraDoubleLog velPublisher = new UltraDoubleLog("Pivot/Velocity");
@@ -92,10 +93,11 @@ public class PivotSubsystem extends SubsystemBase {
     private BotType botType;
 
     public PivotSubsystem(BotType bot, MechanismLigament2d elevatorLigament) {
+        TalonFXConfiguration configuration = new TalonFXConfiguration();
+        
         botType = bot;
         // pid.enableContinuousInput(-0.622, 1 - 0.622);
         if (bot == BotType.ALPHA_BOT) {
-            TalonFXConfiguration configuration = new TalonFXConfiguration();
             feedforward = new ArmFeedforward(PivotConstants.AlphaBot.kS, PivotConstants.AlphaBot.kG, 0, 0);
             offset = PivotConstants.AlphaBot.offset;
             discontinuityPoint = PivotConstants.AlphaBot.discontinuity;
@@ -107,8 +109,11 @@ public class PivotSubsystem extends SubsystemBase {
 
             configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-            pivotMotor.getConfigurator().apply(configuration);
         }
+
+        configuration.Feedback.SensorToMechanismRatio = 44;
+
+        pivotMotor.getConfigurator().apply(configuration);
 
         pivotMotor.setNeutralMode(NeutralModeValue.Brake);
         velocity = pivotMotor.getVelocity();
@@ -123,12 +128,36 @@ public class PivotSubsystem extends SubsystemBase {
         pid.calculate(0);
 
         setDefaultCommand(this.holdAngle());
+
+        reseedEncoder();
     }
 
-    public Command scuffedPivot(Angle rotations, boolean dewit) {
+    StatusSignal<Angle> angleStatus = pivotMotor.getPosition();
+
+    public Angle getInternalEncoder() {
+        StatusSignal.refreshAll(angleStatus);
+
+        return angleStatus.getValue();
+    }
+
+    public Angle getAbsEncoder() {
+        double encoderValue = multiplier * encoder.get() + offset;
+
+        if (encoderValue <= discontinuityPoint) {
+            encoderValue += 1;
+        }
+
+        return Rotations.of(encoderValue);
+    }
+
+    public void reseedEncoder() {
+        pivotMotor.setPosition(getAbsEncoder());
+    }
+
+    public Command scuffedPivot(Angle rotations) {
         final Angle rotations2;
-        if (botType == BotType.MAIN_BOT && dewit) {
-            rotations2 = rotations.minus(Rotations.of(0.0704 - 0.06339682658492063));
+        if (botType == BotType.MAIN_BOT) {
+            rotations2 = rotations.minus(Rotations.of(0.0704 - (0.076061101901527)));
         } else {
             rotations2 = rotations;
         }
@@ -156,7 +185,7 @@ public class PivotSubsystem extends SubsystemBase {
 
             setpointPublisher.update(currentAngle.in(Rotations));
 
-            double currentAngle = getEncoder().in(Radians);
+            double currentAngle = getAbsEncoder().in(Radians);
             double voltage = pid.calculate(currentAngle, setpoint);
             pidPublisher.update(voltage);
             velocityPublisher.update(velocity.getValueAsDouble() / 15 * 12 / 44);
@@ -215,26 +244,19 @@ public class PivotSubsystem extends SubsystemBase {
         pivotMotor.setControl(motorVoltageControl.withOutput(volts));
     }
 
-    public Angle getEncoder() {
-        double encoderValue = multiplier * encoder.get() + offset;
-
-        if (encoderValue <= discontinuityPoint) {
-            encoderValue += 1;
-        }
-
-        return Rotations.of(encoderValue);
-    }
-
     public void sysIDLog() {
-        double encoderValue = getEncoder().in(Rotations);
+        double encoderValueInternal = getInternalEncoder().in(Rotations);
+        double encoderValue = getAbsEncoder().in(Rotations);
 
-        SignalLogger.writeDouble("Pivot Angle", encoderValue);
+        SignalLogger.writeDouble("Pivot Angle REV", encoderValue);
+        SignalLogger.writeDouble("Pivot Angle Internal", encoderValueInternal);
     }
 
     @Override
     public void periodic() {
         SmartDashboard.putBoolean("Arm close enough", closeEnough());
-        anglePublisher.update(getEncoder().in(Rotations));
+        internalAnglePublisher.update(getInternalEncoder().in(Rotations));
+        absoluteAnglePublisher.update(getAbsEncoder().in(Rotations));
         estopAlert.set(estop);
         if(pivotMotor.getPosition().getValueAsDouble() <= PivotConstants.minAngle.in(Rotations) &&
             pivotMotor.getPosition().getValueAsDouble() >= PivotConstants.maxAngle.in(Rotations)) {
@@ -248,6 +270,7 @@ public class PivotSubsystem extends SubsystemBase {
             pivotLigament2d.setAngle(pivotMotor.getPosition().getValue().minus(Degrees.of(90)).in(Degrees));
         }
     }
+
     @Override
     public void simulationPeriodic() {
         var talonFXSim = pivotMotor.getSimState();

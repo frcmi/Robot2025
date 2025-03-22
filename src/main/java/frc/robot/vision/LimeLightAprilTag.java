@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.Radians;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import frc.robot.Constants.AutoConstants;
 
 public class LimeLightAprilTag {
     public class TagInfo {

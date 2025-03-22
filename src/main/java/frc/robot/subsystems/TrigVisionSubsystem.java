@@ -55,7 +55,7 @@ public final class TrigVisionSubsystem extends SubsystemBase {
 
     LEDPattern seeingColor = LEDPattern.solid(new Color(255, 0, 255));
     LEDPattern alignedColor = LEDPattern.solid(new Color(0, 255, 0));
-    LEDPattern notSeeingColor = LEDPattern.rainbow(255, 128);
+    // LEDPattern notSeeingColor = LEDPattern.rainbow(255, 128);
 
     public double isAlignedTimestamp = 0;
 
@@ -81,7 +81,7 @@ public final class TrigVisionSubsystem extends SubsystemBase {
                 lastSeenTag = Optional.empty();
             }
             timeSinceTagSeen = timeSinceTagSeen.plus(Milliseconds.of(20));
-            this.m_LedSubsystem.applyPatternOnce(notSeeingColor);
+            this.m_LedSubsystem.applyPatternOnce(this.m_LedSubsystem.allianceColorGetter());
         }
     }
 

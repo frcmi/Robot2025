@@ -17,6 +17,16 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
@@ -25,6 +35,8 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.ultralogger.UltraDoubleLog;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TrigVisionSubsystem;
@@ -48,6 +60,8 @@ public class AlignBarge extends Command {
         driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
     }
 
+    private double sign = 1;
+
     @Override
     public void execute() {
         Optional<Translation2d> translationOptional = vision.getBargePose();
@@ -58,9 +72,12 @@ public class AlignBarge extends Command {
         }
 
         Optional<Long> tagID = vision.getTagID();
-        int sign = 1;
-        if (tagID.isPresent() && (tagID.get() == 4 || tagID.get() == 5)) {
-            sign = -1;
+        if (tagID.isPresent()) {
+            if (tagID.get() == 4 || tagID.get() == 5) {
+                sign = -1;
+            } else {
+                sign = 1;
+            }
         }
 
         if (profiledPIDController.atGoal()) {

@@ -15,8 +15,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.revrobotics.Rev2mDistanceSensor;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -40,29 +38,31 @@ import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
 import frc.robot.subsystems.TrigVisionSubsystem;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import frc.robot.subsystems.GlobalVisionSubsystem;
 
 import edu.wpi.first.units.measure.Angle;
 import frc.lib.ultralogger.UltraDoubleLog;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.BotType;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Constants.TelemetryConstants;
+import frc.robot.CoralAutoBuilder.AutoType;
 import frc.robot.commands.AlignBarge;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsAlpha;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public final class RobotContainer {
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            // .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(AutoConstants.MaxSpeed * 0.1).withRotationalDeadband(AutoConstants.MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(AutoConstants.MaxSpeed * 0.1).withRotationalDeadband(AutoConstants.MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -77,15 +77,15 @@ public final class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain;
 
-    public final BotType botType = RobotDiscoverer.getRobot();
+  public final BotType botType = RobotDiscoverer.getRobot();
 
 //   private SwerveSubsystem m_Swerve;
   private GlobalVisionSubsystem m_GlobalVision;
   private LEDSubsystem m_LedSubsystem = new LEDSubsystem();
   private ClimberSubsystem m_ClimberSubsystem = new ClimberSubsystem();
   private TrigVisionSubsystem m_TrigVision = new TrigVisionSubsystem(m_LedSubsystem);
-  private ClawSubsystemTurbo m_ClawSubsystem = new ClawSubsystemTurbo(botType);
   private ElevatorSubsystem m_ElevatorSubsystem = new ElevatorSubsystem(botType);
+  private ClawSubsystemTurbo m_ClawSubsystem = new ClawSubsystemTurbo(botType, m_ElevatorSubsystem);
   public PivotSubsystem m_PivotSubsystem = new PivotSubsystem(botType, m_ElevatorSubsystem.elevator);
 
   private int algaeLevel = 0;
@@ -154,9 +154,10 @@ public final class RobotContainer {
   private void initManualAutos() {
     autoChooser.setDefaultOption("None", Commands.none());
     autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(getTravelDir())).withTimeout(2));
-    autoChooser.addOption("Coral Yipee", 
-      CoralAutoBuilder.build(distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-  
+    autoChooser.addOption("L1", CoralAutoBuilder.build(AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("L1 + Intake Algae", CoralAutoBuilder.build(AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("L1 + Shoot Algae", CoralAutoBuilder.build(AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+
   }
 
   private void initSubsystems() {
@@ -193,9 +194,9 @@ public final class RobotContainer {
       multiplier /= 2;
     }
 
-    return drive.withVelocityX(-m_Controller.getLeftY() * MaxSpeed * multiplier) // Drive forward with negative Y (forward)
-      .withVelocityY(-m_Controller.getLeftX() * MaxSpeed * multiplier) // Drive left with negative X (left)
-      .withRotationalRate(-m_Controller.getRightX() * MaxAngularRate * multiplier); // Drive counterclockwise with negative X (left)
+    return drive.withVelocityX(-m_Controller.getLeftY() * AutoConstants.MaxSpeed * multiplier) // Drive forward with negative Y (forward)
+      .withVelocityY(-m_Controller.getLeftX() * AutoConstants.MaxSpeed * multiplier) // Drive left with negative X (left)
+      .withRotationalRate(-m_Controller.getRightX() * AutoConstants.MaxAngularRate * multiplier); // Drive counterclockwise with negative X (left)
   }
 
   public SwerveRequest getDriveReq() {
@@ -220,18 +221,20 @@ public final class RobotContainer {
 
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-    m_Controller.rightBumper().and(m_TrigVision::hasTagInfo).whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
-
+    m_Controller.rightBumper().whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
+    
+    m_Controller.y().whileTrue(drivetrain.applyRequest(() -> brake));
+    
     drivetrain.registerTelemetry(logger::telemeterize);
   }
 
   private void configureBindings() {
     configureSwerveBindings();
+    configureOperatorBindings();
     configureTuningBindings();
     configureScuffedBindings();
     configureOperatorBindings();
     
-    // TODO: correct color
     // new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
 
     // m_Controller.rightBumper().whileTrue(m_ClawSubsystem.intakeWithBeambreak());
@@ -246,6 +249,8 @@ public final class RobotContainer {
     // m_Controller.leftTrigger().whileTrue(m_PivotSubsystem.setAngle(Constants.PivotConstants.reefTwoAngle));
 
     m_Controller.leftTrigger().whileTrue(m_ClimberSubsystem.runClimberdown());
+    m_Controller.b().whileTrue(m_ClimberSubsystem.runMotorDown(20));
+
     m_Controller.leftBumper().whileTrue(m_ClimberSubsystem.runClimberup());
 
     m_Controller.povDown().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
@@ -265,17 +270,13 @@ public final class RobotContainer {
     return Commands.runOnce(() -> m_ElevatorSubsystem.extendArm(rotations)).andThen(Commands.none().withTimeout(0.05));
   }
 
-  public Command scuffedPivot(Angle rotations) {
-    return m_PivotSubsystem.scuffedPivot(rotations, true);
-  }
-
   public void configureScuffedBindings() {
-    m_ScuffedController.y().onTrue(scuffedElevator(Constants.ElevatorConstants.bargeHeight).andThen(scuffedPivot(Constants.PivotConstants.bargeAngle)));
-    m_ScuffedController.a().onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(scuffedPivot(Constants.PivotConstants.floorAngle)));
-    m_ScuffedController.x().onTrue(scuffedElevator(Constants.ElevatorConstants.stowHeight).andThen(scuffedPivot(Constants.PivotConstants.stowAngle)));
-    m_ScuffedController.b().onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(scuffedPivot(Constants.PivotConstants.processorAngle)));
-    m_ScuffedController.povDown().onTrue(scuffedElevator(Constants.ElevatorConstants.reefOneHeight).andThen(scuffedPivot(Constants.PivotConstants.reefOneAngle)));
-    m_ScuffedController.povUp().onTrue(scuffedElevator(Constants.ElevatorConstants.reefTwoHeight).andThen(scuffedPivot(Constants.PivotConstants.reefTwoAngle)));
+    m_ScuffedController.y().onTrue(scuffedElevator(Constants.ElevatorConstants.bargeHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.bargeAngle)));
+    m_ScuffedController.a().onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.floorAngle)));
+    m_ScuffedController.x().onTrue(scuffedElevator(Constants.ElevatorConstants.stowHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.stowAngle)));
+    m_ScuffedController.b().onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.processorAngle)));
+    m_ScuffedController.povDown().onTrue(scuffedElevator(Constants.ElevatorConstants.reefOneHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefOneAngle)));
+    m_ScuffedController.povUp().onTrue(scuffedElevator(Constants.ElevatorConstants.reefTwoHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefTwoAngle)));
     // m_ScuffedController.povLeft().onTrue(scuffedElevator(Constants.ElevatorConstants.onCoralHeight).andThen(scuffedPivot(Constants.PivotConstants.onCoralAngle)));
 
     m_ScuffedController.leftTrigger().whileTrue(m_ClawSubsystem.intakeWithBeambreak());
@@ -283,7 +284,7 @@ public final class RobotContainer {
     m_ScuffedController.rightTrigger().whileTrue(m_ClawSubsystem.shootWithBeambreak());
     m_ScuffedController.rightBumper().whileTrue(m_ClawSubsystem.shoot());
 
-    m_ScuffedController.povRight().whileTrue(scuffedElevator(Constants.ElevatorConstants.coralIntake).andThen(scuffedPivot(Constants.PivotConstants.coralIntake)));
+    m_ScuffedController.povRight().whileTrue(scuffedElevator(Constants.ElevatorConstants.coralIntake).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.coralIntake)));
     m_ScuffedController.povLeft().whileTrue(m_ElevatorSubsystem.autoHonePose().withName("Elevator Hone Command"));
   }
 
@@ -301,15 +302,16 @@ public final class RobotContainer {
   }
 
   private void configureOperatorBindings() {
-    m_OperatorController.button(7).onTrue(scuffedElevator(Constants.ElevatorConstants.bargeHeight).andThen(scuffedPivot(Constants.PivotConstants.bargeAngle)));
-    m_OperatorController.button(5).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(scuffedPivot(Constants.PivotConstants.floorAngle)));
-    m_OperatorController.button(8).onTrue(scuffedElevator(Constants.ElevatorConstants.stowHeight).andThen(scuffedPivot(Constants.PivotConstants.stowAngle)));
-    m_OperatorController.button(2).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(scuffedPivot(Constants.PivotConstants.processorAngle)));
-    m_OperatorController.button(4).onTrue(scuffedElevator(Constants.ElevatorConstants.reefOneHeight).andThen(scuffedPivot(Constants.PivotConstants.reefOneAngle)));
-    m_OperatorController.button(1).onTrue(scuffedElevator(Constants.ElevatorConstants.reefTwoHeight).andThen(scuffedPivot(Constants.PivotConstants.reefTwoAngle)));
+    m_OperatorController.button(7).onTrue(scuffedElevator(Constants.ElevatorConstants.bargeHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.bargeAngle)));
+    m_OperatorController.button(5).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.floorAngle)));
+    m_OperatorController.button(8).onTrue(scuffedElevator(Constants.ElevatorConstants.stowHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.stowAngle)));
+    m_OperatorController.button(2).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.processorAngle)));
+    m_OperatorController.button(4).onTrue(scuffedElevator(Constants.ElevatorConstants.reefOneHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefOneAngle)));
+    m_OperatorController.button(1).onTrue(scuffedElevator(Constants.ElevatorConstants.reefTwoHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefTwoAngle)));
     m_OperatorController.button(6).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
     m_OperatorController.button(9).whileTrue(m_ClawSubsystem.intake());
     // m_OperatorController.button().whileTrue(m_ClawSubsystem.shootWithBeambreak());
+
     m_OperatorController.button(3).whileTrue(m_ClawSubsystem.shoot());
   }
 
@@ -329,10 +331,11 @@ public final class RobotContainer {
       sign = 1;
     }
 
-    Command base = scuffedPivot(Rotations.of(0.241))
+    Command base = m_PivotSubsystem.scuffedPivot(Rotations.of(0.241))
       .andThen(Commands.runOnce(() -> {
         drivetrain.resetRotation(Rotation2d.fromDegrees(sign * 90));
-      }, drivetrain));
+        m_PivotSubsystem.reseedEncoder();
+      }, drivetrain)).andThen(m_ElevatorSubsystem.autoHonePose().asProxy().raceWith(m_ClimberSubsystem.runClimberupAuto()));
     // if (Robot.isReal()) {
     //   base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)); //.andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
     // }

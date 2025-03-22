@@ -160,7 +160,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public boolean closeEnough() {
         StatusSignal.refreshAll(pidError);
 
-        return Math.abs(pidError.getValueAsDouble()) < 0.1;
+        return Math.abs(pidError.getValueAsDouble()) < 1.0;
     }
 
     public void setFollowerMode() {
@@ -175,7 +175,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     // rev throughbore encoder, limit on bottom
 
     // I would assume that there is only going to be one motor to extend the elevator but we will see
-    double poseToHold = ElevatorConstants.stowHeight;
+    public double poseToHold = ElevatorConstants.stowHeight;
     boolean pause = true;
     public Command holdPose(){
         // return run(() -> {});
@@ -343,6 +343,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        SmartDashboard.putBoolean("Elevator Close Enough", closeEnough());
         estopAlert.set(estop);
 
         StatusSignal.refreshAll(currentPoseSignal);
