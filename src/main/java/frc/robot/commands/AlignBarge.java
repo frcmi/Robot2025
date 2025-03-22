@@ -68,7 +68,7 @@ public class AlignBarge extends Command {
         double pidOutput = 0;
         if (!translationOptional.isEmpty()) {
             double distance = translationOptional.get().getMeasureX().in(Meters);
-            pidOutput = -profiledPIDController.calculate(distance, AutoConstants.targetDistanceFromBarge.in(Meters));
+            pidOutput = profiledPIDController.calculate(distance, AutoConstants.targetDistanceFromBarge.in(Meters));
         }
 
         Optional<Long> tagID = vision.getTagID();

@@ -47,8 +47,8 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static int[] bargeTagIDs = { 4, 5, 14, 15 };
-        public static int[] reefTagIDs = {}; // TODO: icbf to look at it rn
+        public static int[] bargeTagIDs = { 4, 5, 14, 15, 2 };
+        public static int[] reefTagIDs = { 21 }; // TODO: icbf to look at it rn
         public static final Angle cameraAngle = Degrees.of(75);
         public static final Distance targetDistanceFromBarge = Inches.of(7.0);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
@@ -184,7 +184,7 @@ public final class Constants {
         // TODO: figure out real conversion and heights
         public static final double inchesPerRotation = 20;
 
-        public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
+        public static final double rotationsPerMeter = 1; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
         public static final double gearRatio = 8.0/1.0;
         public static final double elevatorInertia = 0.001; // In Kg Meters^2 
         public static final double minElevatorHeight = 0.2; // FOR SIM!!!

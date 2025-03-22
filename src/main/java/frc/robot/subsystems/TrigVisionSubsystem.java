@@ -25,6 +25,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.ultralogger.UltraStringLog;
+import frc.lib.ultralogger.UltraStructLog;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.vision.LimeLightAprilTag;
 import frc.robot.vision.LimeLightAprilTag.TagInfo;
@@ -41,14 +43,14 @@ public final class TrigVisionSubsystem extends SubsystemBase {
     private final double bargeTargetHeightMeters = Inches.of(73).in(Meters);     // Height of the AprilTag on the field in meters
     private final double bargeCameraAngleYDegrees = AutoConstants.cameraAngle.in(Degrees);    // Angle at which the camera is mounted
     
-    private final double reefTagHeightMeters = Inches.of(0.0).in(Meters);
-    private final double reefCameraHeightMeters = Inches.of(0.0).in(Meters);
-    private final double reefCameraAngleZDegrees = 0.0;
-    private final double reefCameraAngleYDegrees = 0.0;
+    private final double reefTagHeightMeters = Inches.of(8.75).in(Meters);
+    private final double reefCameraHeightMeters = Inches.of(6.9).in(Meters);
+    private final double reefCameraAngleZDegrees = 10;
+    private final double reefCameraAngleYDegrees = 15;
 
     public TrigVisionSubsystem(LEDSubsystem m_LedSubsystem) {
         bargeCamera = new LimeLightAprilTag("limelight-barge");
-        reefCamera = new LimeLightAprilTag("limelight-reef");
+        reefCamera = new LimeLightAprilTag("limelight");
 
         this.m_LedSubsystem = m_LedSubsystem;
     }
@@ -63,10 +65,24 @@ public final class TrigVisionSubsystem extends SubsystemBase {
         return Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) / 1e6 < 0.1;
     }
 
+    UltraStructLog<Translation2d> bargePosePublisher = new UltraStructLog<>("Vision/Barge Offset", Translation2d.struct);
+    UltraStructLog<Translation2d> reefPosePublisher = new UltraStructLog<>("Vision/Reef Offset", Translation2d.struct);
+    
     @Override
     public void periodic() {
+        Optional<Translation2d> bargePose = getBargePose();
+        Optional<Translation2d> reefPose = getReefPose();
+
+        if (bargePose.isPresent()) {
+            bargePosePublisher.update(bargePose.get());
+        }
+
+        if (reefPose.isPresent()) {
+            reefPosePublisher.update(reefPose.get());
+        }
+
         SmartDashboard.putNumber("Vision Aligned Timestamp", Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) * 1e6);
-        //jonas is racist NO I LOVE WOMEN
+
         if (bargeCamera.hasTarget()) {
             if (!isAligned()) {
                 this.m_LedSubsystem.applyPatternOnce(seeingColor);
@@ -76,6 +92,11 @@ public final class TrigVisionSubsystem extends SubsystemBase {
 
             timeSinceTagSeen = Seconds.of(0);
             lastSeenTag = Optional.of(bargeCamera.getInfo());
+        } else if (reefCamera.hasTarget()) {
+            this.m_LedSubsystem.applyPatternOnce(seeingColor);
+
+            timeSinceTagSeen = Seconds.of(0);
+            lastSeenTag = Optional.of(reefCamera.getInfo());
         } else {
             if (timeSinceTagSeen.gt(AutoConstants.lastPoseTimeout) && lastSeenTag.isPresent()) {
                 lastSeenTag = Optional.empty();
