@@ -13,9 +13,10 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
@@ -33,10 +34,10 @@ public class AlignBarge extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleSupplier horizontalInputSupplier;
 
-    private final PIDController translationPIDController = new PIDController(AutoConstants.Turbo.kTranslationP, AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD);
+    private final ProfiledPIDController profiledPIDController = new ProfiledPIDController(AutoConstants.Turbo.kTranslationP, AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD, new TrapezoidProfile.Constraints(100, 10));
 
     private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
-
+    
     public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain, DoubleSupplier horizontalInputSupplier) {
         this.vision = vision;
         this.drivetrain = drivetrain;
@@ -49,9 +50,12 @@ public class AlignBarge extends Command {
 
     @Override
     public void execute() {
-        Optional<Distance> distanceOptional = vision.getLateralDistanceToBarge();
-        if (distanceOptional.isEmpty()) return;
-        Distance distance = distanceOptional.get();
+        Optional<Translation2d> translationOptional = vision.getBargePose();
+        double pidOutput = 0;
+        if (!translationOptional.isEmpty()) {
+            double distance = translationOptional.get().getMeasureX().in(Meters);
+            pidOutput = -profiledPIDController.calculate(distance, AutoConstants.targetDistanceFromBarge.in(Meters));
+        }
 
         Optional<Long> tagID = vision.getTagID();
         int sign = 1;
@@ -59,15 +63,9 @@ public class AlignBarge extends Command {
             sign = -1;
         }
 
-        double pidOutput = -translationPIDController.calculate(distance.in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters));
-
-        SmartDashboard.putNumber("Auto Align Error", translationPIDController.getError());
-        SmartDashboard.putBoolean("Auto Align Close Enough", translationPIDController.atSetpoint());
-
-        if (translationPIDController.atSetpoint()) {
+        if (profiledPIDController.atGoal()) {
             vision.isAlignedTimestamp = RobotController.getFPGATime();
         }
-        
 
         driveRequest.withVelocityX(Meters.of(sign * pidOutput).per(Second));
         driveRequest.withVelocityY(horizontalInputSupplier.getAsDouble());

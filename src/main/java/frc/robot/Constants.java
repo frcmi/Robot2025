@@ -45,7 +45,10 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static final Distance targetDistanceFromBarge = Inches.of(4);
+        public static int[] bargeTagIDs = { 4, 5, 14, 15 };
+        public static int[] reefTagIDs = {}; // TODO: icbf to look at it rn
+        public static final Angle cameraAngle = Degrees.of(75);
+        public static final Distance targetDistanceFromBarge = Inches.of(7.0);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
         public static class Turbo {
             public static final double kRotationP = 5.0;
