@@ -11,7 +11,7 @@ import frc.robot.Constants.AutoConstants;
 
 public class LimeLightAprilTag {
     // Get the LimeLight NetworkTable. Adjust the table name if necessary.
-    private final NetworkTable limeTable = NetworkTableInstance.getDefault().getTable("limelight");
+    private final NetworkTable limeTable = NetworkTableInstance.getDefault().getTable("limelight-barge");
     // Camera and target configuration (modify these to match your setup)
     private final double cameraHeightMeters = Inches.of(10.5).in(Meters);   // Height of the camera off the ground in meters
     private final double targetHeightMeters = Inches.of(73).in(Meters);     // Height of the AprilTag on the field in meters

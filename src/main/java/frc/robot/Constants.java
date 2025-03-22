@@ -37,7 +37,7 @@ public final class Constants {
         // this will fully disable logging even when FMS is connected.
         public static final boolean killswitch = false;
         // If true, data won't be sent over network even when not connected to FMS
-        public static final boolean disableNetworkLogging = true;
+        public static final boolean disableNetworkLogging = false;
         // ONLY ENABLE IN DEV (this *should* be overwritten when connected to FMS, but that's untested)
         public static final boolean disableDatalog = false;
         // Prefix in NetworkTables, must end with a '/'
@@ -77,7 +77,7 @@ public final class Constants {
         public static final int beambreakChannel = 1;
         public static final int motorControllerID = 23;
         public static final double intakeSpeed = -0.75;
-        public static final double shootSpeed = 1;
+        public static final double shootSpeed = 0.8;
         // TODO: Figure out good speed for shooting at the processor
         public static final double processorShootSpeed = 0.3;
         public static final double stopSpeed = -0.04;
@@ -122,16 +122,15 @@ public final class Constants {
         }
 
         public static class TurboBot {
-            public static final double kP = 1.40d;
+            public static final double kP = 1.5d;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
 
-            public static final double kS = 0.28;
-            // huh
-            public static final double kG = 0.6;
+            public static final double kS = 0.26;
+            public static final double kG = 0.505; // 0.4355
 
-            public static final double offset = -0.0536968513424213 - 0.042272026056800575;
-            public static final double discontinuity = -0.4;
+            public static final double offset = 1 - 0.5940384898509623;
+            public static final double discontinuity = -0.3;
         }
     }
 

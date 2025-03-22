@@ -157,7 +157,7 @@ public class PivotSubsystem extends SubsystemBase {
     public Command scuffedPivot(Angle rotations) {
         final Angle rotations2;
         if (botType == BotType.MAIN_BOT) {
-            rotations2 = rotations.minus(Rotations.of(0.0704 - (0.076061101901527)));
+            rotations2 = rotations.minus(Rotations.of(0.0704 - (0.06440805161020124)));
         } else {
             rotations2 = rotations;
         }
@@ -166,7 +166,7 @@ public class PivotSubsystem extends SubsystemBase {
     }
 
     public boolean closeEnough() {
-        return Math.abs(pid.getPositionError()) < Degrees.of(2).in(Radians);
+        return Math.abs(pid.getError()) < Degrees.of(2).in(Radians);
     }
 
     private Angle currentAngle = PivotConstants.stowAngle;
@@ -190,7 +190,7 @@ public class PivotSubsystem extends SubsystemBase {
             pidPublisher.update(voltage);
             velocityPublisher.update(velocity.getValueAsDouble() / 15 * 12 / 44);
             double signum = Math.signum(voltage);
-            if (pid.atSetpoint() && pid.getPositionError() < 0) {
+            if (pid.atSetpoint() && Math.abs(pid.getError()) < 0.087266) {
                 voltage = 0;
                 if (closeEnough()) {
                     signum = 0;
