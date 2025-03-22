@@ -3,6 +3,7 @@ package frc.robot.vision;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.units.measure.Distance;
 
 public interface Camera {
     public static interface Simulator {
@@ -12,13 +13,17 @@ public interface Camera {
 
     public static class Tag {
         public int ID;
-        public double cameraDistance;
+        public Distance cameraDistance;
+        public double ambiguity;
+        public Transform3d transform;
+        public double area;
     }
 
     public static class Result {
         public Pose2d pose;
         public double maxAmbiguity, maxDistance, minDistance;
         public Tag[] tags;
+        public int bestTagIndex;
         
         public boolean isNew;
         public double timestamp;

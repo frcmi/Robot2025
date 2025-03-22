@@ -1,5 +1,8 @@
 package frc.robot.vision;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
@@ -13,6 +16,7 @@ import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 public final class PhotonlibCamera implements Camera {
@@ -94,10 +98,12 @@ public final class PhotonlibCamera implements Camera {
         result.isNew = true;
         result.pose = pose.estimatedPose.toPose2d();
         result.timestamp = pose.timestampSeconds;
+        result.bestTagIndex = -1;
 
         result.minDistance = Double.MAX_VALUE;
         result.maxDistance = Double.MIN_VALUE;
         result.maxAmbiguity = Double.MIN_VALUE;
+        double minAmbiguity = Double.MAX_VALUE;
 
         var targets = cameraResult.getTargets();
         result.tags = new Tag[targets.size()];
@@ -108,13 +114,22 @@ public final class PhotonlibCamera implements Camera {
             double distance = transform.getTranslation().getNorm();
             double ambiguity = target.getPoseAmbiguity();
 
+            if (ambiguity < minAmbiguity) {
+                result.bestTagIndex = i;
+                minAmbiguity = ambiguity;
+            }
+
             result.minDistance = Math.min(result.minDistance, distance);
             result.maxDistance = Math.max(result.maxDistance, distance);
             result.maxAmbiguity = Math.max(result.maxAmbiguity, ambiguity);
 
             var tag = new Tag();
             tag.ID = target.getFiducialId();
-            tag.cameraDistance = distance;
+            tag.cameraDistance = Meters.of(distance);
+            tag.ambiguity = ambiguity;
+            tag.area = target.area;
+            tag.transform = transform;
+
             result.tags[i] = tag;
         }
 

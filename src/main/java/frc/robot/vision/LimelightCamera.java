@@ -1,6 +1,11 @@
 package frc.robot.vision;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 import frc.lib.LimelightHelpers;
@@ -45,14 +50,24 @@ public class LimelightCamera implements Camera {
         result.pose = estimate.pose;
         result.timestamp = estimate.timestampSeconds;
         result.isNew = true;
+        result.bestTagIndex = -1;
 
+        var limelightResults = LimelightHelpers.getLatestResults(m_Name);
+
+        double minAmbiguity = Double.MAX_VALUE;
         result.maxAmbiguity = Double.MIN_VALUE;
         result.maxDistance = Double.MIN_VALUE;
         result.minDistance = Double.MAX_VALUE;
 
         result.tags = new Tag[estimate.tagCount];
-        for (int i = 0; i < estimate.tagCount; i++) {
+        for (int i = 0; i < result.tags.length; i++) {
             var fiducial = estimate.rawFiducials[i];
+            var processed = limelightResults.targets_Fiducials[i];
+
+            if (fiducial.ambiguity < minAmbiguity) {
+                result.bestTagIndex = i;
+                minAmbiguity = fiducial.ambiguity;
+            }
 
             result.maxAmbiguity = Math.max(result.maxAmbiguity, fiducial.ambiguity);
             result.maxDistance = Math.max(result.maxDistance, fiducial.distToCamera);
@@ -60,7 +75,11 @@ public class LimelightCamera implements Camera {
 
             var tag = new Tag();
             tag.ID = fiducial.id;
-            tag.cameraDistance = fiducial.distToCamera;
+            tag.cameraDistance = Meters.of(fiducial.distToCamera);
+            tag.ambiguity = fiducial.ambiguity;
+            tag.area = fiducial.ta;
+            tag.transform = processed.getTargetPose_CameraSpace().minus(new Pose3d());
+
             result.tags[i] = tag;
         }
     }

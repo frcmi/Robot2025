@@ -99,7 +99,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final UltraSupplierLog rightPosePub = new UltraSupplierLog("Elevator/Right Pose", followerMotor.getPosition());
     private final Alert estopAlert = new Alert("Elevator E-Stopped", AlertType.kError);
 
-    private boolean estop = false;
+    private boolean estop = true;
 
     // there will be at least one limit switch and an encoder to track the position of the elevator
     public ElevatorSubsystem(BotType bot) {

@@ -1,11 +1,16 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+
 import java.io.IOException;
 import java.util.HashSet;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 
@@ -21,6 +26,21 @@ public final class GlobalVisionSubsystem implements Subsystem {
     public static final double kMaxAmbiguity = 0.7;
     public static final double kMaxDistance = Units.feetToMeters(10);
 
+    public static final Translation3d kBargeCameraTranslation = new Translation3d(
+        Inches.of(-8),
+        Inches.of(11),
+        Inches.of(10.25));
+
+    public static final Rotation3d kBargeCameraRotation = new Rotation3d(
+        Degrees.of(0),
+        Degrees.of(75),
+        Degrees.of(90));
+
+    public static final Transform3d kBargeCameraTransform = new Transform3d(kBargeCameraTranslation, kBargeCameraRotation);
+    public static final CameraDescription[] kCameras = new CameraDescription[] {
+        new CameraDescription("limelight-barge", CameraType.LIMELIGHT, kBargeCameraTransform, null)
+    };
+
     public static enum CameraType {
         PHOTONVISION,
         LIMELIGHT
@@ -31,9 +51,17 @@ public final class GlobalVisionSubsystem implements Subsystem {
         CameraType type;
         Transform3d offset;
         Specification spec;
+
+        public CameraDescription(String name, CameraType type, Transform3d offset, Specification spec) {
+            this.name = name;
+            this.type = type;
+            this.offset = offset;
+            this.spec = spec;
+        }
     };
 
     private static class CameraData {
+        CameraType type;
         Camera camera;
         Result result;
         Simulator sim;
@@ -44,10 +72,9 @@ public final class GlobalVisionSubsystem implements Subsystem {
 
     private HashSet<Integer> m_ViableResults;
     private int m_Frame;
+    private AprilTagFieldLayout m_Layout;
 
     public static GlobalVisionSubsystem configure(CommandSwerveDrivetrain swerve) {
-        var cameras = new CameraDescription[] { /* cameras */ };
-
         AprilTagFieldLayout layout;
         try {
             layout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2024Crescendo.m_resourceFile);
@@ -56,7 +83,7 @@ public final class GlobalVisionSubsystem implements Subsystem {
             layout = null;
         }
 
-        return new GlobalVisionSubsystem(swerve, cameras, layout);
+        return new GlobalVisionSubsystem(swerve, layout);
     }
 
     private static Camera createCamera(CameraDescription desc, AprilTagFieldLayout layout) {
@@ -70,16 +97,17 @@ public final class GlobalVisionSubsystem implements Subsystem {
         }
     }
 
-    public GlobalVisionSubsystem(CommandSwerveDrivetrain swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
+    public GlobalVisionSubsystem(CommandSwerveDrivetrain swerve, AprilTagFieldLayout layout) {
         m_Swerve = swerve;
         m_ViableResults = new HashSet<>();
         m_Frame = 0;
 
-        m_Cameras = new CameraData[cameras.length];
-        for (int i = 0; i < cameras.length; i++) {
-            var desc = cameras[i];
+        m_Cameras = new CameraData[kCameras.length];
+        for (int i = 0; i < kCameras.length; i++) {
+            var desc = kCameras[i];
             var data = new CameraData();
 
+            data.type = desc.type;
             data.camera = createCamera(desc, layout);
             data.result = new Result();
             data.sim = null;
@@ -87,6 +115,8 @@ public final class GlobalVisionSubsystem implements Subsystem {
             if (Robot.isSimulation() && desc.spec != null) {
                 data.sim = data.camera.createSimulator(desc.spec);
             }
+
+            m_Cameras[i] = data;
         }
     }
 
@@ -106,8 +136,41 @@ public final class GlobalVisionSubsystem implements Subsystem {
         return true;
     }
 
+    public AprilTagFieldLayout getLayout() {
+        return m_Layout;
+    }
+
+    public int getCameraCount() {
+        return m_Cameras.length;
+    }
+
+    public Camera getCamera(int camera) {
+        return m_Cameras[camera].camera;
+    }
+
+    public CameraType getCameraType(int camera) {
+        return m_Cameras[camera].type;
+    }
+
     public Result getResult(int camera) {
         return m_Cameras[camera].result;
+    }
+
+    /**
+     * Finds the first camera of the given type. Returns -1 on failure.
+     * 
+     * @param type Camera type to search for.
+     * @return The index of the camera.
+     */
+    public int getCameraByType(CameraType type) {
+        for (int i = 0; i < m_Cameras.length; i++) {
+            var data = m_Cameras[i];
+            if (data.type == type) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     @Override

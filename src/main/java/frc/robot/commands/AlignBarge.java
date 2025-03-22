@@ -44,7 +44,8 @@ public class AlignBarge extends Command {
 
     private final ProfiledPIDController profiledPIDController = new ProfiledPIDController(AutoConstants.Turbo.kTranslationP, AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD, new TrapezoidProfile.Constraints(AutoConstants.MaxSpeed, AutoConstants.MaxAcceleration));
 
-    private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
+    private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle()
+            .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
 
     private final UltraDoubleLog logger = new UltraDoubleLog("Auto/Barge Auto Align Pid Output");
     private DoublePublisher posePublisher = NetworkTableInstance.getDefault()
@@ -58,25 +59,34 @@ public class AlignBarge extends Command {
 
         addRequirements(drivetrain);
 
-        driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
+        driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI,
+                AutoConstants.Turbo.kRotationD);
     }
 
     private double sign = 1;
 
     @Override
     public void execute() {
-        Optional<Distance> distanceOptional = vision.getLateralDistanceToBarge();
+        var offset = vision.getRobotToTag();
+
         double pidOutput = 0;
-        if (!distanceOptional.isEmpty()) {
-            pidOutput = -profiledPIDController.calculate(distanceOptional.get().in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters));
-            posePublisher.set(distanceOptional.get().in(Meters));
-            setPosePublisher.set(AutoConstants.targetDistanceFromBarge.in(Meters));
+        if (offset.isPresent()) {
+            var parallelDistance = offset.get().getMeasureX();
+            double bargeDistance = parallelDistance.in(Meters);
+            double goalDistance = AutoConstants.targetDistanceFromBarge.in(Meters);
+
+            pidOutput = -profiledPIDController.calculate(bargeDistance, goalDistance);
+            
+            posePublisher.set(bargeDistance);
+            setPosePublisher.set(goalDistance);
         }
+
         logger.update(pidOutput);
 
-        Optional<Long> tagID = vision.getTagID();
-        if (tagID.isPresent()) {
-            if (tagID.get() == 4 || tagID.get() == 5) {
+        var tag = vision.getBestTag();
+        if (tag != null) {
+            int id = tag.ID;
+            if (id == 4 || id == 5) {
                 sign = -1;
             } else {
                 sign = 1;
@@ -89,7 +99,6 @@ public class AlignBarge extends Command {
         if (profiledPIDController.atGoal()) {
             vision.isAlignedTimestamp = RobotController.getFPGATime();
         }
-        
 
         driveRequest.withVelocityX(Meters.of(sign * pidOutput).per(Second));
         driveRequest.withVelocityY(horizontalInputSupplier.getAsDouble());
@@ -102,5 +111,5 @@ public class AlignBarge extends Command {
     public boolean isFinished() {
         return super.isFinished();
     }
-    
+
 }
