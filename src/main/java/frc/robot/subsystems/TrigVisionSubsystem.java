@@ -35,8 +35,10 @@ import frc.robot.subsystems.LEDSubsystem;
 public final class TrigVisionSubsystem extends SubsystemBase {
     private LimeLightAprilTag bargeCamera;
     private LimeLightAprilTag reefCamera;
-    private Optional<TagInfo> lastSeenTag = Optional.empty();
-    private Time timeSinceTagSeen = Seconds.of(0);
+    private Optional<TagInfo> lastSeenBargeTag = Optional.empty();
+    private Optional<TagInfo> lastSeenReefTag = Optional.empty();
+    private Time timeSinceBargeTagSeen = Seconds.of(0);
+    private Time timeSinceReefTagSeen = Seconds.of(0);
     private LEDSubsystem m_LedSubsystem;
 
     private final double bargeCameraHeightMeters = Inches.of(10.5).in(Meters);   // Height of the camera off the ground in meters
@@ -91,24 +93,30 @@ public final class TrigVisionSubsystem extends SubsystemBase {
                 this.m_LedSubsystem.applyPatternOnce(alignedColor);
             }
 
-            timeSinceTagSeen = Seconds.of(0);
-            lastSeenTag = Optional.of(bargeCamera.getInfo());
+            timeSinceBargeTagSeen = Seconds.of(0);
+            lastSeenBargeTag = Optional.of(bargeCamera.getInfo());
         } else if (reefCamera.hasTarget()) {
             this.m_LedSubsystem.applyPatternOnce(seeingColor);
 
-            timeSinceTagSeen = Seconds.of(0);
-            lastSeenTag = Optional.of(reefCamera.getInfo());
+            timeSinceReefTagSeen = Seconds.of(0);
+            lastSeenReefTag = Optional.of(reefCamera.getInfo());
         } else {
-            if (timeSinceTagSeen.gt(AutoConstants.lastPoseTimeout) && lastSeenTag.isPresent()) {
-                lastSeenTag = Optional.empty();
+            if (timeSinceBargeTagSeen.gt(AutoConstants.lastPoseTimeout) && lastSeenBargeTag.isPresent()) {
+                    lastSeenBargeTag = Optional.empty();
             }
-            timeSinceTagSeen = timeSinceTagSeen.plus(Milliseconds.of(20));
+
+            if (timeSinceReefTagSeen.gt(AutoConstants.lastPoseTimeout) && lastSeenReefTag.isPresent()) {
+                lastSeenReefTag = Optional.empty();
+            }
+            
+            timeSinceBargeTagSeen = timeSinceBargeTagSeen.plus(Milliseconds.of(20));
+            timeSinceReefTagSeen = timeSinceReefTagSeen.plus(Milliseconds.of(20));
             this.m_LedSubsystem.applyPatternOnce(this.m_LedSubsystem.allianceColorGetter());
         }
     }
 
     public Command resetLastPose() {
-        return run(() -> { lastSeenTag = Optional.empty(); });
+        return runOnce(() -> { lastSeenBargeTag = Optional.empty(); lastSeenReefTag = Optional.empty(); });
     }
 
     public Optional<Long> getTagID() {
@@ -120,29 +128,32 @@ public final class TrigVisionSubsystem extends SubsystemBase {
         return Optional.of(tid);
     }
 
-    private boolean tagIsInArray(int[] arr) {
-        if (lastSeenTag.isEmpty()) return false;
+    private boolean tagIsInArray(TagInfo tag, int[] arr) {
         for (int i = 0; i < arr.length; i++) {
-            if (lastSeenTag.get().tid == arr[i])
+            if (tag.tid == arr[i])
                 return true;
         }
         return false;
     }
 
     public boolean tagIsBarge() {
-        return tagIsInArray(AutoConstants.bargeTagIDs);
+        if (lastSeenBargeTag.isEmpty()) return false;
+
+        return tagIsInArray(lastSeenBargeTag.get(), AutoConstants.bargeTagIDs);
     }
 
     public boolean tagIsReef() {
-        return tagIsInArray(AutoConstants.reefTagIDs);
+        if (lastSeenReefTag.isEmpty()) return false;
+
+        return tagIsInArray(lastSeenReefTag.get(), AutoConstants.reefTagIDs);
     }
 
     public Optional<Translation2d> getBargePose() {
-        if (lastSeenTag.isPresent() && tagIsBarge()) {
-            double yAxisRotation = Math.toRadians(bargeCameraAngleYDegrees + lastSeenTag.get().ty);
+        if (lastSeenBargeTag.isPresent() && tagIsBarge()) {
+            double yAxisRotation = Math.toRadians(bargeCameraAngleYDegrees + lastSeenBargeTag.get().ty);
             double forwardDistance = (bargeTargetHeightMeters - bargeCameraHeightMeters) / Math.tan(yAxisRotation);
 
-            double zAxisRotation = Math.toRadians(lastSeenTag.get().tx);
+            double zAxisRotation = Math.toRadians(lastSeenBargeTag.get().tx);
             double sidewaysDistance = forwardDistance * Math.tan(zAxisRotation);
 
             return Optional.of(new Translation2d(Meters.of(forwardDistance), Meters.of(sidewaysDistance)));
@@ -151,11 +162,11 @@ public final class TrigVisionSubsystem extends SubsystemBase {
     }
 
     public Optional<Translation2d> getReefPose() {
-        if (lastSeenTag.isPresent() && tagIsReef()) {
-            double yAxisRotation = Math.toRadians(reefCameraAngleYDegrees + lastSeenTag.get().ty);
+        if (lastSeenReefTag.isPresent() && tagIsReef()) {
+            double yAxisRotation = Math.toRadians(reefCameraAngleYDegrees + lastSeenReefTag.get().ty);
             double forwardDistance = (reefTagHeightMeters - reefCameraHeightMeters) / Math.tan(yAxisRotation);
             
-            double zAxisRotation = Math.toRadians(reefCameraAngleZDegrees + lastSeenTag.get().tx);
+            double zAxisRotation = Math.toRadians(reefCameraAngleZDegrees + lastSeenReefTag.get().tx);
             double sidewaysDistance = forwardDistance * Math.tan(zAxisRotation);
 
             return Optional.of(new Translation2d(Meters.of(forwardDistance), Meters.of(sidewaysDistance)));
@@ -166,7 +177,12 @@ public final class TrigVisionSubsystem extends SubsystemBase {
     public boolean canSeeBargeTag() {
         return bargeCamera.hasTarget();
     }
-    public boolean hasTagInfo() {
-        return lastSeenTag.isPresent();
+
+    public boolean hasBargeTagInfo() {
+        return lastSeenBargeTag.isPresent();
+    }
+
+    public boolean hasReefTagInfo() {
+        return lastSeenReefTag.isPresent();
     }
 }

@@ -31,10 +31,12 @@ public class AlignReef extends Command {
     private final PIDController PIDControllerY = new PIDController(AutoConstants.Turbo.kTranslationYP, AutoConstants.Turbo.kTranslationYI, AutoConstants.Turbo.kTranslationYD);
     private final DoubleSupplier xSupplier;
     private final Rev2mDistanceSensor distance;
+    private final boolean autoX;
 
     private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
 
-    public AlignReef(TrigVisionSubsystem vision, CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distanceSensor, DoubleSupplier xDoubleSupplier) {
+    public AlignReef(TrigVisionSubsystem vision, CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distanceSensor, DoubleSupplier xDoubleSupplier, boolean autoX) {
+        this.autoX = autoX;
         distance = distanceSensor;
         xSupplier = xDoubleSupplier;
 
@@ -44,7 +46,10 @@ public class AlignReef extends Command {
         addRequirements(drivetrain);
 
         driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
+    }
 
+    @Override
+    public void initialize() {
         profiledPIDControllerX.setGoal(AutoConstants.distanceFromReef.in(Meters));
         PIDControllerY.setSetpoint(AutoConstants.sidewaysDistanceFromReef.in(Meters));
         PIDControllerY.setTolerance(0.025);
@@ -53,6 +58,7 @@ public class AlignReef extends Command {
     @Override
     public void execute() {
         Optional<Translation2d> translationOptional = vision.getReefPose();
+        
         double pidOutputX = xSupplier.getAsDouble();
         double pidOutputY = 0;
 
@@ -69,10 +75,12 @@ public class AlignReef extends Command {
         if (PIDControllerY.atSetpoint()) { // && profiledPIDControllerX.atGoal()
             vision.isAlignedTimestamp = RobotController.getFPGATime();
             double distanceMeasurement = distance.getRange();
-            if (distanceMeasurement != -1) {
-                pidOutputX = profiledPIDControllerX.calculate(Inches.of(distanceMeasurement).in(Meters));
-            } else {
-                pidOutputX = -1.5;
+            if (autoX) {
+                if (distanceMeasurement != -1) {
+                    pidOutputX = profiledPIDControllerX.calculate(Inches.of(distanceMeasurement).in(Meters));
+                } else {
+                    pidOutputX = profiledPIDControllerX.calculate(2);
+                }
             }
         }
 

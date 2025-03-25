@@ -226,7 +226,7 @@ public final class RobotContainer {
     m_Controller.rightBumper().whileTrue(
       new ConditionalCommand(
         new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }),
-        new AlignReef(m_TrigVision, drivetrain, distance, () -> { return getFieldCentricDriveReq().VelocityX; }),
+        new AlignReef(m_TrigVision, drivetrain, distance, () -> { return getFieldCentricDriveReq().VelocityX; }, false),
         m_TrigVision::canSeeBargeTag
       )
     );
