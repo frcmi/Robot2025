@@ -162,7 +162,7 @@ public class PivotSubsystem extends SubsystemBase {
             rotations2 = rotations;
         }
 
-        return Commands.runOnce(() -> setAngle(rotations2)).andThen(Commands.run(() -> {})).withTimeout(0.1);
+        return Commands.runOnce(() -> setAngle(rotations2));
     }
 
     public boolean closeEnough() {

@@ -12,6 +12,10 @@ import com.revrobotics.Rev2mDistanceSensor.Unit;
 import com.revrobotics.Rev2mDistanceSensor;
 import com.revrobotics.Rev2mDistanceSensor.Port;
 import com.revrobotics.Rev2mDistanceSensor.Unit;
+
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+
 import com.revrobotics.ColorSensorV3;
 
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -36,6 +40,8 @@ public final class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     SmartDashboard.putNumber("Rev Distance", distance.getRange());
+    SmartDashboard.putNumber("Rev Distance Reef ", Inches.of(distance.getRange()).in(Meters));
+
     SmartDashboard.putBoolean("3.3V rail enabled", RobotController.getEnabled3V3());
     SmartDashboard.putBoolean("5V rail enabled", RobotController.getEnabled5V());
     SmartDashboard.putBoolean("6V rail enabled", RobotController.getEnabled6V());

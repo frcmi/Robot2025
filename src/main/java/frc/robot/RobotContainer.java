@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -51,6 +52,7 @@ import frc.robot.Constants.PivotConstants;
 import frc.robot.Constants.TelemetryConstants;
 import frc.robot.CoralAutoBuilder.AutoType;
 import frc.robot.commands.AlignBarge;
+import frc.robot.commands.AlignReef;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsAlpha;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -221,7 +223,13 @@ public final class RobotContainer {
 
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-    m_Controller.rightBumper().whileTrue(new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }));
+    m_Controller.rightBumper().whileTrue(
+      new ConditionalCommand(
+        new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }),
+        new AlignReef(m_TrigVision, drivetrain, distance, () -> { return getFieldCentricDriveReq().VelocityX; }),
+        m_TrigVision::canSeeBargeTag
+      )
+    );
     
     m_Controller.y().whileTrue(drivetrain.applyRequest(() -> brake));
     
@@ -233,7 +241,6 @@ public final class RobotContainer {
     configureOperatorBindings();
     configureTuningBindings();
     configureScuffedBindings();
-    configureOperatorBindings();
     
     // new Trigger(m_ClawSubsystem.beambreak::get).negate().whileTrue(m_LedSubsystem.solidColor(new Color(0, 155, 255)));
 
@@ -335,7 +342,7 @@ public final class RobotContainer {
       .andThen(Commands.runOnce(() -> {
         drivetrain.resetRotation(Rotation2d.fromDegrees(sign * 90));
         m_PivotSubsystem.reseedEncoder();
-      }, drivetrain)).andThen(m_ElevatorSubsystem.autoHonePose().asProxy().raceWith(m_ClimberSubsystem.runClimberupAuto()));
+      }, drivetrain)); //.andThen(m_ElevatorSubsystem.autoHonePose().asProxy().raceWith(m_ClimberSubsystem.runClimberupAuto()));
     // if (Robot.isReal()) {
     //   base = base.andThen(Commands.run(() -> {}).until(m_PivotSubsystem::closeEnough)); //.andThen(m_ElevatorSubsystem.autoHonePose().asProxy());
     // }

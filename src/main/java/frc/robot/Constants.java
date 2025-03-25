@@ -47,10 +47,12 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static int[] bargeTagIDs = { 4, 5, 14, 15, 2 };
+        public static int[] bargeTagIDs = { 4, 5, 14, 15, 2, 7 };
         public static int[] reefTagIDs = { 21 }; // TODO: icbf to look at it rn
-        public static final Angle cameraAngle = Degrees.of(75);
-        public static final Distance targetDistanceFromBarge = Inches.of(7.0);
+        public static final Angle cameraAngle = Degrees.of(60);
+        public static final Distance distanceFromBarge = Inches.of(13.0);
+        public static final Distance distanceFromReef = Meters.of(0.3);
+        public static final Distance sidewaysDistanceFromReef = Meters.of(0.12);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
         public static final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond);
         public static double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -60,9 +62,13 @@ public final class Constants {
             public static final double kRotationI = 0.0;
             public static final double kRotationD = 0.0;
     
-            public static final double kTranslationP = 2.1;
-            public static final double kTranslationI = 0.0;
-            public static final double kTranslationD = 0.0;
+            public static final double kTranslationXP = 2.1;
+            public static final double kTranslationXI = 0.0;
+            public static final double kTranslationXD = 0.0;
+    
+            public static final double kTranslationYP = 7.5;
+            public static final double kTranslationYI = 0.5;
+            public static final double kTranslationYD = 0.0;
         }
         public static class Alpha {
             public static final double kdP = 1.0;

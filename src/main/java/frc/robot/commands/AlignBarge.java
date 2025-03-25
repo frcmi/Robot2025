@@ -46,7 +46,7 @@ public class AlignBarge extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleSupplier horizontalInputSupplier;
 
-    private final ProfiledPIDController profiledPIDController = new ProfiledPIDController(AutoConstants.Turbo.kTranslationP, AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD, new TrapezoidProfile.Constraints(100, 10));
+    private final ProfiledPIDController profiledPIDController = new ProfiledPIDController(AutoConstants.Turbo.kTranslationXP, AutoConstants.Turbo.kTranslationXI, AutoConstants.Turbo.kTranslationXD, new TrapezoidProfile.Constraints(100, 10));
 
     private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
     
@@ -68,7 +68,7 @@ public class AlignBarge extends Command {
         double pidOutput = 0;
         if (!translationOptional.isEmpty()) {
             double distance = translationOptional.get().getMeasureX().in(Meters);
-            pidOutput = profiledPIDController.calculate(distance, AutoConstants.targetDistanceFromBarge.in(Meters));
+            pidOutput = -profiledPIDController.calculate(distance, AutoConstants.distanceFromBarge.in(Meters));
         }
 
         Optional<Long> tagID = vision.getTagID();

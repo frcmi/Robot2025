@@ -66,7 +66,7 @@ public final class TrigVisionSubsystem extends SubsystemBase {
     }
 
     UltraStructLog<Translation2d> bargePosePublisher = new UltraStructLog<>("Vision/Barge Offset", Translation2d.struct);
-    UltraStructLog<Translation2d> reefPosePublisher = new UltraStructLog<>("Vision/Reef Offset", Translation2d.struct);
+    UltraStructLog<Pose2d> reefPosePublisher = new UltraStructLog<>("Vision/Reef Offset", Pose2d.struct);
     
     @Override
     public void periodic() {
@@ -78,7 +78,8 @@ public final class TrigVisionSubsystem extends SubsystemBase {
         }
 
         if (reefPose.isPresent()) {
-            reefPosePublisher.update(reefPose.get());
+            Translation2d e = reefPose.get();
+            reefPosePublisher.update(new Pose2d(e.getX(), e.getY(), Rotation2d.kZero));
         }
 
         SmartDashboard.putNumber("Vision Aligned Timestamp", Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) * 1e6);
@@ -138,31 +139,31 @@ public final class TrigVisionSubsystem extends SubsystemBase {
 
     public Optional<Translation2d> getBargePose() {
         if (lastSeenTag.isPresent() && tagIsBarge()) {
-            double xAxisRotation = Math.toRadians(bargeCameraAngleYDegrees + lastSeenTag.get().ty);
-            double forwardDistance = (bargeTargetHeightMeters - bargeCameraHeightMeters) / Math.tan(xAxisRotation);
-            
+            double yAxisRotation = Math.toRadians(bargeCameraAngleYDegrees + lastSeenTag.get().ty);
+            double forwardDistance = (bargeTargetHeightMeters - bargeCameraHeightMeters) / Math.tan(yAxisRotation);
+
             double zAxisRotation = Math.toRadians(lastSeenTag.get().tx);
             double sidewaysDistance = forwardDistance * Math.tan(zAxisRotation);
 
-            return Optional.of(new Translation2d(Meters.of(sidewaysDistance), Meters.of(forwardDistance)));
+            return Optional.of(new Translation2d(Meters.of(forwardDistance), Meters.of(sidewaysDistance)));
         }
         return Optional.empty();
     }
 
     public Optional<Translation2d> getReefPose() {
         if (lastSeenTag.isPresent() && tagIsReef()) {
-            double xAxisRotation = Math.toRadians(reefCameraAngleYDegrees + lastSeenTag.get().ty);
-            double forwardDistance = (reefTagHeightMeters - reefCameraHeightMeters) / Math.tan(xAxisRotation);
+            double yAxisRotation = Math.toRadians(reefCameraAngleYDegrees + lastSeenTag.get().ty);
+            double forwardDistance = (reefTagHeightMeters - reefCameraHeightMeters) / Math.tan(yAxisRotation);
             
-            double zAxisRotation = Math.toRadians(lastSeenTag.get().tx);
+            double zAxisRotation = Math.toRadians(reefCameraAngleZDegrees + lastSeenTag.get().tx);
             double sidewaysDistance = forwardDistance * Math.tan(zAxisRotation);
 
-            return Optional.of(new Translation2d(Meters.of(sidewaysDistance), Meters.of(forwardDistance)));
+            return Optional.of(new Translation2d(Meters.of(forwardDistance), Meters.of(sidewaysDistance)));
         }
         return Optional.empty();
     }
 
-    public boolean canSeeTag() {
+    public boolean canSeeBargeTag() {
         return bargeCamera.hasTarget();
     }
     public boolean hasTagInfo() {
