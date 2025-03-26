@@ -36,7 +36,7 @@ public final class TrigVisionSubsystem extends SubsystemBase {
     private LimeLightAprilTag bargeCamera;
     private LimeLightAprilTag reefCamera;
     private Optional<TagInfo> lastSeenBargeTag = Optional.empty();
-    private Optional<TagInfo> lastSeenReefTag = Optional.empty();
+    public Optional<TagInfo> lastSeenReefTag = Optional.empty();
     private Time timeSinceBargeTagSeen = Seconds.of(0);
     private Time timeSinceReefTagSeen = Seconds.of(0);
     private LEDSubsystem m_LedSubsystem;
@@ -58,6 +58,7 @@ public final class TrigVisionSubsystem extends SubsystemBase {
     }
 
     LEDPattern seeingColor = LEDPattern.solid(new Color(255, 0, 255));
+    LEDPattern seeingColorReef = LEDPattern.solid(new Color(255, 255, 255));
     LEDPattern alignedColor = LEDPattern.solid(new Color(0, 255, 0));
     // LEDPattern notSeeingColor = LEDPattern.rainbow(255, 128);
 
@@ -69,9 +70,17 @@ public final class TrigVisionSubsystem extends SubsystemBase {
 
     UltraStructLog<Translation2d> bargePosePublisher = new UltraStructLog<>("Vision/Barge Offset", Translation2d.struct);
     UltraStructLog<Pose2d> reefPosePublisher = new UltraStructLog<>("Vision/Reef Offset", Pose2d.struct);
+
+    public enum LEDState {
+        Aligned,
+        Barge,
+        Reef,
+        Alliance,
+    }
     
     @Override
     public void periodic() {
+        LEDState ledState = LEDState.Alliance;
         Optional<Translation2d> bargePose = getBargePose();
         Optional<Translation2d> reefPose = getReefPose();
 
@@ -86,32 +95,47 @@ public final class TrigVisionSubsystem extends SubsystemBase {
 
         SmartDashboard.putNumber("Vision Aligned Timestamp", Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) * 1e6);
 
-        if (bargeCamera.hasTarget()) {
-            if (!isAligned()) {
-                this.m_LedSubsystem.applyPatternOnce(seeingColor);
-            } else {
-                this.m_LedSubsystem.applyPatternOnce(alignedColor);
-            }
-
-            timeSinceBargeTagSeen = Seconds.of(0);
-            lastSeenBargeTag = Optional.of(bargeCamera.getInfo());
-        } else if (reefCamera.hasTarget()) {
-            this.m_LedSubsystem.applyPatternOnce(seeingColor);
+        if (reefCamera.hasTarget() && tagIsInArray(reefCamera.getTargetID(), AutoConstants.reefTagIDs)) {
+            ledState = LEDState.Reef;
 
             timeSinceReefTagSeen = Seconds.of(0);
             lastSeenReefTag = Optional.of(reefCamera.getInfo());
         } else {
-            if (timeSinceBargeTagSeen.gt(AutoConstants.lastPoseTimeout) && lastSeenBargeTag.isPresent()) {
-                    lastSeenBargeTag = Optional.empty();
-            }
-
             if (timeSinceReefTagSeen.gt(AutoConstants.lastPoseTimeout) && lastSeenReefTag.isPresent()) {
                 lastSeenReefTag = Optional.empty();
             }
-            
-            timeSinceBargeTagSeen = timeSinceBargeTagSeen.plus(Milliseconds.of(20));
             timeSinceReefTagSeen = timeSinceReefTagSeen.plus(Milliseconds.of(20));
-            this.m_LedSubsystem.applyPatternOnce(this.m_LedSubsystem.allianceColorGetter());
+        }
+
+        if (bargeCamera.hasTarget() && tagIsInArray(bargeCamera.getTargetID(), AutoConstants.bargeTagIDs)) {
+            ledState = LEDState.Barge;
+
+            timeSinceBargeTagSeen = Seconds.of(0);
+            lastSeenBargeTag = Optional.of(bargeCamera.getInfo());
+        } else {
+            if (timeSinceBargeTagSeen.gt(AutoConstants.lastPoseTimeout) && lastSeenBargeTag.isPresent()) {
+                lastSeenBargeTag = Optional.empty();
+            }
+            timeSinceBargeTagSeen = timeSinceBargeTagSeen.plus(Milliseconds.of(20));
+        }
+
+        if (isAligned()) {
+            ledState = LEDState.Aligned;
+        }
+
+        switch (ledState) {
+            case Aligned:
+                this.m_LedSubsystem.applyPatternOnce(alignedColor);
+                break;
+            case Barge:
+                this.m_LedSubsystem.applyPatternOnce(seeingColor);
+                break;
+            case Reef:
+                this.m_LedSubsystem.applyPatternOnce(seeingColorReef);
+                break;
+            default:
+            case Alliance:
+                this.m_LedSubsystem.applyPatternOnce(this.m_LedSubsystem.allianceColorGetter());
         }
     }
 
@@ -128,9 +152,9 @@ public final class TrigVisionSubsystem extends SubsystemBase {
         return Optional.of(tid);
     }
 
-    private boolean tagIsInArray(TagInfo tag, int[] arr) {
+    private boolean tagIsInArray(long tag, int[] arr) {
         for (int i = 0; i < arr.length; i++) {
-            if (tag.tid == arr[i])
+            if (tag == arr[i])
                 return true;
         }
         return false;
@@ -139,13 +163,13 @@ public final class TrigVisionSubsystem extends SubsystemBase {
     public boolean tagIsBarge() {
         if (lastSeenBargeTag.isEmpty()) return false;
 
-        return tagIsInArray(lastSeenBargeTag.get(), AutoConstants.bargeTagIDs);
+        return tagIsInArray(lastSeenBargeTag.get().tid, AutoConstants.bargeTagIDs);
     }
 
     public boolean tagIsReef() {
         if (lastSeenReefTag.isEmpty()) return false;
 
-        return tagIsInArray(lastSeenReefTag.get(), AutoConstants.reefTagIDs);
+        return tagIsInArray(lastSeenReefTag.get().tid, AutoConstants.reefTagIDs);
     }
 
     public Optional<Translation2d> getBargePose() {

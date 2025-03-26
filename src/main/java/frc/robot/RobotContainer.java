@@ -159,7 +159,8 @@ public final class RobotContainer {
     autoChooser.addOption("L1", CoralAutoBuilder.build(AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     autoChooser.addOption("L1 + Intake Algae", CoralAutoBuilder.build(AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     autoChooser.addOption("L1 + Shoot Algae", CoralAutoBuilder.build(AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-
+    autoChooser.addOption("Intake Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("1 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
   }
 
   private void initSubsystems() {
@@ -224,11 +225,11 @@ public final class RobotContainer {
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
     m_Controller.rightBumper().whileTrue(
-      new ConditionalCommand(
-        new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }),
-        new AlignReef(m_TrigVision, drivetrain, distance, () -> { return getFieldCentricDriveReq().VelocityX; }, false),
-        m_TrigVision::canSeeBargeTag
-      )
+      new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; })
+    );
+    
+    m_Controller.a().whileTrue(
+      new AlignReef(m_TrigVision, drivetrain, distance, () -> { return -getFieldCentricDriveReq().VelocityX; }, false)
     );
     
     m_Controller.y().whileTrue(drivetrain.applyRequest(() -> brake));

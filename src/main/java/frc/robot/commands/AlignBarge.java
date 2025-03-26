@@ -58,6 +58,7 @@ public class AlignBarge extends Command {
         addRequirements(drivetrain);
 
         driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
+        driveRequest.HeadingController.setTolerance(0.026);
     }
 
     private double sign = 1;
@@ -68,6 +69,7 @@ public class AlignBarge extends Command {
         double pidOutput = 0;
         if (!translationOptional.isEmpty()) {
             double distance = translationOptional.get().getMeasureX().in(Meters);
+            SmartDashboard.putNumber("distance x", distance);
             pidOutput = -profiledPIDController.calculate(distance, AutoConstants.distanceFromBarge.in(Meters));
         }
 

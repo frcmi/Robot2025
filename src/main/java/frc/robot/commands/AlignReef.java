@@ -55,9 +55,15 @@ public class AlignReef extends Command {
         PIDControllerY.setTolerance(0.025);
     }
 
+    int tagID = 18;
+
     @Override
     public void execute() {
         Optional<Translation2d> translationOptional = vision.getReefPose();
+        
+        if (vision.lastSeenReefTag.isPresent()) {
+            tagID = vision.lastSeenReefTag.get().tid;
+        }
         
         double pidOutputX = xSupplier.getAsDouble();
         double pidOutputY = 0;
@@ -84,9 +90,36 @@ public class AlignReef extends Command {
             }
         }
 
-        driveRequest.withVelocityX(Meters.of(pidOutputX).per(Second));
-        driveRequest.withVelocityY(Meters.of(pidOutputY).per(Second));
-        driveRequest.withTargetDirection(Rotation2d.fromDegrees(90));
+        Rotation2d angleOffset = Rotation2d.kZero;
+
+        switch (tagID) {
+            case 17:
+            case 11:
+                angleOffset = Rotation2d.fromDegrees(-120);
+                break;
+            case 18:
+            case 10:
+                angleOffset = Rotation2d.k180deg;
+                break;
+            case 19:
+            case 9:
+                angleOffset = Rotation2d.fromDegrees(120);
+                break;
+            case 20:
+            case 8:
+                angleOffset = Rotation2d.fromDegrees(60);
+                break;
+            case 22:
+            case 6:
+                angleOffset = Rotation2d.fromDegrees(-60);
+                break;
+        }
+
+        Translation2d translation2d = new Translation2d(pidOutputX, pidOutputY).rotateBy(Rotation2d.kZero.plus(angleOffset));
+
+        driveRequest.withVelocityX(Meters.of(translation2d.getX()).per(Second));
+        driveRequest.withVelocityY(Meters.of(translation2d.getY()).per(Second));
+        driveRequest.withTargetDirection(Rotation2d.fromDegrees(90).plus(angleOffset));
 
         drivetrain.setControl(driveRequest);
     }

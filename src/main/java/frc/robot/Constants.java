@@ -47,10 +47,10 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static int[] bargeTagIDs = { 4, 5, 14, 15, 2, 7 };
-        public static int[] reefTagIDs = { 21 }; // TODO: icbf to look at it rn
+        public static int[] bargeTagIDs = { 4, 5, 14, 15 };
+        public static int[] reefTagIDs = { 17, 18, 19, 20, 21, 22 };
         public static final Angle cameraAngle = Degrees.of(60);
-        public static final Distance distanceFromBarge = Inches.of(13.0);
+        public static final Distance distanceFromBarge = Inches.of(18.0);
         public static final Distance distanceFromReef = Meters.of(0.3);
         public static final Distance sidewaysDistanceFromReef = Meters.of(0.12);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
@@ -66,8 +66,8 @@ public final class Constants {
             public static final double kTranslationXI = 0.0;
             public static final double kTranslationXD = 0.0;
     
-            public static final double kTranslationYP = 7.5;
-            public static final double kTranslationYI = 0.5;
+            public static final double kTranslationYP = 6.0;
+            public static final double kTranslationYI = 0.0;
             public static final double kTranslationYD = 0.0;
         }
         public static class Alpha {
