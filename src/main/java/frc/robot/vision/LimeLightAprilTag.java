@@ -10,14 +10,23 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants.AutoConstants;
 
 public class LimeLightAprilTag {
-    // Get the LimeLight NetworkTable. Adjust the table name if necessary.
-    private final NetworkTable limeTable = NetworkTableInstance.getDefault().getTable("limelight-barge");
-    // Camera and target configuration (modify these to match your setup)
-    private final double cameraHeightMeters = Inches.of(10.5).in(Meters);   // Height of the camera off the ground in meters
-    private final double targetHeightMeters = Inches.of(73).in(Meters);     // Height of the AprilTag on the field in meters
-    private final double cameraAngleDegrees = AutoConstants.cameraAngle.in(Degrees);    // Angle at which the camera is mounted
-    // 3, 4.75, 10.5
+    public class TagInfo {
+        public int tid;
+        public double tx;
+        public double ty;
 
+        public TagInfo(int id, double tx, double ty) {
+            this.tid = id;
+            this.tx = tx;
+            this.ty = ty;
+        }
+    }
+    // Get the LimeLight NetworkTable. Adjust the table name if necessary.
+    private final NetworkTable limeTable;
+    // Camera and target configuration (modify these to match your setup)
+    public LimeLightAprilTag(String limelightName) {
+        limeTable = NetworkTableInstance.getDefault().getTable(limelightName);
+    }
     /**
 Checks if a valid target is detected.
 @return true if target is detected; false otherwise.
@@ -53,40 +62,8 @@ Gets the target id (tod).
     public long getTargetID() {
         return limeTable.getEntry("tid").getInteger(-1);
     }
-    /**
-Computes an approximate distance to the target using the vertical offset.
-Uses the formula:
-   distance = (targetHeight - cameraHeight) / tan(cameraAngle + ty)
-Make sure to convert angles to radians.
-     *
-@return Estimated distance in meters.
-     */
-    public double getLateralDistanceMeters() {
-        double ty = getVerticalOffset();
-        // Combine the mounting angle with the offset
-        double angleToTargetRadians = Math.toRadians(cameraAngleDegrees + ty);
-        return (targetHeightMeters - cameraHeightMeters) / Math.tan(angleToTargetRadians);
-    }
-    public double getVerticalDistanceMeters() {
-        double tx = getHorizontalOffset();
-        double verticalDist = getLateralDistanceMeters();
 
-        return verticalDist * Math.tan(Degrees.of(tx).in(Radians));
-    }
-    /**
-Example method to update and print the current LimeLight data.
-     */
-    public void update() {
-        if (hasTarget()) {
-            double tx = getHorizontalOffset();
-            double ty = getVerticalOffset();
-            double distance = getVerticalDistanceMeters();
-            System.out.println("Target Detected!");
-            System.out.println("Horizontal Offset (tx): " + tx + " degrees");
-            System.out.println("Vertical Offset (ty): " + ty + " degrees");
-            System.out.println("Estimated Distance: " + distance + " meters");
-        } else {
-            System.out.println("No target detected.");
-        }
+    public TagInfo getInfo() {
+        return new TagInfo((int)getTargetID(), getHorizontalOffset(), getVerticalOffset());
     }
 }

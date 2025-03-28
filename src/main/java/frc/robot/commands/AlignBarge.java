@@ -13,6 +13,10 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -42,15 +46,10 @@ public class AlignBarge extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleSupplier horizontalInputSupplier;
 
-    private final ProfiledPIDController profiledPIDController = new ProfiledPIDController(AutoConstants.Turbo.kTranslationP, AutoConstants.Turbo.kTranslationI, AutoConstants.Turbo.kTranslationD, new TrapezoidProfile.Constraints(AutoConstants.MaxSpeed, AutoConstants.MaxAcceleration));
+    private final ProfiledPIDController profiledPIDController = new ProfiledPIDController(AutoConstants.Turbo.kTranslationXP, AutoConstants.Turbo.kTranslationXI, AutoConstants.Turbo.kTranslationXD, new TrapezoidProfile.Constraints(100, 10));
 
     private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
-
-    private final UltraDoubleLog logger = new UltraDoubleLog("Auto/Barge Auto Align Pid Output");
-    private DoublePublisher posePublisher = NetworkTableInstance.getDefault()
-        .getDoubleTopic("Auto/Distance To Barge").publish();
-    private DoublePublisher setPosePublisher = NetworkTableInstance.getDefault()
-        .getDoubleTopic("Auto/Set Distance").publish();
+    
     public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain, DoubleSupplier horizontalInputSupplier) {
         this.vision = vision;
         this.drivetrain = drivetrain;
@@ -59,22 +58,22 @@ public class AlignBarge extends Command {
         addRequirements(drivetrain);
 
         driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
+        driveRequest.HeadingController.setTolerance(0.026);
     }
 
     private double sign = 1;
 
     @Override
     public void execute() {
-        Optional<Distance> distanceOptional = vision.getLateralDistanceToBarge();
+        Optional<Translation2d> translationOptional = vision.getBargePose();
         double pidOutput = 0;
-        if (!distanceOptional.isEmpty()) {
-            pidOutput = -profiledPIDController.calculate(distanceOptional.get().in(Meters), AutoConstants.targetDistanceFromBarge.in(Meters));
-            posePublisher.set(distanceOptional.get().in(Meters));
-            setPosePublisher.set(AutoConstants.targetDistanceFromBarge.in(Meters));
+        if (!translationOptional.isEmpty()) {
+            double distance = translationOptional.get().getMeasureX().in(Meters);
+            SmartDashboard.putNumber("distance x", distance);
+            pidOutput = -profiledPIDController.calculate(distance, AutoConstants.distanceFromBarge.in(Meters));
         }
-        logger.update(pidOutput);
 
-        Optional<Long> tagID = vision.getTagID();
+        Optional<Long> tagID = vision.getBargeTagID();
         if (tagID.isPresent()) {
             if (tagID.get() == 4 || tagID.get() == 5) {
                 sign = -1;
@@ -83,13 +82,9 @@ public class AlignBarge extends Command {
             }
         }
 
-        // SmartDashboard.putNumber("Auto Align Error", profiledPIDController.getError());
-        // SmartDashboard.putBoolean("Auto Align Close Enough", translationPIDController.atSetpoint());
-
         if (profiledPIDController.atGoal()) {
             vision.isAlignedTimestamp = RobotController.getFPGATime();
         }
-        
 
         driveRequest.withVelocityX(Meters.of(sign * pidOutput).per(Second));
         driveRequest.withVelocityY(horizontalInputSupplier.getAsDouble());

@@ -4,14 +4,10 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.revrobotics.Rev2mDistanceSensor;
-import com.revrobotics.Rev2mDistanceSensor.Port;
-import com.revrobotics.Rev2mDistanceSensor.RangeProfile;
-import com.revrobotics.Rev2mDistanceSensor.Unit;
 import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -108,7 +104,7 @@ public class CoralAutoBuilder {
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle));
         
         Command shootBarge = 
-            swerve.applyRequest(() -> finalDrive).until(vision::canSeeTag)
+            swerve.applyRequest(() -> finalDrive).until(vision::canSeeBargeTag)
             .andThen(new AlignBarge(vision, swerve, () -> 0).until(vision::isAligned))
             .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
             .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))

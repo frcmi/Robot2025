@@ -47,8 +47,12 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static final Angle cameraAngle = Degrees.of(75);
-        public static final Distance targetDistanceFromBarge = Inches.of(7.0);
+        public static int[] bargeTagIDs = { 1, 2, 4, 5, 14, 15 };
+        public static int[] reefTagIDs = { 17, 18, 19, 20, 21, 22 };
+        public static final Angle cameraAngle = Degrees.of(60);
+        public static final Distance distanceFromBarge = Inches.of(18.0);
+        public static final Distance distanceFromReef = Meters.of(0.3);
+        public static final Distance sidewaysDistanceFromReef = Meters.of(0.12);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
         public static final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond);
         public static double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -58,9 +62,13 @@ public final class Constants {
             public static final double kRotationI = 0.0;
             public static final double kRotationD = 0.0;
     
-            public static final double kTranslationP = 2.1;
-            public static final double kTranslationI = 0.0;
-            public static final double kTranslationD = 0.0;
+            public static final double kTranslationXP = 2.1;
+            public static final double kTranslationXI = 0.0;
+            public static final double kTranslationXD = 0.0;
+    
+            public static final double kTranslationYP = 6.0;
+            public static final double kTranslationYI = 0.0;
+            public static final double kTranslationYD = 0.0;
         }
         public static class Alpha {
             public static final double kdP = 1.0;
@@ -182,7 +190,7 @@ public final class Constants {
         // TODO: figure out real conversion and heights
         public static final double inchesPerRotation = 20;
 
-        public static final double rotationsPerMeter = 2; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
+        public static final double rotationsPerMeter = 1; // ROTATIONS OF OUTPUT GEAR, NOT MOTOR 
         public static final double gearRatio = 8.0/1.0;
         public static final double elevatorInertia = 0.001; // In Kg Meters^2 
         public static final double minElevatorHeight = 0.2; // FOR SIM!!!
