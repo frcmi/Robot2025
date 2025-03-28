@@ -47,7 +47,7 @@ public final class Constants {
     }
 
     public static class AutoConstants {
-        public static int[] bargeTagIDs = { 4, 5, 14, 15 };
+        public static int[] bargeTagIDs = { 1, 2, 4, 5, 14, 15 };
         public static int[] reefTagIDs = { 17, 18, 19, 20, 21, 22 };
         public static final Angle cameraAngle = Degrees.of(60);
         public static final Distance distanceFromBarge = Inches.of(18.0);

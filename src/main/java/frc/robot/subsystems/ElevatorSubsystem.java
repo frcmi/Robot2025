@@ -158,9 +158,13 @@ public class ElevatorSubsystem extends SubsystemBase {
     StatusSignal<Double> pidError = elevatorMotorLeft.getClosedLoopError();
 
     public boolean closeEnough() {
+        return closeEnough(1.0);
+    }
+
+    public boolean closeEnough(double enough) {
         StatusSignal.refreshAll(pidError);
 
-        return Math.abs(pidError.getValueAsDouble()) < 1.0;
+        return Math.abs(pidError.getValueAsDouble()) < enough;
     }
 
     public void setFollowerMode() {

@@ -73,7 +73,7 @@ public class AlignBarge extends Command {
             pidOutput = -profiledPIDController.calculate(distance, AutoConstants.distanceFromBarge.in(Meters));
         }
 
-        Optional<Long> tagID = vision.getTagID();
+        Optional<Long> tagID = vision.getBargeTagID();
         if (tagID.isPresent()) {
             if (tagID.get() == 4 || tagID.get() == 5) {
                 sign = -1;

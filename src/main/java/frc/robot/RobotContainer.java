@@ -160,7 +160,8 @@ public final class RobotContainer {
     autoChooser.addOption("L1 + Intake Algae", CoralAutoBuilder.build(AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     autoChooser.addOption("L1 + Shoot Algae", CoralAutoBuilder.build(AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     autoChooser.addOption("Intake Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-    autoChooser.addOption("1 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("1.5 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("2 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
   }
 
   private void initSubsystems() {

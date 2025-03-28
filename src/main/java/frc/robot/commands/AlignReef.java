@@ -48,11 +48,15 @@ public class AlignReef extends Command {
         driveRequest.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
     }
 
+    public double timestampStart = 0;
+
     @Override
     public void initialize() {
         profiledPIDControllerX.setGoal(AutoConstants.distanceFromReef.in(Meters));
         PIDControllerY.setSetpoint(AutoConstants.sidewaysDistanceFromReef.in(Meters));
         PIDControllerY.setTolerance(0.025);
+
+        timestampStart = RobotController.getFPGATime();
     }
 
     int tagID = 18;
@@ -81,7 +85,7 @@ public class AlignReef extends Command {
         if (PIDControllerY.atSetpoint()) { // && profiledPIDControllerX.atGoal()
             vision.isAlignedTimestamp = RobotController.getFPGATime();
             double distanceMeasurement = distance.getRange();
-            if (autoX) {
+            if (autoX && Math.abs(RobotController.getFPGATime() - timestampStart) / 1e6 > 1.0) {
                 if (distanceMeasurement != -1) {
                     pidOutputX = profiledPIDControllerX.calculate(Inches.of(distanceMeasurement).in(Meters));
                 } else {

@@ -93,7 +93,7 @@ public final class TrigVisionSubsystem extends SubsystemBase {
             reefPosePublisher.update(new Pose2d(e.getX(), e.getY(), Rotation2d.kZero));
         }
 
-        SmartDashboard.putNumber("Vision Aligned Timestamp", Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) * 1e6);
+        SmartDashboard.putNumber("Vision Aligned Timestamp", Math.abs(RobotController.getFPGATime() - isAlignedTimestamp) / 1e6);
 
         if (reefCamera.hasTarget() && tagIsInArray(reefCamera.getTargetID(), AutoConstants.reefTagIDs)) {
             ledState = LEDState.Reef;
@@ -143,8 +143,17 @@ public final class TrigVisionSubsystem extends SubsystemBase {
         return runOnce(() -> { lastSeenBargeTag = Optional.empty(); lastSeenReefTag = Optional.empty(); });
     }
 
-    public Optional<Long> getTagID() {
+    public Optional<Long> getBargeTagID() {
         long tid = bargeCamera.getTargetID();
+        if (tid == -1) {
+            return Optional.empty();
+        }
+
+        return Optional.of(tid);
+    }
+
+    public Optional<Long> getReefTagID() {
+        long tid = reefCamera.getTargetID();
         if (tid == -1) {
             return Optional.empty();
         }
