@@ -137,8 +137,8 @@ public final class Constants {
             public static final double kS = 0.26;
             public static final double kG = 0.505; // 0.4355
 
-            public static final double offset = 1 - 0.5940384898509623;
-            public static final double discontinuity = -0.3;
+            public static final double offset = -0.233154296875;
+            public static final double discontinuity = 0.75;
         }
     }
 

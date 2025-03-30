@@ -7,6 +7,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Rotations;
 
+import java.util.Optional;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -230,7 +232,7 @@ public final class RobotContainer {
     );
     
     m_Controller.a().whileTrue(
-      new AlignReef(m_TrigVision, drivetrain, distance, () -> { return -getFieldCentricDriveReq().VelocityX; }, false)
+      new AlignReef(m_TrigVision, drivetrain, distance, () -> { return -getFieldCentricDriveReq().VelocityX; }, false, Optional.empty())
     );
     
     m_Controller.y().whileTrue(drivetrain.applyRequest(() -> brake));

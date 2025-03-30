@@ -13,6 +13,7 @@ import com.revrobotics.Rev2mDistanceSensor;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -32,11 +33,12 @@ public class AlignReef extends Command {
     private final DoubleSupplier xSupplier;
     private final Rev2mDistanceSensor distance;
     private final boolean autoX;
-
+    private final Debouncer isAlignedDebouncer = new Debouncer(0.25);
     private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
-
-    public AlignReef(TrigVisionSubsystem vision, CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distanceSensor, DoubleSupplier xDoubleSupplier, boolean autoX) {
+    private Optional<Integer> limitTag = Optional.empty();
+    public AlignReef(TrigVisionSubsystem vision, CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distanceSensor, DoubleSupplier xDoubleSupplier, boolean autoX, Optional<Integer> limitTag) {
         this.autoX = autoX;
+        this.limitTag = limitTag;
         distance = distanceSensor;
         xSupplier = xDoubleSupplier;
 
@@ -57,16 +59,26 @@ public class AlignReef extends Command {
         PIDControllerY.setTolerance(0.025);
 
         timestampStart = RobotController.getFPGATime();
+
+        isAlignedForAuto = false;
+        isAlignedDebouncer.calculate(false);
     }
 
     int tagID = 18;
+
+    boolean isAlignedForAuto = false;
 
     @Override
     public void execute() {
         Optional<Translation2d> translationOptional = vision.getReefPose();
         
         if (vision.lastSeenReefTag.isPresent()) {
-            tagID = vision.lastSeenReefTag.get().tid;
+            int tmpTag = vision.lastSeenReefTag.get().tid;
+            if (limitTag.orElseGet(() -> tmpTag) == tmpTag) {
+                tagID = tmpTag;
+            } else {
+                translationOptional = Optional.empty();
+            }
         }
         
         double pidOutputX = xSupplier.getAsDouble();
@@ -82,10 +94,13 @@ public class AlignReef extends Command {
 
         SmartDashboard.putBoolean("Y at setpoint", PIDControllerY.atSetpoint());
 
-        if (PIDControllerY.atSetpoint()) { // && profiledPIDControllerX.atGoal()
+        double timeSinceStart = Math.abs(RobotController.getFPGATime() - timestampStart) / 1e6;
+
+        if (isAlignedDebouncer.calculate(PIDControllerY.atSetpoint()) || timeSinceStart > 2.5) { // && profiledPIDControllerX.atGoal()
             vision.isAlignedTimestamp = RobotController.getFPGATime();
             double distanceMeasurement = distance.getRange();
-            if (autoX && Math.abs(RobotController.getFPGATime() - timestampStart) / 1e6 > 1.0) {
+            if (autoX && timeSinceStart > 0.5) {
+                isAlignedForAuto = true;
                 if (distanceMeasurement != -1) {
                     pidOutputX = profiledPIDControllerX.calculate(Inches.of(distanceMeasurement).in(Meters));
                 } else {

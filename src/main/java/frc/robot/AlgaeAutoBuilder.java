@@ -12,6 +12,8 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 
+import java.util.Optional;
+
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -36,13 +38,13 @@ import frc.robot.subsystems.ClawSubsystemTurbo;
 public class AlgaeAutoBuilder {
     private static final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective);
     private static final SwerveRequest.FieldCentric driveTwoElectricBoogaloo = new SwerveRequest.FieldCentric().withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective);
-    private static final SwerveRequest.FieldCentricFacingAngle approachSecondTag = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective).withTargetDirection(Rotation2d.fromDegrees(150)).withVelocityX(-1.8).withVelocityY(0.5);
-    private static final SwerveRequest.RobotCentric leaveSecondTag = new SwerveRequest.RobotCentric().withVelocityY(-4);
+    private static final SwerveRequest.FieldCentricFacingAngle approachSecondTag = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective).withTargetDirection(Rotation2d.fromDegrees(150)).withVelocityX(-1.8).withVelocityY(0.7);
+    private static final SwerveRequest.RobotCentric leaveSecondTag = new SwerveRequest.RobotCentric().withVelocityY(-5);
 
     private static final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private static final SwerveRequest.FieldCentricFacingAngle finalDrive = new SwerveRequest.FieldCentricFacingAngle()
       .withTargetDirection(Rotation2d.fromDegrees(-90))
-      .withVelocityY(2.15)
+      .withVelocityY(3)
       .withVelocityX(0.3)
       .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective);
     private static final SwerveRequest.FieldCentricFacingAngle finalAlign = new SwerveRequest.FieldCentricFacingAngle()
@@ -139,16 +141,29 @@ public class AlgaeAutoBuilder {
         Command half = new WaitCommand(0.8).andThen(swerve.applyRequest(() -> approachSecondTag).until(() -> vision.getReefTagID().orElseGet(() -> -1L) == 20 ));
 
         Command base2 = (Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", true))
-            .andThen(new AlignReef(vision, swerve, distance, () -> 0, true))
+            .andThen(new AlignReef(vision, swerve, distance, () -> 0, true, Optional.of(20)))
             .alongWith(scuffedElevator(elevator, ElevatorConstants.reefTwoHeight).andThen(pivot.scuffedPivot(PivotConstants.reefTwoAngle)))
             .alongWith(claw.intake()).until(() -> !claw.beambreak.get()));
 
-        Command shootCommand2 = swerve.applyRequest(() -> leaveSecondTag).withTimeout(0.2)
+        Command shootCommand2 = (scuffedElevator(elevator, ElevatorConstants.stowHeight)
+                .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
+            )
+            .andThen(swerve.applyRequest(() -> leaveSecondTag).withTimeout(0.2))
             .andThen(swerve.applyRequest(() -> finalDrive
-                .withVelocityY(0.2)
-                .withVelocityX(2.5))).until(vision::canSeeBargeTag);
+                .withVelocityY(0.7)
+                .withVelocityX(2.5))).until(vision::canSeeBargeTag)
+            // barge shot
+            .andThen(new AlignBarge(vision, swerve, () -> 0).until(vision::isAligned))
+                .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
+                .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))
+                .andThen(new WaitCommand(3.0).until(() -> pivot.closeEnough() && elevator.closeEnough(2.5)))
+                .andThen(claw.shoot().withTimeout(0.25).andThen(claw.stop().withTimeout(0.1)))
+                .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
+                .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight))
+                .andThen(new WaitCommand(0.5))
+                .andThen(swerve.applyRequest(() -> drive.withVelocityX(-2).withVelocityY(0)).withTimeout(0.7));
 
-        Command end = stow.asProxy().andThen(Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", false)));
+        Command end = (stow.asProxy()).andThen(Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", false)));
 
         switch (auto) {
             case One:
