@@ -158,10 +158,11 @@ public final class RobotContainer {
   private void initManualAutos() {
     autoChooser.setDefaultOption("None", Commands.none());
     autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(getTravelDir())).withTimeout(2));
-    autoChooser.addOption("L1", CoralAutoBuilder.build(AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-    autoChooser.addOption("L1 + Intake Algae", CoralAutoBuilder.build(AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-    autoChooser.addOption("L1 + Shoot Algae", CoralAutoBuilder.build(AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-    autoChooser.addOption("Intake Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    // autoChooser.addOption("L1", CoralAutoBuilder.build(AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    // autoChooser.addOption("L1 + Intake Algae", CoralAutoBuilder.build(AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    // autoChooser.addOption("L1 + Shoot Algae", CoralAutoBuilder.build(AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("L1", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.Half, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("1 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     autoChooser.addOption("1.5 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     autoChooser.addOption("2 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
   }

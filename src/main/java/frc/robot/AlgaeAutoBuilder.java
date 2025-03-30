@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -51,11 +52,16 @@ public class AlgaeAutoBuilder {
       .withTargetDirection(Rotation2d.fromDegrees(90))
       .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective);
     
+    
+
+    private static final SwerveRequest.FieldCentricFacingAngle driveReq = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective).withTargetDirection(Rotation2d.fromDegrees(90));
+    
     static {
         finalDrive.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
         approachSecondTag.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
+        driveReq.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
     }
-
+    
     public static SwerveRequest getRequest(Rev2mDistanceSensor distance, double distanceTarget, double dir, Translation2d movement) {
         if (distance.getRange() != -1 && dir != 0) {
             if ((dir > 0 && distance.getRange() < distanceTarget) || (dir < 0 && distance.getRange() > distanceTarget)) {
@@ -67,7 +73,7 @@ public class AlgaeAutoBuilder {
             dir = 1;
         }
         
-        return drive
+        return driveReq
             .withVelocityY(dir * movement.getY())
             .withVelocityX(dir * movement.getX());
     }
@@ -85,6 +91,7 @@ public class AlgaeAutoBuilder {
     }
 
     public enum AutoType {
+        Half,
         One,
         OneAndHalf,
         Two,
@@ -97,9 +104,9 @@ public class AlgaeAutoBuilder {
 
     private static final ProfiledPIDController profiledPIDControllerX = new ProfiledPIDController(AutoConstants.Turbo.kTranslationXP, AutoConstants.Turbo.kTranslationXI, AutoConstants.Turbo.kTranslationXD, new TrapezoidProfile.Constraints(10, 1));
 
-    public static Command firstAlign(CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distance) {
-        profiledPIDControllerX.setGoal(AutoConstants.distanceFromReef.in(Meters));
-        return swerve.applyRequest(() -> {
+    public static Command firstAlign(CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distance, Distance goal) {
+        return Commands.runOnce(() -> { profiledPIDControllerX.setGoal(goal.in(Meters)); } ) //  profiledPIDControllerX.reset(2);
+            .andThen(swerve.applyRequest(() -> {
                 double distanceMeasurement = distance.getRange();
                 double outputX = 0;
                 if (distanceMeasurement != -1) {
@@ -108,7 +115,7 @@ public class AlgaeAutoBuilder {
                     outputX = profiledPIDControllerX.calculate(2);
                 }
                 return firstAlign.withVelocityX(outputX);
-            }).until(profiledPIDControllerX::atGoal);
+            })).until(profiledPIDControllerX::atGoal);
             
     }
 
@@ -116,10 +123,29 @@ public class AlgaeAutoBuilder {
         Command stow = scuffedElevator(elevator, ElevatorConstants.stowHeight)
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle));
 
+        Command baseCoral = Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", true))
+            .andThen(firstAlign(swerve, distance, AutoConstants.distanceFromReef)
+                .alongWith(scuffedElevator(elevator, 4.5).andThen(pivot.scuffedPivot(Rotations.of(0.075))))
+            )
+            .andThen(claw.runMotor(new DutyCycleOut(-0.5)).withTimeout(0.2).andThen(claw.stop().withTimeout(0.1)))
+            .andThen(
+                (new WaitCommand(0.5)
+                    .andThen(
+                        scuffedElevator(elevator,ElevatorConstants.reefOneHeight)
+                        .andThen(pivot.scuffedPivot(PivotConstants.reefOneAngle))
+                    )
+                    .alongWith(driveCommand(distance, swerve, 17, -1.5).until(() -> distance.getRange() > 17)))
+            )
+            .andThen(firstAlign(swerve, distance, AutoConstants.distanceFromReef)
+                .alongWith(claw.intake()).until(() -> !claw.beambreak.get())
+            )
+            .andThen(stow.asProxy());
+        
+
         Command base = Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", true))
-            .andThen(firstAlign(swerve, distance))
-            .alongWith(scuffedElevator(elevator, ElevatorConstants.reefOneHeight).andThen(pivot.scuffedPivot(PivotConstants.reefOneAngle)))
-            .alongWith(claw.intake()).until(() -> !claw.beambreak.get())
+            .andThen(firstAlign(swerve, distance, AutoConstants.distanceFromReef)
+                .alongWith(scuffedElevator(elevator, ElevatorConstants.reefOneHeight).andThen(pivot.scuffedPivot(PivotConstants.reefOneAngle)))
+            .alongWith(claw.intake()).until(() -> !claw.beambreak.get()))
             .andThen(stow);
         
         Command shootBarge =
@@ -166,10 +192,12 @@ public class AlgaeAutoBuilder {
         Command end = (stow.asProxy()).andThen(Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", false)));
 
         switch (auto) {
+            case Half:
+                return baseCoral.asProxy();
             case One:
-                return base.andThen(shootBarge).andThen(end.asProxy()); //.andThen(stow);
+                return baseCoral.andThen(shootBarge).andThen(swerve.applyRequest(() -> drive.withVelocityX(-2).withVelocityY(0)).withTimeout(0.7)).andThen(end.asProxy()); //.andThen(stow);
             case OneAndHalf:
-                return shootCommand2.asProxy(); //.andThen(half);
+                return baseCoral.andThen(shootBarge).andThen(half).andThen(base2).andThen(end.asProxy()); //.andThen(half);
             case Two:
             default:
                 return base.andThen(shootBarge).andThen(half).andThen(base2).andThen(shootCommand2.asProxy()).andThen(end.asProxy());
