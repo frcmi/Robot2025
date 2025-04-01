@@ -102,7 +102,7 @@ public class AlgaeAutoBuilder {
         firstAlign.HeadingController.setPID(AutoConstants.Turbo.kRotationP, AutoConstants.Turbo.kRotationI, AutoConstants.Turbo.kRotationD);
     }
 
-    private static final ProfiledPIDController profiledPIDControllerX = new ProfiledPIDController(AutoConstants.Turbo.kTranslationXP, AutoConstants.Turbo.kTranslationXI, AutoConstants.Turbo.kTranslationXD, new TrapezoidProfile.Constraints(10, 1));
+    private static final ProfiledPIDController profiledPIDControllerX = new ProfiledPIDController(AutoConstants.Turbo.kTranslationXP, AutoConstants.Turbo.kTranslationXI, AutoConstants.Turbo.kTranslationXD, new TrapezoidProfile.Constraints(5, 1));
 
     public static Command firstAlign(CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distance, Distance goal) {
         return Commands.runOnce(() -> { profiledPIDControllerX.setGoal(goal.in(Meters)); } ) //  profiledPIDControllerX.reset(2);
@@ -119,25 +119,39 @@ public class AlgaeAutoBuilder {
             
     }
 
+    private static final ProfiledPIDController coralProfiledPIDControllerX = new ProfiledPIDController(0.7, AutoConstants.Turbo.kTranslationXI, AutoConstants.Turbo.kTranslationXD, new TrapezoidProfile.Constraints(5, 1));
+
+    public static Command coralAlign(CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distance, Distance goal) {
+        coralProfiledPIDControllerX.setTolerance(0.15);
+        return Commands.runOnce(() -> { coralProfiledPIDControllerX.setGoal(goal.in(Meters)); } ) //  profiledPIDControllerX.reset(2);
+            .andThen(swerve.applyRequest(() -> {
+                double distanceMeasurement = distance.getRange();
+                double outputX = 0;
+                if (distanceMeasurement != -1) {
+                    outputX = coralProfiledPIDControllerX.calculate(Inches.of(distanceMeasurement).in(Meters));
+                } else {
+                    outputX = coralProfiledPIDControllerX.calculate(2);
+                }
+                return firstAlign.withVelocityX(outputX);
+            })).until(coralProfiledPIDControllerX::atGoal);
+            
+    }
+
     public static Command build(AutoType auto, Rev2mDistanceSensor distance, CommandSwerveDrivetrain swerve, PivotSubsystem pivot, ElevatorSubsystem elevator, ClawSubsystemTurbo claw, TrigVisionSubsystem vision) {
         Command stow = scuffedElevator(elevator, ElevatorConstants.stowHeight)
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle));
 
         Command baseCoral = Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", true))
-            .andThen(firstAlign(swerve, distance, AutoConstants.distanceFromReef)
+            .andThen(coralAlign(swerve, distance, Meters.of(0.57))
                 .alongWith(scuffedElevator(elevator, 4.5).andThen(pivot.scuffedPivot(Rotations.of(0.075))))
             )
-            .andThen(claw.runMotor(new DutyCycleOut(-0.5)).withTimeout(0.2).andThen(claw.stop().withTimeout(0.1)))
-            .andThen(
-                (new WaitCommand(0.5)
-                    .andThen(
+            .andThen(claw.runMotor(new DutyCycleOut(-0.8)).withTimeout(0.2).andThen(claw.stop().withTimeout(0.1)))
+            .andThen(firstAlign(swerve, distance, AutoConstants.distanceFromReef)
+                .alongWith(
                         scuffedElevator(elevator,ElevatorConstants.reefOneHeight)
                         .andThen(pivot.scuffedPivot(PivotConstants.reefOneAngle))
                     )
-                    .alongWith(driveCommand(distance, swerve, 17, -1.5).until(() -> distance.getRange() > 17)))
-            )
-            .andThen(firstAlign(swerve, distance, AutoConstants.distanceFromReef)
-                .alongWith(claw.intake()).until(() -> !claw.beambreak.get())
+                    .raceWith(claw.intake()).until(() -> !claw.beambreak.get())
             )
             .andThen(stow.asProxy());
         
@@ -146,7 +160,7 @@ public class AlgaeAutoBuilder {
             .andThen(firstAlign(swerve, distance, AutoConstants.distanceFromReef)
                 .alongWith(scuffedElevator(elevator, ElevatorConstants.reefOneHeight).andThen(pivot.scuffedPivot(PivotConstants.reefOneAngle)))
             .alongWith(claw.intake()).until(() -> !claw.beambreak.get()))
-            .andThen(stow);
+            .andThen(stow.asProxy());
         
         Command shootBarge =
             (
@@ -161,20 +175,20 @@ public class AlgaeAutoBuilder {
             .andThen(claw.shoot().withTimeout(0.25).andThen(claw.stop().withTimeout(0.1)))
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
             .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight));
-            // .andThen(new WaitCommand(1.25).alongWith(claw.stop().withTimeout(0.1)))
-            // .andThen(swerve.applyRequest(() -> finalAlign));
 
         Command half = new WaitCommand(0.8).andThen(swerve.applyRequest(() -> approachSecondTag).until(() -> vision.getReefTagID().orElseGet(() -> -1L) == 20 ));
 
         Command base2 = (Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", true))
             .andThen(new AlignReef(vision, swerve, distance, () -> 0, true, Optional.of(20)))
             .alongWith(scuffedElevator(elevator, ElevatorConstants.reefTwoHeight).andThen(pivot.scuffedPivot(PivotConstants.reefTwoAngle)))
-            .alongWith(claw.intake()).until(() -> !claw.beambreak.get()));
+            .alongWith(claw.intake()).until(() -> !claw.beambreak.get())).andThen((scuffedElevator(elevator, ElevatorConstants.stowHeight)
+            .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
+        ));
 
         Command shootCommand2 = (scuffedElevator(elevator, ElevatorConstants.stowHeight)
                 .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
             )
-            .andThen(swerve.applyRequest(() -> leaveSecondTag).withTimeout(0.2))
+            .andThen((swerve.applyRequest(() -> leaveSecondTag).alongWith(claw.intake())).withTimeout(0.2))
             .andThen(swerve.applyRequest(() -> finalDrive
                 .withVelocityY(0.7)
                 .withVelocityX(2.5))).until(vision::canSeeBargeTag)
@@ -193,14 +207,14 @@ public class AlgaeAutoBuilder {
 
         switch (auto) {
             case Half:
-                return baseCoral.asProxy();
+                return baseCoral.andThen(end.asProxy());
             case One:
                 return baseCoral.andThen(shootBarge).andThen(swerve.applyRequest(() -> drive.withVelocityX(-2).withVelocityY(0)).withTimeout(0.7)).andThen(end.asProxy()); //.andThen(stow);
             case OneAndHalf:
                 return baseCoral.andThen(shootBarge).andThen(half).andThen(base2).andThen(end.asProxy()); //.andThen(half);
             case Two:
             default:
-                return base.andThen(shootBarge).andThen(half).andThen(base2).andThen(shootCommand2.asProxy()).andThen(end.asProxy());
+                return baseCoral.andThen(shootBarge).andThen(half).andThen(base2).andThen(shootCommand2.asProxy()).andThen(end.asProxy());
         }
     }
 }
