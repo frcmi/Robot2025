@@ -4,6 +4,8 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.revrobotics.Rev2mDistanceSensor;
+
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -105,7 +107,7 @@ public class CoralAutoBuilder {
         
         Command shootBarge = 
             swerve.applyRequest(() -> finalDrive).until(vision::canSeeBargeTag)
-            .andThen(new AlignBarge(vision, swerve, () -> 0).until(vision::isAligned))
+            .andThen(new AlignBarge(vision, swerve, () -> 0, Inches.of(47.2)).until(vision::isAligned))
             .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
             .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))
             .andThen(new WaitCommand(3.5).until(() -> pivot.closeEnough() && elevator.closeEnough()))

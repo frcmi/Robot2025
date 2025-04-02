@@ -119,10 +119,10 @@ public class AlgaeAutoBuilder {
             
     }
 
-    private static final ProfiledPIDController coralProfiledPIDControllerX = new ProfiledPIDController(0.7, AutoConstants.Turbo.kTranslationXI, AutoConstants.Turbo.kTranslationXD, new TrapezoidProfile.Constraints(5, 1));
+    private static final ProfiledPIDController coralProfiledPIDControllerX = new ProfiledPIDController(0.70, AutoConstants.Turbo.kTranslationXI, AutoConstants.Turbo.kTranslationXD, new TrapezoidProfile.Constraints(5, 1));
 
     public static Command coralAlign(CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distance, Distance goal) {
-        coralProfiledPIDControllerX.setTolerance(0.15);
+        coralProfiledPIDControllerX.setTolerance(0.4);
         return Commands.runOnce(() -> { coralProfiledPIDControllerX.setGoal(goal.in(Meters)); } ) //  profiledPIDControllerX.reset(2);
             .andThen(swerve.applyRequest(() -> {
                 double distanceMeasurement = distance.getRange();
@@ -142,15 +142,18 @@ public class AlgaeAutoBuilder {
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle));
 
         Command baseCoral = Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", true))
-            .andThen(coralAlign(swerve, distance, Meters.of(0.57))
-                .alongWith(scuffedElevator(elevator, 4.5).andThen(pivot.scuffedPivot(Rotations.of(0.075))))
+            .andThen(coralAlign(swerve, distance, Meters.of(0.3))
+                .alongWith(scuffedElevator(elevator, 4.5).andThen(pivot.scuffedPivot(Rotations.of(0.08))))
             )
-            .andThen(claw.runMotor(new DutyCycleOut(-0.8)).withTimeout(0.2).andThen(claw.stop().withTimeout(0.1)))
-            .andThen(firstAlign(swerve, distance, AutoConstants.distanceFromReef)
-                .alongWith(
+            .andThen(
+                claw.runMotor(new DutyCycleOut(-0.3)).withTimeout(0.2)
+                    .andThen(claw.stop().withTimeout(0.05))
+                    .alongWith(
                         scuffedElevator(elevator,ElevatorConstants.reefOneHeight)
                         .andThen(pivot.scuffedPivot(PivotConstants.reefOneAngle))
                     )
+            )
+            .andThen(firstAlign(swerve, distance, AutoConstants.distanceFromReef)
                     .raceWith(claw.intake()).until(() -> !claw.beambreak.get())
             )
             .andThen(stow.asProxy());
@@ -168,11 +171,11 @@ public class AlgaeAutoBuilder {
             ).withTimeout(0.25).andThen(
             swerve.applyRequest(() -> finalDrive).until(vision::canSeeBargeTag))
             .andThen(swerve.applyRequest(() -> driveTwoElectricBoogaloo.withVelocityX(0.7).withVelocityY(2.8)).withTimeout(0.2))
-            .andThen(new AlignBarge(vision, swerve, () -> 0).until(vision::isAligned))
+            .andThen(new AlignBarge(vision, swerve, () -> 0, AutoConstants.distanceFromBarge).until(vision::isAligned))
             .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
             .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))
             .andThen(new WaitCommand(3.0).until(() -> pivot.closeEnough() && elevator.closeEnough(3.0)))
-            .andThen(claw.shoot().withTimeout(0.25).andThen(claw.stop().withTimeout(0.1)))
+            .andThen(claw.shoot().withTimeout(0.20).andThen(claw.stop().withTimeout(0.05)))
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
             .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight));
 
@@ -193,14 +196,14 @@ public class AlgaeAutoBuilder {
                 .withVelocityY(0.7)
                 .withVelocityX(2.5))).until(vision::canSeeBargeTag)
             // barge shot
-            .andThen(new AlignBarge(vision, swerve, () -> 0).until(vision::isAligned))
+            .andThen(new AlignBarge(vision, swerve, () -> 0, AutoConstants.distanceFromBarge).until(vision::isAligned))
                 .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
                 .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))
                 .andThen(new WaitCommand(3.0).until(() -> pivot.closeEnough() && elevator.closeEnough(2.5)))
                 .andThen(claw.shoot().withTimeout(0.25).andThen(claw.stop().withTimeout(0.1)))
                 .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
                 .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight))
-                .andThen(new WaitCommand(0.5))
+                .andThen(new WaitCommand(0.45))
                 .andThen(swerve.applyRequest(() -> drive.withVelocityX(-2).withVelocityY(0)).withTimeout(0.7));
 
         Command end = (stow.asProxy()).andThen(Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", false)));

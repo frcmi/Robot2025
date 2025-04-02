@@ -76,7 +76,9 @@ public final class Robot extends TimedRobot {
   public void autonomousPeriodic() {}
 
   @Override
-  public void autonomousExit() {}
+  public void autonomousExit() {
+    m_RobotContainer.drivetrain.orchestra.pause();
+  }
 
   @Override
   public void teleopInit() {

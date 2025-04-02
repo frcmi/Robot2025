@@ -157,6 +157,9 @@ public final class RobotContainer {
   
   private void initManualAutos() {
     autoChooser.setDefaultOption("None", Commands.none());
+    drivetrain.orchestra.loadMusic("song6.chrp");
+    autoChooser.addOption("Song", Commands.runOnce(() -> drivetrain.orchestra.play()));
+
     autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(getTravelDir())).withTimeout(2));
     // autoChooser.addOption("L1", CoralAutoBuilder.build(AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     // autoChooser.addOption("L1 + Intake Algae", CoralAutoBuilder.build(AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
@@ -229,7 +232,7 @@ public final class RobotContainer {
     // // reset the field-centric heading on left bumper press
     m_Controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
     m_Controller.rightBumper().whileTrue(  
-      new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; })
+      new AlignBarge(m_TrigVision, drivetrain, () -> { return getFieldCentricDriveReq().VelocityY; }, AutoConstants.distanceFromBarge)
     );
     
     m_Controller.a().whileTrue(

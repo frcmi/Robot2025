@@ -90,14 +90,11 @@ public class ClawSubsystemTurbo extends SubsystemBase {
 
   public Command shoot() {
     return run(() -> {
-
-    
-    if(elevatorSubsystem.poseToHold == Constants.ElevatorConstants.onCoralHeight) {
-      intakeMotor.setControl(new DutyCycleOut(ClawConstants.processorShootSpeed));
-    }
-    else {
-     intakeMotor.setControl(new DutyCycleOut(ClawConstants.shootSpeed));
-    }
+      if(elevatorSubsystem.poseToHold == Constants.ElevatorConstants.onCoralHeight) {
+        intakeMotor.setControl(new DutyCycleOut(ClawConstants.processorShootSpeed));
+      } else {
+        intakeMotor.setControl(new DutyCycleOut(ClawConstants.shootSpeed));
+      }
     });
   }
 

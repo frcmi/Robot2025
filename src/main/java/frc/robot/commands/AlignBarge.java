@@ -49,8 +49,10 @@ public class AlignBarge extends Command {
     private final ProfiledPIDController profiledPIDController = new ProfiledPIDController(AutoConstants.Turbo.kTranslationXP, AutoConstants.Turbo.kTranslationXI, AutoConstants.Turbo.kTranslationXD, new TrapezoidProfile.Constraints(100, 10));
 
     private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
-    
-    public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain, DoubleSupplier horizontalInputSupplier) {
+    private final Distance targetDistance;
+
+    public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain, DoubleSupplier horizontalInputSupplier, Distance targetDistance) {
+        this.targetDistance = targetDistance;
         this.vision = vision;
         this.drivetrain = drivetrain;
         this.horizontalInputSupplier = horizontalInputSupplier;
@@ -70,12 +72,12 @@ public class AlignBarge extends Command {
         if (!translationOptional.isEmpty()) {
             double distance = translationOptional.get().getMeasureX().in(Meters);
             SmartDashboard.putNumber("distance x", distance);
-            pidOutput = -profiledPIDController.calculate(distance, AutoConstants.distanceFromBarge.in(Meters));
+            pidOutput = -profiledPIDController.calculate(distance, this.targetDistance.in(Meters));
         }
 
         Optional<Long> tagID = vision.getBargeTagID();
         if (tagID.isPresent()) {
-            if (tagID.get() == 4 || tagID.get() == 5) {
+            if (tagID.get() == 4 || tagID.get() == 5 || tagID.get() == 2) {
                 sign = -1;
             } else {
                 sign = 1;

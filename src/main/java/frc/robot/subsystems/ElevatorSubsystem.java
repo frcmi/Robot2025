@@ -139,8 +139,8 @@ public class ElevatorSubsystem extends SubsystemBase {
         followerMotor.getConfigurator().apply(softLimitConfig);
         followerMotor.getConfigurator().apply(motionMagicConfigs);
 
-        elevatorMotorLeft.setPosition(Rotations.of(1));
-        followerMotor.setPosition(Rotations.of(1));
+        elevatorMotorLeft.setPosition(Rotations.of(-0.698));
+        followerMotor.setPosition(Rotations.of(-0.698));
 
         elevatorMotorLeft.setNeutralMode(NeutralModeValue.Brake);
         followerMotor.setNeutralMode(NeutralModeValue.Brake);
