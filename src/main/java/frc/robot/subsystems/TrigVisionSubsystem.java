@@ -161,7 +161,7 @@ public final class TrigVisionSubsystem extends SubsystemBase {
         return Optional.of(tid);
     }
 
-    private boolean tagIsInArray(long tag, int[] arr) {
+    public boolean tagIsInArray(long tag, int[] arr) {
         for (int i = 0; i < arr.length; i++) {
             if (tag == arr[i])
                 return true;

@@ -182,7 +182,7 @@ public class AlgaeAutoBuilder {
         Command half = new WaitCommand(0.8).andThen(swerve.applyRequest(() -> approachSecondTag).until(() -> vision.getReefTagID().orElseGet(() -> -1L) == 20 ));
 
         Command base2 = (Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", true))
-            .andThen(new AlignReef(vision, swerve, distance, () -> 0, true, Optional.of(20)))
+            .andThen(new AlignReef(vision, swerve, distance, () -> 0, true, Optional.of(new int[] { 20, 11 } )))
             .alongWith(scuffedElevator(elevator, ElevatorConstants.reefTwoHeight).andThen(pivot.scuffedPivot(PivotConstants.reefTwoAngle)))
             .alongWith(claw.intake()).until(() -> !claw.beambreak.get())).andThen((scuffedElevator(elevator, ElevatorConstants.stowHeight)
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))

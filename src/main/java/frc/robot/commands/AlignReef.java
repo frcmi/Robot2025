@@ -35,9 +35,9 @@ public class AlignReef extends Command {
     private final boolean autoX;
     private final Debouncer isAlignedDebouncer = new Debouncer(0.25);
     private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
-    private Optional<Integer> limitTag = Optional.empty();
+    private Optional<int[]> limitTag = Optional.empty();
     private boolean forcedLimit = false;
-    public AlignReef(TrigVisionSubsystem vision, CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distanceSensor, DoubleSupplier xDoubleSupplier, boolean autoX, Optional<Integer> limitTag) {
+    public AlignReef(TrigVisionSubsystem vision, CommandSwerveDrivetrain swerve, Rev2mDistanceSensor distanceSensor, DoubleSupplier xDoubleSupplier, boolean autoX, Optional<int[]> limitTag) {
         this.autoX = autoX;
         this.limitTag = limitTag;
         if (limitTag.isPresent()) {
@@ -83,7 +83,7 @@ public class AlignReef extends Command {
         
         if (vision.lastSeenReefTag.isPresent()) {
             int tmpTag = vision.lastSeenReefTag.get().tid;
-            if (limitTag.orElseGet(() -> tmpTag) == tmpTag) {
+            if (vision.tagIsInArray(tmpTag, limitTag.orElseGet(() -> new int[] { tmpTag }))) {
                 tagID = tmpTag;
             } else {
                 translationOptional = Optional.empty();
@@ -110,7 +110,7 @@ public class AlignReef extends Command {
             double distanceMeasurement = distance.getRange();
             if (autoX && timeSinceStart > 0.5) {
                 isAlignedForAuto = true;
-                limitTag = Optional.of(tagID);
+                limitTag = Optional.of(new int[] { tagID } );
                 if (distanceMeasurement != -1) {
                     pidOutputX = profiledPIDControllerX.calculate(Inches.of(distanceMeasurement).in(Meters));
                 } else {
