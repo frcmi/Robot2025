@@ -171,7 +171,7 @@ public class AlgaeAutoBuilder {
             ).withTimeout(0.25).andThen(
             swerve.applyRequest(() -> finalDrive).until(vision::canSeeBargeTag))
             .andThen(swerve.applyRequest(() -> driveTwoElectricBoogaloo.withVelocityX(0.7).withVelocityY(2.8)).withTimeout(0.2))
-            .andThen(new AlignBarge(vision, swerve, () -> 0, AutoConstants.distanceFromBarge).until(vision::isAligned))
+            .andThen(new AlignBarge(vision, swerve, () -> 0, AutoConstants.distanceFromBarge, true).until(vision::isAligned))
             .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
             .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))
             .andThen(new WaitCommand(3.0).until(() -> pivot.closeEnough() && elevator.closeEnough(3.0)))
@@ -179,7 +179,7 @@ public class AlgaeAutoBuilder {
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
             .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight));
 
-        Command half = new WaitCommand(0.8).andThen(swerve.applyRequest(() -> approachSecondTag).until(() -> vision.getReefTagID().orElseGet(() -> -1L) == 20 ));
+        Command half = new WaitCommand(0.8).andThen(swerve.applyRequest(() -> approachSecondTag).until(() -> vision.getReefTagID().orElseGet(() -> -1L) == 20 || vision.getReefTagID().orElseGet(() -> -1L) == 11 ));
 
         Command base2 = (Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", true))
             .andThen(new AlignReef(vision, swerve, distance, () -> 0, true, Optional.of(new int[] { 20, 11 } )))
@@ -196,7 +196,7 @@ public class AlgaeAutoBuilder {
                 .withVelocityY(0.7)
                 .withVelocityX(2.5))).until(vision::canSeeBargeTag)
             // barge shot
-            .andThen(new AlignBarge(vision, swerve, () -> 0, AutoConstants.distanceFromBarge).until(vision::isAligned))
+            .andThen(new AlignBarge(vision, swerve, () -> 0, AutoConstants.distanceFromBarge, true).until(vision::isAligned))
                 .andThen(scuffedElevator(elevator, ElevatorConstants.bargeHeight))
                 .andThen(pivot.scuffedPivot(PivotConstants.bargeAngle))
                 .andThen(new WaitCommand(3.0).until(() -> pivot.closeEnough() && elevator.closeEnough(2.5)))

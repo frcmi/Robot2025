@@ -211,6 +211,10 @@ public final class TrigVisionSubsystem extends SubsystemBase {
         return bargeCamera.hasTarget();
     }
 
+    public boolean canSeeCorrectBargeTag() {
+        return bargeCamera.hasTarget() && tagIsBarge();
+    }
+
     public boolean hasBargeTagInfo() {
         return lastSeenBargeTag.isPresent();
     }

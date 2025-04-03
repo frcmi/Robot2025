@@ -30,10 +30,14 @@ import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.RobotContainer;
@@ -50,8 +54,10 @@ public class AlignBarge extends Command {
 
     private final SwerveRequest.FieldCentricFacingAngle driveRequest = new SwerveRequest.FieldCentricFacingAngle().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
     private final Distance targetDistance;
+    private final boolean forceAllianceSide;
 
-    public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain, DoubleSupplier horizontalInputSupplier, Distance targetDistance) {
+    public AlignBarge(TrigVisionSubsystem vision, CommandSwerveDrivetrain drivetrain, DoubleSupplier horizontalInputSupplier, Distance targetDistance, boolean forceAllianceSide) {
+        this.forceAllianceSide = forceAllianceSide;
         this.targetDistance = targetDistance;
         this.vision = vision;
         this.drivetrain = drivetrain;
@@ -78,6 +84,16 @@ public class AlignBarge extends Command {
         Optional<Long> tagID = vision.getBargeTagID();
         if (tagID.isPresent()) {
             if (tagID.get() == 4 || tagID.get() == 5) {
+                sign = -1;
+            } else {
+                sign = 1;
+            }
+        }
+
+        if (forceAllianceSide) {
+            Optional<Alliance> alliance = DriverStation.getAlliance();
+
+            if (alliance.get().equals(Alliance.Red)) {
                 sign = -1;
             } else {
                 sign = 1;
