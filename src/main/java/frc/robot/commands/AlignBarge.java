@@ -77,7 +77,7 @@ public class AlignBarge extends Command {
 
         Optional<Long> tagID = vision.getBargeTagID();
         if (tagID.isPresent()) {
-            if (tagID.get() == 4 || tagID.get() == 5 || tagID.get() == 2) {
+            if (tagID.get() == 4 || tagID.get() == 5) {
                 sign = -1;
             } else {
                 sign = 1;
