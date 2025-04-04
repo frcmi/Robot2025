@@ -52,7 +52,7 @@ public final class Constants {
         public static final Angle cameraAngle = Degrees.of(60);
         public static final Distance distanceFromBarge = Inches.of(20.0);
         public static final Distance distanceFromReef = Meters.of(0.3);
-        public static final Distance sidewaysDistanceFromReef = Meters.of(0.11);
+        public static final Distance sidewaysDistanceFromReef = Meters.of(0.10);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
         public static final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond);
         public static double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -87,7 +87,7 @@ public final class Constants {
         public static final double intakeSpeed = -0.75;
         public static final double shootSpeed = 0.8;
         // TODO: Figure out good speed for shooting at the processor
-        public static final double processorShootSpeed = 0.3;
+        public static final double processorShootSpeed = 0.2;
         public static final double stopSpeed = -0.04;
     }
 

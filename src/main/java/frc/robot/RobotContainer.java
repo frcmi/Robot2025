@@ -356,6 +356,7 @@ public final class RobotContainer {
     // }
     Command cmd = autoChooser.getSelected().asProxy();
     cmd.addRequirements(drivetrain);
-    return base.andThen(cmd).withName("Full auto");
+    return base.andThen(cmd.alongWith(m_ClimberSubsystem.runClimberupAuto().withTimeout(1.0
+    ))).withName("Full auto");
   }
 }

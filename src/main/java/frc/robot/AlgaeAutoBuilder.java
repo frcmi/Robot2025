@@ -142,7 +142,7 @@ public class AlgaeAutoBuilder {
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle));
 
         Command baseCoral = Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", true))
-            .andThen(coralAlign(swerve, distance, Meters.of(0.3))
+            .andThen(coralAlign(swerve, distance, Meters.of(0.30))
                 .alongWith(scuffedElevator(elevator, 4.5).andThen(pivot.scuffedPivot(Rotations.of(0.08))))
             )
             .andThen(
@@ -210,14 +210,14 @@ public class AlgaeAutoBuilder {
 
         switch (auto) {
             case Half:
-                return baseCoral.andThen(end.asProxy());
+                return base.andThen(end.asProxy());
             case One:
-                return baseCoral.andThen(shootBarge).andThen(swerve.applyRequest(() -> drive.withVelocityX(-2).withVelocityY(0)).withTimeout(0.7)).andThen(end.asProxy()); //.andThen(stow);
+                return base.andThen(shootBarge).andThen(swerve.applyRequest(() -> drive.withVelocityX(-2).withVelocityY(0)).withTimeout(0.7)).andThen(end.asProxy()); //.andThen(stow);
             case OneAndHalf:
-                return baseCoral.andThen(shootBarge).andThen(half).andThen(base2).andThen(end.asProxy()); //.andThen(half);
+                return base.andThen(shootBarge).andThen(half).andThen(base2).andThen(end.asProxy()); //.andThen(half);
             case Two:
             default:
-                return baseCoral.andThen(shootBarge).andThen(half).andThen(base2).andThen(shootCommand2.asProxy()).andThen(end.asProxy());
+                return base.andThen(shootBarge).andThen(half).andThen(base2).andThen(shootCommand2.asProxy()).andThen(end.asProxy());
         }
     }
 }
