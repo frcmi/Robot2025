@@ -96,7 +96,7 @@ public final class Constants {
     }
 
     public static class LEDConstants {
-        public static final int ledID = 0;
+        public static final int ledID = 4;
         public static final int ledLength = 20;
     }
 

@@ -90,14 +90,16 @@ public class AlignBarge extends Command {
             }
         }
 
-        if (forceAllianceSide) {
-            Optional<Alliance> alliance = DriverStation.getAlliance();
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        double allianceSign;
+        if (alliance.get().equals(Alliance.Red)) {
+            allianceSign = -1;
+        } else {
+            allianceSign = 1;
+        }
 
-            if (alliance.get().equals(Alliance.Red)) {
-                sign = -1;
-            } else {
-                sign = 1;
-            }
+        if (forceAllianceSide) {
+            sign = allianceSign;
         }
 
         if (profiledPIDController.atGoal()) {
@@ -105,7 +107,7 @@ public class AlignBarge extends Command {
         }
 
         driveRequest.withVelocityX(Meters.of(sign * pidOutput).per(Second));
-        driveRequest.withVelocityY(horizontalInputSupplier.getAsDouble());
+        driveRequest.withVelocityY(allianceSign * horizontalInputSupplier.getAsDouble());
         driveRequest.withTargetDirection(Rotation2d.fromDegrees(sign * -90));
 
         drivetrain.setControl(driveRequest);
