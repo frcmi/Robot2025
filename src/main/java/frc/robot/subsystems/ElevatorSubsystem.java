@@ -93,7 +93,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private final UltraSupplierLog leftVelocityPub = new UltraSupplierLog("Elevator/Left Velocity", elevatorMotorLeft.getVelocity());
     private final UltraSupplierLog leftTempPub = new UltraSupplierLog("Elevator/Left Temp", elevatorMotorLeft.getDeviceTemp());
-    private final UltraSupplierLog leftPosePub = new UltraSupplierLog("Elevator/Left Pose", elevatorMotorLeft.getPosition());
+    private final StatusSignal<Angle> leftPoseSignal = elevatorMotorLeft.getPosition();
+    private final UltraSupplierLog leftPosePub = new UltraSupplierLog("Elevator/Left Pose", leftPoseSignal);
     private final UltraSupplierLog rightVelocityPub = new UltraSupplierLog("Elevator/Right Velocity", followerMotor.getVelocity());
     private final UltraSupplierLog rightTempPub = new UltraSupplierLog("Elevator/Right Temp", followerMotor.getDeviceTemp());
     private final UltraSupplierLog rightPosePub = new UltraSupplierLog("Elevator/Right Pose", followerMotor.getPosition());
@@ -155,16 +156,14 @@ public class ElevatorSubsystem extends SubsystemBase {
         }
     }
 
-    StatusSignal<Double> pidError = elevatorMotorLeft.getClosedLoopError();
-
     public boolean closeEnough() {
         return closeEnough(1.0);
     }
 
     public boolean closeEnough(double enough) {
-        StatusSignal.refreshAll(pidError);
+        StatusSignal.refreshAll(leftPoseSignal);
 
-        return Math.abs(pidError.getValueAsDouble()) < enough;
+        return leftPoseSignal.getValue().minus(poseToHold).abs(Rotations) < enough;
     }
 
     public void setFollowerMode() {
@@ -179,7 +178,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     // rev throughbore encoder, limit on bottom
 
     // I would assume that there is only going to be one motor to extend the elevator but we will see
-    public double poseToHold = ElevatorConstants.stowHeight;
+    public Angle poseToHold = Rotations.of(ElevatorConstants.stowHeight);
     boolean pause = true;
     public Command holdPose(){
         // return run(() -> {});
@@ -215,7 +214,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void extendArm(double rotations) {
         SmartDashboard.putNumber("Elevator Setpoint", rotations);
         pause = false;
-        poseToHold = rotations;
+        poseToHold = Rotations.of(rotations);
     }
 
     public void driveWithVoltage(Voltage volts) {
@@ -332,9 +331,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     UltraDoubleLog setPose = new UltraDoubleLog("Elevator/Set Rotations");
-    UltraDoubleLog currentPose = new UltraDoubleLog("Elevator/Current Rotations");
     StatusSignal<Double> setPoseSignal = elevatorMotorLeft.getClosedLoopReference();
-    StatusSignal<Angle> currentPoseSignal = elevatorMotorLeft.getPosition();
 
 
     public Command runSpeed(DoubleSupplier speed) {
@@ -350,9 +347,9 @@ public class ElevatorSubsystem extends SubsystemBase {
         SmartDashboard.putBoolean("Elevator Close Enough", closeEnough());
         estopAlert.set(estop);
 
-        StatusSignal.refreshAll(currentPoseSignal);
-        double currentPoseTHing = currentPoseSignal.getValueAsDouble();
-        if (!upperDigitalInput.get() && poseToHold > currentPoseTHing) {
+        StatusSignal.refreshAll(leftPoseSignal);
+        double currentPoseTHing = leftPoseSignal.getValueAsDouble();
+        if (!upperDigitalInput.get() && poseToHold.in(Rotations) > currentPoseTHing) {
             // estop = true;
             // setDefaultCommand(stop());
             // elevatorMotorLeft.set(0);
@@ -376,9 +373,8 @@ public class ElevatorSubsystem extends SubsystemBase {
         SmartDashboard.putBoolean("Upper Limit", !upperDigitalInput.get());
         SmartDashboard.putBoolean("Lower Limit", !lowerDigitalInput.get());
 
-        BaseStatusSignal.refreshAll(setPoseSignal, currentPoseSignal);
+        BaseStatusSignal.refreshAll(setPoseSignal);
         setPose.update(setPoseSignal.getValue());
-        currentPose.update(currentPoseSignal.getValueAsDouble());
         if (RobotBase.isReal()) {
             // elevator.setLength(getElevatorHeight().in(Meters));
         }
