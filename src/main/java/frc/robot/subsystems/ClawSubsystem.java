@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -99,7 +100,7 @@ public class ClawSubsystem extends SubsystemBase {
 
   public Command shoot() {
     return run(() -> {
-    if(elevatorSubsystem.poseToHold == Constants.ElevatorConstants.onCoralHeight) {
+    if(elevatorSubsystem.poseToHold.in(Rotations) == Constants.ElevatorConstants.onCoralHeight) {
       intakeMotor.setControl(new DutyCycleOut(ClawConstants.processorShootSpeed));
     }
     else {

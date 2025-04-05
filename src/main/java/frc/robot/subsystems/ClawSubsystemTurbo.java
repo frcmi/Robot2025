@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
@@ -90,7 +91,7 @@ public class ClawSubsystemTurbo extends SubsystemBase {
 
   public Command shoot() {
     return run(() -> {
-      if(elevatorSubsystem.poseToHold == Constants.ElevatorConstants.onCoralHeight) {
+      if(elevatorSubsystem.poseToHold.in(Rotations) == Constants.ElevatorConstants.onCoralHeight) {
         intakeMotor.setControl(new DutyCycleOut(ClawConstants.processorShootSpeed));
       } else {
         intakeMotor.setControl(new DutyCycleOut(ClawConstants.shootSpeed));
@@ -104,7 +105,7 @@ public class ClawSubsystemTurbo extends SubsystemBase {
     beambreakPublisher.update(beambreak.get());
     topMotorSpeedPublisher.update();
     topMotorTempPublisher.update();
-    SmartDashboard.putNumber("PoseToHold", elevatorSubsystem.poseToHold);
-    SmartDashboard.putBoolean("if statement", elevatorSubsystem.poseToHold == Constants.ElevatorConstants.onCoralHeight);
+    SmartDashboard.putNumber("PoseToHold", elevatorSubsystem.poseToHold.in(Rotations));
+    SmartDashboard.putBoolean("if statement", elevatorSubsystem.poseToHold.in(Rotations) == Constants.ElevatorConstants.onCoralHeight);
   }
 }
