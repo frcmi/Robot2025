@@ -52,7 +52,7 @@ public final class Constants {
         public static final Angle cameraAngle = Degrees.of(60);
         public static final Distance distanceFromBarge = Inches.of(20.0);
         public static final Distance distanceFromReef = Meters.of(0.3);
-        public static final Distance sidewaysDistanceFromReef = Meters.of(0.10);
+        public static final Distance sidewaysDistanceFromReef = Meters.of(0.076);
         public static final Time lastPoseTimeout = Milliseconds.of(50);
         public static final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond);
         public static double MaxAngularRate = Units.RotationsPerSecond.of(0.75).in(Units.RadiansPerSecond); // 3/4 of a rotation per second max angular velocity

@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import java.util.Optional;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -50,6 +51,7 @@ import edu.wpi.first.units.measure.Angle;
 import frc.lib.ultralogger.UltraDoubleLog;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.BotType;
+import frc.robot.Constants.ClawConstants;
 import frc.robot.Constants.PivotConstants;
 import frc.robot.Constants.TelemetryConstants;
 import frc.robot.CoralAutoBuilder.AutoType;
@@ -164,10 +166,10 @@ public final class RobotContainer {
     // autoChooser.addOption("L1", CoralAutoBuilder.build(AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     // autoChooser.addOption("L1 + Intake Algae", CoralAutoBuilder.build(AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     // autoChooser.addOption("L1 + Shoot Algae", CoralAutoBuilder.build(AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-    autoChooser.addOption("L1", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.Half, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-    autoChooser.addOption("1 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-    autoChooser.addOption("1.5 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
-    autoChooser.addOption("2 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
+    autoChooser.addOption("L1", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.Half, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_ClimberSubsystem, m_TrigVision));
+    autoChooser.addOption("1 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_ClimberSubsystem, m_TrigVision));
+    autoChooser.addOption("1.5 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_ClimberSubsystem, m_TrigVision));
+    autoChooser.addOption("2 Algae", AlgaeAutoBuilder.build(AlgaeAutoBuilder.AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_ClimberSubsystem, m_TrigVision));
   }
 
   private void initSubsystems() {
@@ -323,8 +325,9 @@ public final class RobotContainer {
     m_OperatorController.button(2).onTrue(scuffedElevator(Constants.ElevatorConstants.floorHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.processorAngle)));
     m_OperatorController.button(4).onTrue(scuffedElevator(Constants.ElevatorConstants.reefOneHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefOneAngle)));
     m_OperatorController.button(1).onTrue(scuffedElevator(Constants.ElevatorConstants.reefTwoHeight).andThen(m_PivotSubsystem.scuffedPivot(Constants.PivotConstants.reefTwoAngle)));
-    m_OperatorController.button(6).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
+    m_OperatorController.button(10).whileTrue(m_ClawSubsystem.intakeWithBeambreak());
     m_OperatorController.button(9).whileTrue(m_ClawSubsystem.intake());
+    m_OperatorController.button(6).whileTrue(m_ClawSubsystem.runMotor(new DutyCycleOut(0.6)));
     // m_OperatorController.button().whileTrue(m_ClawSubsystem.shootWithBeambreak());
 
     m_OperatorController.button(3).whileTrue(m_ClawSubsystem.shoot());
@@ -356,7 +359,7 @@ public final class RobotContainer {
     // }
     Command cmd = autoChooser.getSelected().asProxy();
     cmd.addRequirements(drivetrain);
-    return base.andThen(cmd.alongWith(m_ClimberSubsystem.runClimberupAuto().withTimeout(1.2))).withName("Full auto");
+    return base.andThen(cmd).withName("Full auto");
   }
 }
 

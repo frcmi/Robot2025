@@ -35,6 +35,7 @@ import frc.robot.Constants.PivotConstants;
 import frc.robot.commands.AlignBarge;
 import frc.robot.commands.AlignReef;
 import frc.robot.subsystems.ClawSubsystemTurbo;
+import frc.robot.subsystems.ClimberSubsystem;
 
 public class AlgaeAutoBuilder {
     private static final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective);
@@ -137,7 +138,7 @@ public class AlgaeAutoBuilder {
             
     }
 
-    public static Command build(AutoType auto, Rev2mDistanceSensor distance, CommandSwerveDrivetrain swerve, PivotSubsystem pivot, ElevatorSubsystem elevator, ClawSubsystemTurbo claw, TrigVisionSubsystem vision) {
+    public static Command build(AutoType auto, Rev2mDistanceSensor distance, CommandSwerveDrivetrain swerve, PivotSubsystem pivot, ElevatorSubsystem elevator, ClawSubsystemTurbo claw, ClimberSubsystem climber, TrigVisionSubsystem vision) {
         Command stow = scuffedElevator(elevator, ElevatorConstants.stowHeight)
             .andThen(pivot.scuffedPivot(PivotConstants.stowAngle));
 
@@ -204,7 +205,10 @@ public class AlgaeAutoBuilder {
                 .andThen(pivot.scuffedPivot(PivotConstants.stowAngle))
                 .andThen(scuffedElevator(elevator, ElevatorConstants.stowHeight))
                 .andThen(new WaitCommand(0.45))
-                .andThen(swerve.applyRequest(() -> drive.withVelocityX(-2).withVelocityY(0)).withTimeout(0.7));
+                .andThen(
+                    (swerve.applyRequest(() -> drive.withVelocityX(-2).withVelocityY(0)).withTimeout(0.7))
+                    .alongWith(climber.runClimberupAuto().withTimeout(1.2))
+                );
 
         Command end = (stow.asProxy()).andThen(Commands.runOnce(() -> SmartDashboard.putBoolean("Auto Running", false)));
 
