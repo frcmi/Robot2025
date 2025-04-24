@@ -11,17 +11,19 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 
 import frc.robot.Robot;
 import frc.robot.vision.Camera;
-// import frc.robot.vision.PhotonlibCamera;
+import frc.robot.vision.LimelightCamera;
+import frc.robot.vision.PhotonlibCamera;
 import frc.robot.vision.Camera.Result;
 import frc.robot.vision.Camera.Simulator;
 import frc.robot.vision.Camera.Specification;
 
-public final class VisionSubsystem implements Subsystem {
+public final class GlobalVisionSubsystem implements Subsystem {
     public static final double kMaxAmbiguity = 0.7;
     public static final double kMaxDistance = Units.feetToMeters(10);
 
     public static enum CameraType {
-        PHOTONVISION
+        PHOTONVISION,
+        LIMELIGHT
     }
 
     public static class CameraDescription {
@@ -37,13 +39,13 @@ public final class VisionSubsystem implements Subsystem {
         Simulator sim;
     }
 
-    private SwerveSubsystem m_Swerve;
+    private CommandSwerveDrivetrain m_Swerve;
     private CameraData[] m_Cameras;
 
     private HashSet<Integer> m_ViableResults;
     private int m_Frame;
 
-    public static VisionSubsystem configure(SwerveSubsystem swerve) {
+    public static GlobalVisionSubsystem configure(CommandSwerveDrivetrain swerve) {
         var cameras = new CameraDescription[] { /* cameras */ };
 
         AprilTagFieldLayout layout;
@@ -54,19 +56,21 @@ public final class VisionSubsystem implements Subsystem {
             layout = null;
         }
 
-        return new VisionSubsystem(swerve, cameras, layout);
+        return new GlobalVisionSubsystem(swerve, cameras, layout);
     }
 
     private static Camera createCamera(CameraDescription desc, AprilTagFieldLayout layout) {
         switch (desc.type) {
             case PHOTONVISION:
-                return null; //new PhotonlibCamera(desc.name, desc.offset, layout);
+                return new PhotonlibCamera(desc.name, desc.offset, layout);
+            case LIMELIGHT:
+                return new LimelightCamera(desc.name, desc.offset);
             default:
                 return null;
         }
     }
 
-    public VisionSubsystem(SwerveSubsystem swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
+    public GlobalVisionSubsystem(CommandSwerveDrivetrain swerve, CameraDescription[] cameras, AprilTagFieldLayout layout) {
         m_Swerve = swerve;
         m_ViableResults = new HashSet<>();
         m_Frame = 0;
@@ -78,8 +82,9 @@ public final class VisionSubsystem implements Subsystem {
 
             data.camera = createCamera(desc, layout);
             data.result = new Result();
+            data.sim = null;
 
-            if (Robot.isSimulation()) {
+            if (Robot.isSimulation() && desc.spec != null) {
                 data.sim = data.camera.createSimulator(desc.spec);
             }
         }
@@ -124,6 +129,10 @@ public final class VisionSubsystem implements Subsystem {
         var pose = m_Swerve.getState().Pose;
 
         for (var camera : m_Cameras) {
+            if (camera.sim == null) {
+                continue;
+            }
+
             camera.sim.update(pose, m_Frame);
         }
 

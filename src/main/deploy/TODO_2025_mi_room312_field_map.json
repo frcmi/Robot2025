@@ -1,0 +1,275 @@
+{
+    "field": {
+        "dimensions": {
+            "length": 709,
+            "width": 326,
+            "height": 336
+        }
+    },
+    "apriltags": [
+        {
+            "id": 1,
+            "position": {
+                "x": 657.37,
+                "y": 25.8,
+                "z": 58.5
+            },
+            "orientation": {
+                "z_rotation": 126,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 2,
+            "position": {
+                "x": 657.37,
+                "y": 291.2,
+                "z": 58.5
+            },
+            "orientation": {
+                "z_rotation": 234,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 3,
+            "position": {
+                "x": 455.15,
+                "y": 317.15,
+                "z": 51.25
+            },
+            "orientation": {
+                "z_rotation": 270,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 4,
+            "position": {
+                "x": 365.2,
+                "y": 241.64,
+                "z": 73.54
+            },
+            "orientation": {
+                "z_rotation": 0,
+                "y_rotation": 30
+            }
+        },
+        {
+            "id": 5,
+            "position": {
+                "x": 365.2,
+                "y": 75.39,
+                "z": 73.54
+            },
+            "orientation": {
+                "z_rotation": 0,
+                "y_rotation": 30
+            }
+        },
+        {
+            "id": 6,
+            "position": {
+                "x": 530.49,
+                "y": 130.17,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 300,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 7,
+            "position": {
+                "x": 546.87,
+                "y": 158.5,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 0,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 8,
+            "position": {
+                "x": 530.49,
+                "y": 186.83,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 60,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 9,
+            "position": {
+                "x": 497.77,
+                "y": 186.83,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 120,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 10,
+            "position": {
+                "x": 481.39,
+                "y": 158.5,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 180,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 11,
+            "position": {
+                "x": 497.77,
+                "y": 130.17,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 240,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 12,
+            "position": {
+                "x": 33.51,
+                "y": 25.8,
+                "z": 58.5
+            },
+            "orientation": {
+                "z_rotation": 54,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 13,
+            "position": {
+                "x": 33.51,
+                "y": 291.2,
+                "z": 58.5
+            },
+            "orientation": {
+                "z_rotation": 306,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 14,
+            "position": {
+                "x": 325.68,
+                "y": 241.64,
+                "z": 73.54
+            },
+            "orientation": {
+                "z_rotation": 180,
+                "y_rotation": 30
+            }
+        },
+        {
+            "id": 15,
+            "position": {
+                "x": 325.68,
+                "y": 75.39,
+                "z": 73.54
+            },
+            "orientation": {
+                "z_rotation": 180,
+                "y_rotation": 30
+            }
+        },
+        {
+            "id": 16,
+            "position": {
+                "x": 235.73,
+                "y": -0.15,
+                "z": 51.25
+            },
+            "orientation": {
+                "z_rotation": 90,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 17,
+            "position": {
+                "x": 160.39,
+                "y": 130.17,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 240,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 18,
+            "position": {
+                "x": 144.0,
+                "y": 158.5,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 180,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 19,
+            "position": {
+                "x": 160.39,
+                "y": 186.83,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 120,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 20,
+            "position": {
+                "x": 193.1,
+                "y": 186.83,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 60,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 21,
+            "position": {
+                "x": 209.49,
+                "y": 158.5,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 0,
+                "y_rotation": 0
+            }
+        },
+        {
+            "id": 22,
+            "position": {
+                "x": 193.1,
+                "y": 130.17,
+                "z": 12.13
+            },
+            "orientation": {
+                "z_rotation": 300,
+                "y_rotation": 0
+            }
+        }
+    ]
+}

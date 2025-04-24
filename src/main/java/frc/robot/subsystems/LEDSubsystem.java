@@ -15,19 +15,22 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.LEDConstants;
 
 public class LEDSubsystem extends SubsystemBase {
-    private final AddressableLED led = new AddressableLED(0);
-    private final AddressableLEDBuffer ledBuffer = new AddressableLEDBuffer(10);
+    private final AddressableLED led = new AddressableLED(LEDConstants.ledID);
+    private final AddressableLEDBuffer ledBuffer = new AddressableLEDBuffer(LEDConstants.ledLength);
 
     public LEDSubsystem() {
         led.setLength(ledBuffer.getLength());
         led.setData(ledBuffer);
         led.start();
+
+        this.setDefaultCommand(defaultCommand());
     }
 
-    public Command blank() {
-        return applyPattern(LEDPattern.solid(Color.kBlack));
+    public Command solidColor(Color color) {
+        return applyPattern(LEDPattern.solid(color));
     }
 
     public Command fauxRSL() {
@@ -43,7 +46,7 @@ public class LEDSubsystem extends SubsystemBase {
         return applyPattern(pattern);
     }
 
-    private LEDPattern allianceColorGetter() {
+    public LEDPattern allianceColorGetter() {
         Optional<Alliance> alliance = DriverStation.getAlliance();
 
         if (alliance.isEmpty()) {
@@ -69,8 +72,22 @@ public class LEDSubsystem extends SubsystemBase {
         }).ignoringDisable(true);
     }
 
+    public void applyPatternOnce(LEDPattern pattern) {
+        if (DriverStation.isDisabled()) {
+            pattern = allianceColorGetter();
+        }
+        pattern.applyTo(ledBuffer);
+        led.setData(ledBuffer);
+    }
+
+    public Command defaultCommand() {
+        return this.run(() -> {
+            led.setData(ledBuffer);
+        });
+    }
+
     public Command applyPattern(LEDPattern pattern) {
-        return this.runOnce(() -> {
+        return this.run(() -> {
             pattern.applyTo(ledBuffer);
             led.setData(ledBuffer);
         }).ignoringDisable(true);

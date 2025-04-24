@@ -1,28 +1,30 @@
 package frc.lib.ultralogger;
 
-import java.lang.reflect.InvocationTargetException;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-public class UltraSupplierLog<T> {
-    private Supplier<T> tempSupplier;
-    private UltraLogEntry<T> logEntry;
+import com.ctre.phoenix6.StatusSignal;
 
-    public UltraSupplierLog(Class<UltraLogEntry<T>> e, String name, Supplier<T> tempSupplier) {
-        try {
-            logEntry = e.getDeclaredConstructor().newInstance(name);
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-                | NoSuchMethodException | SecurityException e1) {
-            e1.printStackTrace();
-        }
-        this.tempSupplier = tempSupplier::get;
+public class UltraSupplierLog {
+    private DoubleSupplier supplier;
+    private UltraDoubleLog logEntry;
+
+    public UltraSupplierLog(String name, StatusSignal tempSupplier) {
+        logEntry = new UltraDoubleLog(name);
+        this.supplier = () -> { StatusSignal.refreshAll(tempSupplier); return tempSupplier.getValueAsDouble(); };
     }
     
-    // public UltraTempLog(String name, DoubleSupplier tempSupplier) {
-    //     logEntry = new UltraDoubleLog(name);
-    //     this.tempSupplier = tempSupplier;
-    // }
+    public UltraSupplierLog(String name, Supplier<Double> tempSupplier) {
+        logEntry = new UltraDoubleLog(name);
+        this.supplier = tempSupplier::get;
+    }
+    
+    public UltraSupplierLog(String name, DoubleSupplier tempSupplier) {
+        logEntry = new UltraDoubleLog(name);
+        this.supplier = tempSupplier;
+    }
 
     public void update() {
-        logEntry.update(tempSupplier.get());
+        logEntry.update(supplier.getAsDouble());
     }
 }
