@@ -31,10 +31,14 @@ public class SysIdChooser {
     }
 
     public void updateCommands(SysIdRoutine routine) {
-        dynamicForward.setCommand(sysIdChooser.getSelected().dynamic(SysIdRoutine.Direction.kForward));
-        dynamicReverse.setCommand(sysIdChooser.getSelected().dynamic(SysIdRoutine.Direction.kReverse));
-        quasistaticForward.setCommand(sysIdChooser.getSelected().quasistatic(SysIdRoutine.Direction.kForward));
-        quasistaticReverse.setCommand(sysIdChooser.getSelected().quasistatic(SysIdRoutine.Direction.kReverse));
+        if(sysIdChooser.getSelected() == null){
+            System.out.println("It is null :(");
+        } else{
+            dynamicForward.setCommand(sysIdChooser.getSelected().dynamic(SysIdRoutine.Direction.kForward));
+            dynamicReverse.setCommand(sysIdChooser.getSelected().dynamic(SysIdRoutine.Direction.kReverse));
+            quasistaticForward.setCommand(sysIdChooser.getSelected().quasistatic(SysIdRoutine.Direction.kForward));
+            quasistaticReverse.setCommand(sysIdChooser.getSelected().quasistatic(SysIdRoutine.Direction.kReverse));
+        }
     } 
 
     public CommandSupplier sysIdDynamicForward() {

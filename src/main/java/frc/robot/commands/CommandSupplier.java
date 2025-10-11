@@ -50,4 +50,7 @@ public class CommandSupplier extends Command {
     public Set<Subsystem> getRequirements() {
         return currentCommand.getRequirements();
     }
+    public boolean isNull(){
+        return currentCommand == null;
+    }
 }

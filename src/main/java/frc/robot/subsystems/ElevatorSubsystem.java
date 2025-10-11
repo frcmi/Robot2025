@@ -346,7 +346,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putBoolean("Elevator Close Enough", closeEnough());
         estopAlert.set(estop);
-
         StatusSignal.refreshAll(leftPoseSignal);
         double currentPoseTHing = leftPoseSignal.getValueAsDouble();
         if (!upperDigitalInput.get() && poseToHold.in(Rotations) > currentPoseTHing) {

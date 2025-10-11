@@ -98,7 +98,7 @@ public final class RobotContainer {
   private UltraDoubleLog levelLog = new UltraDoubleLog("Algae Level");
 
   private final SendableChooser<Command> autoChooser;
-  private final SysIdChooser sysIdChooser;
+  public final SysIdChooser sysIdChooser;
 
   Alert onMainAlert = new Alert("Main Bot", AlertType.kInfo);
   Alert onAlphaAlert = new Alert("Alpha Bot", AlertType.kWarning);
