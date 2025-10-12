@@ -149,6 +149,7 @@ public final class RobotContainer {
       configureSimBindings();
   }
 
+  // nora: drivetrain is inverted when using blue alliance. todo: remove
   public double getTravelDir() {
     if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue) {
       return 1;
@@ -162,7 +163,7 @@ public final class RobotContainer {
     drivetrain.orchestra.loadMusic("song6.chrp");
     autoChooser.addOption("Song", Commands.runOnce(() -> drivetrain.orchestra.play()));
 
-    autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(getTravelDir())).withTimeout(2));
+    autoChooser.addOption("Travel", drivetrain.applyRequest(() -> drive.withVelocityY(-1)).withTimeout(2));
     // autoChooser.addOption("L1", CoralAutoBuilder.build(AutoType.One, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     // autoChooser.addOption("L1 + Intake Algae", CoralAutoBuilder.build(AutoType.OneAndHalf, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
     // autoChooser.addOption("L1 + Shoot Algae", CoralAutoBuilder.build(AutoType.Two, distance, drivetrain, m_PivotSubsystem, m_ElevatorSubsystem, m_ClawSubsystem, m_TrigVision));
