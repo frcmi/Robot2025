@@ -54,7 +54,7 @@ public class LEDSubsystem extends SubsystemBase {
             return LEDPattern.solid(new Color(255, 20, 20));
         } else if (alliance.get().equals(Alliance.Red)) {
             // Red
-            return LEDPattern.solid(new Color(255, 0, 0));
+            return LEDPattern.solid(new Color(255, 20, 20));
         } else {
             // Blue
             return LEDPattern.solid(new Color(0, 0, 255));

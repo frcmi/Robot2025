@@ -85,7 +85,7 @@ public final class Constants {
         public static final int beambreakChannel = 1;
         public static final int motorControllerID = 23;
         public static final double intakeSpeed = -0.75;
-        public static final double shootSpeed = 0.8;
+        public static final double shootSpeed = 0.7;
         // TODO: Figure out good speed for shooting at the processor
         public static final double processorShootSpeed = 0.2;
         public static final double stopSpeed = -0.04;
@@ -144,7 +144,7 @@ public final class Constants {
 
     public static class ElevatorConstants {
         public static final int upperLimitSwitchID = 3;
-        public static final int lowerLimitSwitchID = 4;
+        public static final int lowerLimitSwitchID = 0;
 
         public static final Angle absoluteBottom = Rotations.of(-0.4);
         public static final Angle absoluteTop = Rotations.of(60);
