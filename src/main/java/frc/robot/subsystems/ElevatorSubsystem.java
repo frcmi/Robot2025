@@ -105,7 +105,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     // there will be at least one limit switch and an encoder to track the position of the elevator
     public ElevatorSubsystem(BotType bot) {
         elevatorPositionControl = elevatorPositionControl.withSlot(bot.slotId);
-
+        System.out.println("Just testing :)");
         SoftwareLimitSwitchConfigs softLimitConfig = new SoftwareLimitSwitchConfigs();
             // .withReverseSoftLimitThreshold(ElevatorConstants.absoluteBottom)
             // .withReverseSoftLimitEnable(true)
